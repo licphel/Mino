@@ -55,7 +55,7 @@ please check it first, and download as needed.
 Mino leverages several excellent open-source libraries to deliver its functionality:
 - **[StbImageSharp](https://github.com/StbSharp/StbImageSharp)**
 - **[StbImageWriteSharp](https://github.com/StbSharp/StbImageWriteSharp)**
-- **[FreeTypeSharp](https://github.com/Robmaister/SharpFont)**
+- **[FreeTypeSharp](https://github.com/ryancheung/FreeTypeSharp)**
 - **[Silk.NET](https://github.com/dotnet/Silk.NET)**
 - **[NAudio](https://github.com/naudio/NAudio)**
 
