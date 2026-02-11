@@ -1,4 +1,4 @@
-﻿using Mino.Mathematics.Random;
+﻿using Mino.Algorithm.Random;
 
 namespace Mino.Nio;
 

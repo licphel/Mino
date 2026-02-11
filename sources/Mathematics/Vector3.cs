@@ -1,5 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
-using Mino.Mathematics.Stereo;
+using Mino.Mathematics.Spatial;
 
 namespace Mino.Mathematics;
 

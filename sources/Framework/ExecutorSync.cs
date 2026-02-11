@@ -150,12 +150,8 @@ public class ExecutorSync : Executor {
 		}
 	}
 
-	private void yield() {
-		if (_renderFrameCounter % 10 == 0) {
-			Thread.Sleep(0);
-		} else {
-			Thread.Yield();
-		}
+	private static void yield() {
+		Thread.Sleep(0);
 	}
 
 	private static void preciseSleep(double milliseconds) {

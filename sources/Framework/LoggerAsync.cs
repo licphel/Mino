@@ -21,7 +21,7 @@ public class LoggerAsync : Logger {
 		_processor = Task.Run(processAsync);
 	}
 
-	public void SetWriteTo(in Url url) {
+	public void OutputTo(in Url url) {
 		Stream? stream = url.OpenStream();
 		if (stream != null) {
 			// Use no bom UTF-8.

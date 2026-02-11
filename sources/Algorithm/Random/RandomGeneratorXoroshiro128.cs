@@ -1,4 +1,4 @@
-namespace Mino.Mathematics.Random;
+namespace Mino.Algorithm.Random;
 
 /// <summary>
 ///     Xoroshiro128+ random generator.

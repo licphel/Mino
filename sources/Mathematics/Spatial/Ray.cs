@@ -1,4 +1,4 @@
-﻿namespace Mino.Mathematics.Stereo;
+﻿namespace Mino.Mathematics.Spatial;
 
 /// <summary>
 ///     Immutable ray.

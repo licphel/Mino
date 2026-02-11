@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace Mino.Mathematics.Stereo;
+namespace Mino.Mathematics.Spatial;
 
 /// <summary>
 ///     Immutable quaternion.

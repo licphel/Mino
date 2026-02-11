@@ -39,6 +39,24 @@ public interface Image : IDisposable {
 	}
 
 	/// <summary>
+	///		Creates an empty image.
+	/// </summary>
+	/// <param name="width">Image width.</param>
+	/// <param name="height">Image height.</param>
+	/// <returns>A blank image.</returns>
+	/// <exception cref="Error">Thrown if size is negative.</exception>
+	public static Image CreateEmpty(int width, int height) {
+		if (width <= 0 || height <= 0) {
+			throw new Error("negative size");
+		}
+		return new LiteralImage() {
+			Data = new byte[4 * width * height],
+			Width = width,
+			Height = height
+		};
+	}
+	
+	/// <summary>
 	///     Parses an RGBA image data from a byte buffer.
 	/// </summary>
 	/// <param name="buffer">an untouched byte buffer</param>

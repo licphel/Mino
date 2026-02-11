@@ -1,4 +1,4 @@
-﻿namespace Mino.Mathematics.Stereo;
+﻿namespace Mino.Mathematics.Spatial;
 
 /// <summary>
 ///     A plane in 3D space defined by normal and distance from origin.

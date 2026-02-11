@@ -1,4 +1,4 @@
-﻿namespace Mino.Mathematics.Stereo;
+﻿namespace Mino.Mathematics.Spatial;
 
 /// <summary>
 ///     View frustum defined by six clipping planes.

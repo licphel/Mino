@@ -38,7 +38,7 @@ public interface Logger : IDisposable {
 	///     Adds a write target to the logger.
 	/// </summary>
 	/// <param name="url">The target url.</param>
-	void SetWriteTo(in Url url);
+	void OutputTo(in Url url);
 
 	/// <summary>
 	///     Enables to log debug level messages.

@@ -1,9 +1,9 @@
-﻿using Mino.Framework;
+﻿using Mino.Algorithm.Random;
+using Mino.Framework;
 using Mino.Graphics.Desktop;
 using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
 using Mino.Graphics.RHI.Enum;
-using Mino.Mathematics.Random;
 using Mino.Native.OpenGL.Command;
 using Mino.Native.OpenGL.Object;
 using Silk.NET.OpenGL;

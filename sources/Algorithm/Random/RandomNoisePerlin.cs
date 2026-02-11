@@ -1,4 +1,4 @@
-﻿namespace Mino.Mathematics.Random;
+﻿namespace Mino.Algorithm.Random;
 
 /// <summary>
 ///     Perlin noise, according to Ken Perlin.
