@@ -35,13 +35,6 @@ public class Line : LineReader, IDisposable {
 	public TimeSpan Duration {
 		get => Desc.Duration;
 	}
-	
-	/// <summary>
-	///		Data of the line.
-	/// </summary>
-	public byte[] Data {
-		get => Desc.Data ?? Array.Empty<byte>();
-	}
 
 	public void Dispose() {
 		if (_disposed) {
@@ -52,7 +45,14 @@ public class Line : LineReader, IDisposable {
 		_backend.LineDelete(_handle);
 		GC.SuppressFinalize(this);
 	}
-	
+
+	/// <summary>
+	///     Data of the line.
+	/// </summary>
+	public byte[] Data {
+		get => Desc.Data ?? Array.Empty<byte>();
+	}
+
 	[NotRecommended]
 	public uint GetBackendHandle() {
 		return _handle;
@@ -61,5 +61,10 @@ public class Line : LineReader, IDisposable {
 	// Finalizer in case.
 	~Line() {
 		Dispose();
+	}
+	
+	// Implicit cast to native handle.
+	public static implicit operator uint(Line obj) {
+		return obj._handle;
 	}
 }

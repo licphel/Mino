@@ -11,18 +11,19 @@ public static unsafe class GLDbg {
 		gl.Enable(EnableCap.DebugOutput);
 		gl.Enable(EnableCap.DebugOutputSynchronous);
 		gl.DebugMessageCallback(callback, in IntPtr.Zero);
-		
+
 		gl.DebugMessageControl(
-			source: DebugSource.DontCare,
-			type: DebugType.DontCare,
-			severity: DebugSeverity.DontCare,
-			count: 0,
-			ids: null,
-			enabled: true
+			DebugSource.DontCare,
+			DebugType.DontCare,
+			DebugSeverity.DontCare,
+			0,
+			null,
+			true
 		);
 	}
-	
-	private static void callback(GLEnum source, GLEnum type, int id, GLEnum severity, int length, IntPtr message, IntPtr param) {
+
+	private static void callback(GLEnum source, GLEnum type, int id, GLEnum severity, int length, IntPtr message,
+		IntPtr param) {
 		string msg = Marshal.PtrToStringAnsi(message, length);
 
 		StackTrace stackTrace = new StackTrace(true);
@@ -46,7 +47,7 @@ public static unsafe class GLDbg {
 				break;
 			}
 		}
-		
+
 		throw new Error($"error raised '{msg}'");
 	}
 }

@@ -277,27 +277,27 @@ public readonly struct Vector4 : IEquatable<Vector4> {
 	/// </summary>
 	/// <param name="color">The rgba color.</param>
 	/// <returns>The color vector.</returns>
-	public static Vector4 CreateColor(in Color4f color) {
-		return Unsafe.As<Color4f, Vector4>(ref Unsafe.AsRef(in color));
+	public static Vector4 CreateColor(in Color color) {
+		return Unsafe.As<Color, Vector4>(ref Unsafe.AsRef(in color));
 	}
 
 	/// <summary>
 	///     Converts the vector as a rgba color.
 	/// </summary>
 	/// <returns>A rgba color.</returns>
-	public Color4f ToColor() {
-		return Unsafe.As<Vector4, Color4f>(ref Unsafe.AsRef(in this));
+	public Color ToColor() {
+		return Unsafe.As<Vector4, Color>(ref Unsafe.AsRef(in this));
 	}
-	
+
 	// Implicit cast Vector2 -> Vector4.
 	public static implicit operator Vector4(in Vector2 vec2) {
 		return new Vector4(vec2.X, vec2.Y, 0.0F, 0.0F);
-	} 
-	
+	}
+
 	// Implicit cast Vector3 -> Vector4.
 	public static implicit operator Vector4(in Vector3 vec3) {
 		return new Vector4(vec3.X, vec3.Y, vec3.Z, 0.0F);
-	} 
+	}
 
 	public bool Equals(Vector4 other) {
 		return Comparison.DoEqual(X, other.X)

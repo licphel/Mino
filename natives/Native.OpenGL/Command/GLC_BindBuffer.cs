@@ -3,9 +3,9 @@
 namespace Mino.Native.OpenGL.Command;
 
 public class GLC_BindBuffer : GLC_Command {
-	private BufferType _type;
 	private uint _buffer;
-	
+	private BufferType _type;
+
 	public GLC_BindBuffer(BufferType type, uint buffer) {
 		_type = type;
 		_buffer = buffer;

@@ -31,26 +31,12 @@ public unsafe class GLBackend : RenderBackend {
 
 		// Initial NDC args.
 		_gl.DepthRange(1.0, 0.0);
-	
+
 		if (window.Debug) {
 			// Disturbs GL ids to let it differ from our handles.
 			// This may expose some errors.
-			
-			// _disturbGLIDs();
-		}
-	}
 
-	private void _disturbGLIDs() {
-		// Random disturbing levels.
-		int lvl = RandomGenerator.Default.NextInt(5, 20);
-		for (int i = 0; i < lvl; i++) {
-			_gl.GenTexture();
-			_gl.GenBuffer();
-			_gl.GenFramebuffer();
-			_gl.GenSampler();
-			_gl.CreateShader(GLEnum.VertexShader);
-			_gl.CreateProgram();
-			_gl.GenVertexArray();
+			// _disturbGLIDs();
 		}
 	}
 
@@ -80,7 +66,7 @@ public unsafe class GLBackend : RenderBackend {
 	}
 
 	public void FrameEnd() {
-		// Do nothing.
+		_window.Present();
 	}
 
 	public uint GetUltimateRenderTarget() {
@@ -98,7 +84,8 @@ public unsafe class GLBackend : RenderBackend {
 		_bufferHeap.Free(buffer);
 	}
 
-	public void BufferAlloc<T>(uint buffer, in BufferDesc desc, ReadOnlySpan<T> data, int capacity) where T : unmanaged {
+	public void BufferAlloc<T>(uint buffer, in BufferDesc desc, ReadOnlySpan<T> data, int capacity)
+		where T : unmanaged {
 		_bufferHeap.GetData(buffer).OnBufferAlloc(desc, data, capacity);
 	}
 
@@ -109,7 +96,7 @@ public unsafe class GLBackend : RenderBackend {
 	public uint TextureGen() {
 		return _textureHeap.Allocate(new GLTexture(_gl, _gl.GenTexture()));
 	}
-	
+
 	public void TextureDelete(uint texture) {
 		uint handle = _textureHeap.GetData(texture)._handle;
 
@@ -121,13 +108,14 @@ public unsafe class GLBackend : RenderBackend {
 		_textureHeap.GetData(texture).OnTextureData(desc);
 	}
 
-	public void TextureBlit(uint src, int srcX, int srcY, int srcW, int srcH, uint dst, int dstX, int dstY, int dstW, int dstH,
+	public void TextureBlit(uint src, int srcX, int srcY, int srcW, int srcH, uint dst, int dstX, int dstY, int dstW,
+		int dstH,
 		TextureFilter filter) {
 		ref GLTexture srcTex = ref _textureHeap.GetData(src);
 		ref GLTexture dstTex = ref _textureHeap.GetData(dst);
 		uint srcFBO = _gl.GenFramebuffer();
 		uint dstFBO = _gl.GenFramebuffer();
-    
+
 		try {
 			_gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, srcFBO);
 			_gl.FramebufferTexture2D(
@@ -137,7 +125,7 @@ public unsafe class GLBackend : RenderBackend {
 				srcTex._handle,
 				0
 			);
-			
+
 			_gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, dstFBO);
 			_gl.FramebufferTexture2D(
 				FramebufferTarget.DrawFramebuffer,
@@ -146,7 +134,7 @@ public unsafe class GLBackend : RenderBackend {
 				dstTex._handle,
 				0
 			);
-			
+
 			_gl.BlitFramebuffer(
 				srcX, srcY, srcX + srcW, srcY + srcH,
 				dstX, dstY, dstX + dstW, dstY + dstH,
@@ -159,7 +147,7 @@ public unsafe class GLBackend : RenderBackend {
 			_gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
 			_gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
 		}
-		
+
 		// Regenerate mipmaps.
 		_gl.BindTexture(GLEnum.Texture2D, dstTex._handle);
 		_gl.GenerateMipmap(GLEnum.Texture2D);
@@ -168,7 +156,7 @@ public unsafe class GLBackend : RenderBackend {
 	public uint SamplerGen() {
 		return _samplerHeap.Allocate(new GLSampler(_gl, _gl.GenSampler()));
 	}
-	
+
 	public void SamplerDelete(uint sampler) {
 		uint handle = _samplerHeap.GetData(sampler)._handle;
 
@@ -184,7 +172,7 @@ public unsafe class GLBackend : RenderBackend {
 		// ** Delayed handle gen ** //
 		return _moduleHeap.Allocate(new GLShaderModule(_gl, 0));
 	}
-	
+
 	public void ShaderModuleDelete(uint module) {
 		uint handle = _moduleHeap.GetData(module)._handle;
 
@@ -192,14 +180,14 @@ public unsafe class GLBackend : RenderBackend {
 		_moduleHeap.Free(module);
 	}
 
-	public void ShaderModuleData(uint module, in ShaderModuleDesc desc) {
+	public void ShaderModuleCompile(uint module, in ShaderModuleDesc desc) {
 		_moduleHeap.GetData(module).OnShaderModuleData(desc);
 	}
 
 	public uint ShaderProgramGen() {
 		return _programHeap.Allocate(new GLShaderProgram(_gl, _gl.CreateProgram()));
 	}
-	
+
 	public void ShaderProgramDelete(uint program) {
 		uint handle = _programHeap.GetData(program)._handle;
 
@@ -217,14 +205,14 @@ public unsafe class GLBackend : RenderBackend {
 
 	public void UniformData<T>(uint program, uint uniform, in T data) where T : unmanaged {
 		uint nHandle = _programHeap.GetData(program)._handle;
-		
+
 		_gl.UseProgram(nHandle);
 		_gl.OnUniformData((int) uniform, data); // (Extension method)
 	}
 
 	public void UniformData<T>(uint program, uint uniform, ReadOnlySpan<T> data) where T : unmanaged {
 		uint nHandle = _programHeap.GetData(program)._handle;
-		
+
 		_gl.UseProgram(nHandle);
 		_gl.OnUniformData((int) uniform, data); // (Extension method)
 	}
@@ -232,7 +220,7 @@ public unsafe class GLBackend : RenderBackend {
 	public uint RenderTargetGen() {
 		return _renderTargetHeap.Allocate(new GLRenderTarget(_gl, _gl.GenFramebuffer()));
 	}
-	
+
 	public void RenderTargetDelete(uint renderTarget) {
 		uint handle = _renderTargetHeap.GetData(renderTarget)._handle;
 
@@ -243,15 +231,16 @@ public unsafe class GLBackend : RenderBackend {
 	public void RenderTargetData(uint renderTarget, in RenderTargetDesc desc) {
 		_renderTargetHeap.GetData(renderTarget).OnRenderTargetData(desc);
 	}
-	
-	public void RenderTargetBlit(uint src, int srcX, int srcY, int srcW, int srcH, uint dst, int dstX, int dstY, int dstW,
+
+	public void RenderTargetBlit(uint src, int srcX, int srcY, int srcW, int srcH, uint dst, int dstX, int dstY,
+		int dstW,
 		int dstH, TextureFilter filter) {
 		uint srcFBO = src == 0 ? 0 : _renderTargetHeap.GetData(src)._handle;
 		uint dstFBO = dst == 0 ? 0 : _renderTargetHeap.GetData(dst)._handle;
-    
+
 		_gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, srcFBO);
 		_gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, dstFBO);
-		
+
 		_gl.BlitFramebuffer(
 			srcX, srcY, srcX + srcW, srcY + srcH,
 			dstX, dstY, dstX + dstW, dstY + dstH,
@@ -313,21 +302,21 @@ public unsafe class GLBackend : RenderBackend {
 		// No according gl object.
 		_pipelineHeap.Free(pipeline);
 	}
-	
-	public void PipelineData(uint pipeline, in PipelineDesc desc) {
+
+	public void PipelineCompile(uint pipeline, in PipelineDesc desc) {
 		_pipelineHeap.GetData(pipeline).OnPipelineData(desc);
 	}
 
 	public uint ResourceSetGen() {
 		return _resourceSetHeap.Allocate(new GLResourceSet(_gl));
 	}
-	
+
 	public void ResourceSetDelete(uint set) {
 		_resourceSetHeap.Free(set);
 	}
 
 	public void ResourceSetLayout(uint set, in ResourceSetLayout layout) {
-		 _resourceSetHeap.GetData(set).OnResourceSetLayout(layout);
+		_resourceSetHeap.GetData(set).OnResourceSetLayout(layout);
 	}
 
 	public void ResourceSetBindBuffer(uint set, int slot, ResourceType type, uint buffer, int offset, int size) {
@@ -335,24 +324,25 @@ public unsafe class GLBackend : RenderBackend {
 	}
 
 	public void ResourceSetBindTexture(uint set, int slot, uint texture, uint sampler) {
-		_resourceSetHeap.GetData(set)._bounds.Add(new GLResourceSet.Bound(ResourceType.Texture, slot, [texture, sampler]));
+		_resourceSetHeap.GetData(set)._bounds
+			.Add(new GLResourceSet.Bound(ResourceType.Texture, slot, [texture, sampler]));
 	}
 
 	public uint EncoderGen() {
 		return _encoderHeap.Allocate(new GLEncoder());
 	}
-	
+
 	public void EncoderDelete(uint encoder) {
 		// No according gl object.
 		_encoderHeap.Free(encoder);
 	}
 
-	public void EncoderData(uint encoder, in EncoderDesc desc) {
+	public void EncoderCompile(uint encoder, in EncoderDesc desc) {
 		ref GLEncoder enc = ref _encoderHeap.GetData(encoder);
 		// Set userdata.
 		enc._desc = desc;
 	}
-	
+
 	public void EncoderReset(uint encoder) {
 		ref GLEncoder enc = ref _encoderHeap.GetData(encoder);
 		// Clear commands for next record.
@@ -403,10 +393,31 @@ public unsafe class GLBackend : RenderBackend {
 		_encoderHeap.GetData(encoder)._commands.Add(new GLC_SetPipeline(pipeline));
 	}
 
-	public void _GLC_EncoderCpuCmd(uint encoder, Action<RenderBackend> action) {
-		_encoderHeap.GetData(encoder)._commands.Add(new GLC_Custom(action));
+	private void _disturbGLIDs() {
+		// Random disturbing levels.
+		int lvl = RandomGenerator.Default.NextInt(5, 20);
+		for (int i = 0; i < lvl; i++) {
+			_gl.GenTexture();
+			_gl.GenBuffer();
+			_gl.GenFramebuffer();
+			_gl.GenSampler();
+			_gl.CreateShader(GLEnum.VertexShader);
+			_gl.CreateProgram();
+			_gl.GenVertexArray();
+		}
 	}
-	
+
+	private void preDraw(GLPipeline _p) {
+		for (int i = 0; i < _p._desc.ResourceLayouts.Length; i++) {
+			uint rs = _boundResourceSets[i];
+			ref GLResourceSet _s = ref _resourceSetHeap.GetData(rs);
+			_s.Rearrange(this);
+			_s.Apply(this, _p);
+		}
+		// Reset for next arrangement.
+		_texId = _ubId = 0;
+	}
+
 	#region HEAPS
 	internal Heap<GLBuffer> _bufferHeap = new Heap<GLBuffer>();
 	internal Heap<GLPipeline> _pipelineHeap = new Heap<GLPipeline>();
@@ -479,7 +490,7 @@ public unsafe class GLBackend : RenderBackend {
 		uint vbo = _boundBuffers[(int) BufferType.Vertex];
 		uint ebo = _boundBuffers[(int) BufferType.Index];
 		_gl.BindVertexArray(_p.FindVao(vbo, ebo));
-		
+
 		// Apply resources
 		preDraw(_p);
 
@@ -494,10 +505,10 @@ public unsafe class GLBackend : RenderBackend {
 	internal void executeDispatch(uint x, uint y, uint z) {
 		// Bind pipeline
 		ref GLPipeline _p = ref _pipelineHeap.GetData(_boundPipeline);
-		
+
 		// Apply resources
 		preDraw(_p);
-		
+
 		_gl.DispatchCompute(x, y, z);
 		_gl.MemoryBarrier(MemoryBarrierMask.AllBarrierBits);
 	}
@@ -515,15 +526,4 @@ public unsafe class GLBackend : RenderBackend {
 		}
 	}
 	#endregion
-
-	private void preDraw(GLPipeline _p) {
-		for (int i = 0; i < _p._desc.ResourceLayouts.Length; i++) {
-			uint rs = _boundResourceSets[i];
-			ref GLResourceSet _s = ref _resourceSetHeap.GetData(rs);
-			_s.Rearrange(this);
-			_s.Apply(this, _p);
-		}
-		// Reset for next arrangement.
-		_texId = _ubId = 0;
-	}
 }

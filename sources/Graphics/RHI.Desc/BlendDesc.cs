@@ -14,7 +14,7 @@ public struct BlendDesc {
 	public BlendFactor SrcAlpha;
 	public BlendFactor DstAlpha;
 	public BlendFunc AlphaFunc;
-	public Color4f Constant;
+	public Color Constant;
 
 	public BlendDesc() {
 		Enable = false;
@@ -24,7 +24,7 @@ public struct BlendDesc {
 		SrcAlpha = default;
 		DstAlpha = default;
 		AlphaFunc = default;
-		Constant = Color4f.PureWhite;
+		Constant = Color.PureWhite;
 	}
 
 	/// <summary>

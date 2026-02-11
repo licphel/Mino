@@ -1,4 +1,5 @@
-﻿using Mino.Nio;
+﻿using Mino.Mathematics;
+using Mino.Nio;
 using StbImageSharp;
 using ColorComponents = StbImageSharp.ColorComponents;
 
@@ -22,6 +23,20 @@ public interface Image : IDisposable {
 	///     Height of the image.
 	/// </summary>
 	public int Height { get; }
+
+	/// <summary>
+	///     Pixel stride bytes.
+	/// </summary>
+	public int PixelStride {
+		get => 4;
+	}
+
+	/// <summary>
+	///     Image pixel indexer.
+	/// </summary>
+	public _ImagePixelProxy this[int x] {
+		get => new _ImagePixelProxy(x, this);
+	}
 
 	/// <summary>
 	///     Parses an RGBA image data from a byte buffer.
@@ -53,22 +68,52 @@ public interface Image : IDisposable {
 			return;
 		}
 
-		int stride = width * 4;
+		int pix = img.PixelStride;
+		int stride = width * pix;
 		byte[] flippedData = new byte[data.Length];
 
 		for (int y = 0; y < height; y++) {
 			int sourceY = height - 1 - y;
 			for (int x = 0; x < width; x++) {
-				int sourceIndex = sourceY * stride + x * 4;
-				int destIndex = y * stride + x * 4;
+				int sourceIndex = sourceY * stride + x * pix;
+				int destIndex = y * stride + x * pix;
 
-				for (int b = 0; b < 4; b++) {
+				for (int b = 0; b < pix; b++) {
 					flippedData[destIndex + b] = data[sourceIndex + b];
 				}
 			}
 		}
 
 		img.Data = flippedData;
+	}
+
+	// Image pixel proxy used in pixel indexer.
+	public class _ImagePixelProxy {
+		public int X;
+		public byte[] Data;
+		public int W;
+		public int P;
+
+		public _ImagePixelProxy(int x, Image image) {
+			X = x;
+			Data = image.Data ?? throw new Error("no image data");
+			W = image.Width;
+			P = image.PixelStride;
+		}
+
+		public Color this[int y] {
+			get {
+				int i = P * (W * y + X);
+				return Color.Create(Data[i++], Data[i++], Data[i++], Data[i]);
+			}
+			set {
+				int i = P * (W * y + X);
+				Data[i++] = (byte) Math.Clamp(value.Red * 255, 0, 255);
+				Data[i++] = (byte) Math.Clamp(value.Green * 255, 0, 255);
+				Data[i++] = (byte) Math.Clamp(value.Blue * 255, 0, 255);
+				Data[i] = (byte) Math.Clamp(value.Alpha * 255, 0, 255);
+			}
+		}
 	}
 
 	/// <summary>

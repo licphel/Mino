@@ -7,13 +7,13 @@ namespace Mino.Graphics.RHI.Desc;
 ///     Describes a render pass.
 /// </summary>
 public struct RenderPassDesc {
-	public Color4f ClearColor;
+	public Color ClearColor;
 	public double ClearDepth;
 	public int ClearStencil;
 	public ClearMask Clear;
 
 	public RenderPassDesc() {
-		ClearColor = Color4f.PureBlack;
+		ClearColor = Color.PureBlack;
 		ClearDepth = 0.0;
 		ClearStencil = 0;
 		Clear = ClearMask.Color | ClearMask.Depth | ClearMask.Stencil;

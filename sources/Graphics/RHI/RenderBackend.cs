@@ -40,7 +40,7 @@ public interface RenderBackend : IDisposable {
 	// Shader module
 	uint ShaderModuleGen();
 	void ShaderModuleDelete(uint module);
-	void ShaderModuleData(uint module, in ShaderModuleDesc desc);
+	void ShaderModuleCompile(uint module, in ShaderModuleDesc desc);
 
 	// Shader program
 	uint ShaderProgramGen();
@@ -66,7 +66,7 @@ public interface RenderBackend : IDisposable {
 
 	// Pipeline
 	uint PipelineGen();
-	void PipelineData(uint pipeline, in PipelineDesc desc);
+	void PipelineCompile(uint pipeline, in PipelineDesc desc);
 	void PipelineDelete(uint pipeline);
 
 	// Resource set
@@ -80,7 +80,7 @@ public interface RenderBackend : IDisposable {
 	uint EncoderGen();
 	void EncoderDelete(uint encoder);
 	void EncoderReset(uint encoder);
-	void EncoderData(uint encoder, in EncoderDesc desc);
+	void EncoderCompile(uint encoder, in EncoderDesc desc);
 	void EncoderQueuedExecute(uint encoder);
 	void EncoderTopology(uint encoder, Topology topology);
 	void EncoderBuffer(uint encoder, BufferType type, uint buffer);
@@ -91,5 +91,4 @@ public interface RenderBackend : IDisposable {
 	void EncoderViewport(uint encoder, int x, int y, int width, int height);
 	void EncoderScissor(uint encoder, in ScissorDesc desc);
 	void EncoderPipeline(uint encoder, uint pipeline);
-	void _GLC_EncoderCpuCmd(uint encoder, Action<RenderBackend> action);
 }

@@ -1,36 +1,46 @@
 ﻿namespace Mino.Mathematics;
 
 /// <summary>
-///     Immutable float32 rgba color.
+///     Immutable float32 RGBA color.
 /// </summary>
-public readonly struct Color4f : IEquatable<Color4f> {
-	public static readonly Color4f Empty = new Color4f(0.0F, 0.0F, 0.0F, 0.0F);
-	public static readonly Color4f PureWhite = new Color4f(1.0F, 1.0F, 1.0F);
-	public static readonly Color4f PureBlack = new Color4f(0.0F, 0.0F, 0.0F);
-	public static readonly Color4f PureRed = new Color4f(1.0F, 0.0F, 0.0F);
-	public static readonly Color4f PureGreen = new Color4f(0.0F, 1.0F, 0.0F);
-	public static readonly Color4f PureBlue = new Color4f(0.0F, 0.0F, 1.0F);
+public readonly struct Color : IEquatable<Color> {
+	public static readonly Color Empty = new Color(0.0F, 0.0F, 0.0F, 0.0F);
+	public static readonly Color PureWhite = new Color(1.0F, 1.0F, 1.0F);
+	public static readonly Color PureBlack = new Color(0.0F, 0.0F, 0.0F);
+	public static readonly Color PureRed = new Color(1.0F, 0.0F, 0.0F);
+	public static readonly Color PureGreen = new Color(0.0F, 1.0F, 0.0F);
+	public static readonly Color PureBlue = new Color(0.0F, 0.0F, 1.0F);
 
 	public readonly float Red = 1.0F;
 	public readonly float Green = 1.0F;
 	public readonly float Blue = 1.0F;
 	public readonly float Alpha = 1.0F;
 
-	public Color4f() {
+	public Color() {
 	}
 
-	public Color4f(float red, float green, float blue, float alpha = 1.0F) {
+	public Color(float red, float green, float blue, float alpha = 1.0F) {
 		Red = red;
 		Green = green;
 		Blue = blue;
 		Alpha = alpha;
 	}
 
-	public Color4f(Color4f color, float alpha = 1.0F) {
+	public Color(Color color, float alpha = 1.0F) {
 		Red = color.Red;
 		Green = color.Green;
 		Blue = color.Blue;
 		Alpha = alpha;
+	}
+	
+	/// <summary>
+	///     Gets an additive merge of the two colors.
+	/// </summary>
+	/// <param name="other">The other color.</param>
+	/// <returns>A new merged color.</returns>
+	public Color Add(in Color other) {
+		return new Color(
+			Red + other.Red, Green + other.Green, Blue + other.Blue, Alpha + other.Alpha);
 	}
 
 	/// <summary>
@@ -38,8 +48,8 @@ public readonly struct Color4f : IEquatable<Color4f> {
 	/// </summary>
 	/// <param name="other">The other color.</param>
 	/// <returns>A new merged color.</returns>
-	public Color4f Multiply(in Color4f other) {
-		return new Color4f(
+	public Color Multiply(in Color other) {
+		return new Color(
 			Red * other.Red, Green * other.Green, Blue * other.Blue, Alpha * other.Alpha);
 	}
 
@@ -48,15 +58,15 @@ public readonly struct Color4f : IEquatable<Color4f> {
 	/// </summary>
 	/// <param name="v">The merging value.</param>
 	/// <returns>A new merged color</returns>
-	public Color4f Multiply(float v) {
-		return new Color4f(Red * v, Green * v, Blue * v, Alpha);
+	public Color Multiply(float v) {
+		return new Color(Red * v, Green * v, Blue * v, Alpha);
 	}
 
 	/// <summary>
 	///     Get the invert color of the original color.
 	/// </summary>
-	public Color4f Invert() {
-		return new Color4f(1.0F - Red, 1.0F - Green, 1.0F - Blue, Alpha);
+	public Color Invert() {
+		return new Color(1.0F - Red, 1.0F - Green, 1.0F - Blue, Alpha);
 	}
 
 	/// <summary>
@@ -86,8 +96,8 @@ public readonly struct Color4f : IEquatable<Color4f> {
 	/// <summary>
 	///     Create a rgba color from 0~255 bytes.
 	/// </summary>
-	public static Color4f Create(byte red, byte green, byte blue, byte alpha = 255) {
-		return new Color4f(red / 255.0F, green / 255.0F, blue / 255.0F, alpha / 255.0F);
+	public static Color Create(byte red, byte green, byte blue, byte alpha = 255) {
+		return new Color(red / 255.0F, green / 255.0F, blue / 255.0F, alpha / 255.0F);
 	}
 
 	/// <summary>
@@ -98,7 +108,7 @@ public readonly struct Color4f : IEquatable<Color4f> {
 	/// <param name="value">Hsv value.</param>
 	/// <param name="alpha">Desired alpha of the result.</param>
 	/// <returns>A converted rgba color.</returns>
-	public static Color4f HsvToRgb(float hue, float saturation, float value, float alpha = 1.0F) {
+	public static Color HsvToRgb(float hue, float saturation, float value, float alpha = 1.0F) {
 		int i = (int) (hue * 6) % 6;
 		float f = hue * 6 - i;
 		float f1 = value * (1 - saturation);
@@ -139,10 +149,10 @@ public readonly struct Color4f : IEquatable<Color4f> {
 				f6 = f2;
 				break;
 		}
-		return new Color4f(f4, f5, f6, alpha);
+		return new Color(f4, f5, f6, alpha);
 	}
 
-	public bool Equals(Color4f other) {
+	public bool Equals(Color other) {
 		return Comparison.DoEqual(Red, other.Red)
 			&& Comparison.DoEqual(Green, other.Green)
 			&& Comparison.DoEqual(Blue, other.Blue)
@@ -150,30 +160,30 @@ public readonly struct Color4f : IEquatable<Color4f> {
 	}
 
 	public override bool Equals(object? obj) {
-		return obj is Color4f other && Equals(other);
+		return obj is Color other && Equals(other);
 	}
 
 	public override int GetHashCode() {
 		return HashCode.Combine(Red, Green, Blue, Alpha);
 	}
 
-	public static bool operator ==(Color4f left, Color4f right) {
+	public static bool operator ==(Color left, Color right) {
 		return left.Equals(right);
 	}
 
-	public static bool operator !=(Color4f left, Color4f right) {
+	public static bool operator !=(Color left, Color right) {
 		return !left.Equals(right);
 	}
 
-	public static Color4f operator *(in Color4f a, in Color4f b) {
+	public static Color operator *(in Color a, in Color b) {
 		return a.Multiply(b);
 	}
 
-	public static Color4f operator ~(in Color4f c) {
+	public static Color operator ~(in Color c) {
 		return c.Invert();
 	}
 
-	public static Color4f operator *(in Color4f c, float v) {
+	public static Color operator *(in Color c, float v) {
 		return c.Multiply(v);
 	}
 }

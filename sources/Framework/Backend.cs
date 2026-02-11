@@ -72,7 +72,7 @@ public class Backend : Attribute {
 			}
 			Type[] founds = assembly.GetTypes()
 				.Where(t => t.IsClass && !t.IsAbstract && type.IsAssignableFrom(t)).ToArray();
-			List<Type> osReqMet = new List<Type>();
+			var osReqMet = new List<Type>();
 			foreach (Type t in founds) {
 				Backend? attr = t.GetCustomAttribute<Backend>();
 				if (attr == null) {

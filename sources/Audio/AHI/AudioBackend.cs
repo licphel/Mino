@@ -9,14 +9,14 @@ namespace Mino.Audio.AHI;
 public interface AudioBackend : IDisposable {
 	void Init();
 	void PollEvents();
-	
+
 	// Clip
 	uint ClipGen();
 	void ClipDelete(uint clip);
 	void ClipPlay(uint clip);
 	void ClipStop(uint clip);
 	void ClipData(uint clip, ClipDesc desc);
-	void ClipSetProperty<T>(uint clip, ClipProperty property, T value); 
+	void ClipSetProperty<T>(uint clip, ClipProperty property, T value);
 	void ClipGetProperty<T>(uint clip, ClipProperty property, out T value);
 
 	// Line

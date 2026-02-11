@@ -2,7 +2,6 @@
 using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
 using Mino.Graphics.RHI.Enum;
-using Mino.Mathematics;
 
 namespace Mino.Graphics;
 
@@ -61,6 +60,11 @@ public class Texture : IDisposable {
 		GC.SuppressFinalize(this);
 	}
 
+	// Finalizer in case.
+	~Texture() {
+		Dispose();
+	}
+
 	/// <summary>
 	///     Submits texture data to gpu.
 	/// </summary>
@@ -85,15 +89,8 @@ public class Texture : IDisposable {
 		_backend.TextureData(_handle, desc);
 	}
 
-	[NotRecommended]
-	public uint GetBackendHandle() {
-		return _handle;
-	}
-
-	internal void blit(Texture canvas, in Box2 dst, in Box2 src, TextureFilter filter) {
-		// Call backend blitter.
-		_backend.TextureBlit(
-			_handle, (int) src.MinX, (int) src.MinY, (int) src.Width, (int) src.Height, canvas._handle, (int) dst.MinX,
-			(int) dst.MinY, (int) dst.Width, (int) dst.Height, filter);
+	// Implicit cast to native handle.
+	public static implicit operator uint(Texture obj) {
+		return obj._handle;
 	}
 }

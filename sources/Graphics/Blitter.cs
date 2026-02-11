@@ -1,4 +1,5 @@
-﻿using Mino.Graphics.RHI.Enum;
+﻿using Mino.Graphics.RHI;
+using Mino.Graphics.RHI.Enum;
 using Mino.Mathematics;
 
 namespace Mino.Graphics;
@@ -8,23 +9,50 @@ namespace Mino.Graphics;
 /// </summary>
 public static unsafe class Blitter {
 	/// <summary>
-	///     Copies a texture to another texture.
+	///     Copies a texture part to another texture part.
 	/// </summary>
 	/// <param name="from">Source texture part.</param>
 	/// <param name="to">Target texture part.</param>
 	/// <param name="filter">Filter of drawing.</param>
 	/// <exception cref="Error">Thrown if there's no data to draw or draw to.</exception>
 	public static void Blit(in TexturePart from, in TexturePart to, TextureFilter filter = TextureFilter.Nearest) {
-		from.Src.blit(to.Src, to.Region, from.Region, filter);
+		RenderBackend backend = RenderSystem.GetBackend();
+		Box2 src = from.Region;
+		Box2 dst = to.Region;
+
+		// Call backend blitter.
+		backend.TextureBlit(
+			from.Src, (int) src.MinX, (int) src.MinY, (int) src.Width, (int) src.Height,
+			to.Src, (int) dst.MinX,
+			(int) dst.MinY, (int) dst.Width, (int) dst.Height, filter);
+	}
+
+	/// <summary>
+	///     Copies a RT region to another RT region.
+	/// </summary>
+	/// <param name="from">Source rt.</param>
+	/// <param name="to">Target rt.</param>
+	/// <param name="dst">Dst region.</param>
+	/// <param name="src">Src region.</param>
+	/// <param name="filter">Filter of drawing.</param>
+	public static void Blit(RenderTarget from, RenderTarget to, in Box2 dst, in Box2 src,
+		TextureFilter filter = TextureFilter.Nearest) {
+		RenderBackend backend = RenderSystem.GetBackend();
+
+		// Call backend blitter.
+		backend.RenderTargetBlit(
+			from, (int) src.MinX, (int) src.MinY, (int) src.Width, (int) src.Height,
+			to, (int) dst.MinX,
+			(int) dst.MinY, (int) dst.Width, (int) dst.Height, filter);
 	}
 
 	/// <summary>
 	///     Copies a block of data from an image to another image.
 	/// </summary>
-	/// <param name="from"></param>
-	/// <param name="to"></param>
-	/// <param name="dst"></param>
-	/// <param name="src"></param>
+	/// <param name="from">Source image.</param>
+	/// <param name="to">Target image.</param>
+	/// <param name="dst">Dst region.</param>
+	/// <param name="src">Src region.</param>
 	/// <exception cref="Error">Thrown if src size != dst size.</exception>
 	public static void BlockCopy(Image from, Image to, in Box2 dst, in Box2 src) {
 		if (src.Size != dst.Size) {

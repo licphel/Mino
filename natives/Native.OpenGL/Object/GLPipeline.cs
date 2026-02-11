@@ -5,10 +5,10 @@ using Silk.NET.OpenGL;
 namespace Mino.Native.OpenGL.Object;
 
 public unsafe class GLPipeline {
-	public GL _gl;
 	public PipelineDesc _desc;
+	public GL _gl;
 	private Dictionary<(uint, uint), uint> _vaoCache = new Dictionary<(uint, uint), uint>();
-	
+
 	public GLPipeline(GL gl) {
 		_gl = gl;
 	}
@@ -16,7 +16,7 @@ public unsafe class GLPipeline {
 	public void OnPipelineData(in PipelineDesc desc) {
 		_desc = desc;
 	}
-	
+
 	public uint FindVao(uint vbo, uint ebo = 0) {
 		(uint vbo, uint ebo) key = (vbo, ebo);
 
@@ -26,14 +26,14 @@ public unsafe class GLPipeline {
 
 			_gl.BindBuffer(GLEnum.ArrayBuffer, vbo);
 			foreach (VertexLayout.Attr attr in _desc.VertexLayout.Attrs) {
-				_gl.EnableVertexAttribArray((uint)attr.Location);
+				_gl.EnableVertexAttribArray((uint) attr.Location);
 				_gl.VertexAttribPointer(
-					(uint)attr.Location,
+					(uint) attr.Location,
 					attr.Components,
 					GLEnumC.Cast(attr.Type),
 					attr.Normalized,
-					(uint)_desc.VertexLayout.Stride,
-					(void*)attr.Offset
+					(uint) _desc.VertexLayout.Stride,
+					(void*) attr.Offset
 				);
 			}
 
@@ -54,7 +54,7 @@ public unsafe class GLPipeline {
 			uint sHandle = backend._programHeap.GetData(_desc.ShaderProgram)._handle;
 			_gl.UseProgram(sHandle);
 		}
-		
+
 		if (_desc.Blend.Enable) {
 			_gl.Enable(EnableCap.Blend);
 			_gl.BlendFuncSeparate(

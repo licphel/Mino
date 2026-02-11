@@ -39,7 +39,7 @@ public unsafe class GLTexture {
 			// Buf fixed: Somehow the texture is flipped,
 			// I don't know which part has done it,
 			// But it does. Maybe silk.NET?
-			
+
 			// data = Image.FlipRgbaImage2D(data, width, height);
 		}
 
@@ -76,7 +76,7 @@ public unsafe class GLTexture {
 			_gl.TexParameterI(_target, TextureParameterName.TextureMaxLevel, in maxLevel);
 			_gl.GenerateMipmap(_target);
 		}
-		
+
 		_gl.Finish();
 		_gl.BindTexture(_target, 0);
 	}

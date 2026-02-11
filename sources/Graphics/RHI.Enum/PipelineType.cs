@@ -4,6 +4,6 @@
 ///     How the pipeline is used.
 /// </summary>
 public enum PipelineType {
-	Render,
-	Compute
+	Render = 0,
+	Compute = 1
 }

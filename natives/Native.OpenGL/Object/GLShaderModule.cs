@@ -4,10 +4,10 @@ using Silk.NET.OpenGL;
 namespace Mino.Native.OpenGL.Object;
 
 public class GLShaderModule {
-	public uint _handle;
-	public GL _gl;
 	public ShaderModuleDesc _desc;
-	
+	public GL _gl;
+	public uint _handle;
+
 	public GLShaderModule(GL gl, uint handle) {
 		_gl = gl;
 		_handle = handle;
@@ -21,7 +21,7 @@ public class GLShaderModule {
 
 		_gl.ShaderSource(_handle, desc.Code);
 		_gl.CompileShader(_handle);
-		
+
 		_gl.GetShader(_handle, ShaderParameterName.CompileStatus, out int status);
 		if (status == 0) {
 			_gl.GetShaderInfoLog(_handle, out string txt);

@@ -7,7 +7,7 @@ public class GLSampler {
 	public SamplerDesc _desc;
 	public GL _gl;
 	public uint _handle;
-	
+
 	public GLSampler(GL gl, uint handle) {
 		_gl = gl;
 		_handle = handle;
@@ -16,7 +16,7 @@ public class GLSampler {
 	public void OnSamplerData(in SamplerDesc desc) {
 		// Set userdata.
 		_desc = desc;
-		
+
 		_gl.SamplerParameter(_handle, GLEnum.TextureWrapS, GLEnumC.Cast(desc.WrapX));
 		_gl.SamplerParameter(_handle, GLEnum.TextureWrapT, GLEnumC.Cast(desc.WrapY));
 		_gl.SamplerParameter(_handle, GLEnum.TextureWrapR, GLEnumC.Cast(desc.WrapZ));

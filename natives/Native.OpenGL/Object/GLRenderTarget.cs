@@ -5,10 +5,10 @@ using Silk.NET.OpenGL;
 namespace Mino.Native.OpenGL.Object;
 
 public class GLRenderTarget {
-	public uint _handle;
-	public GL _gl;
 	public RenderTargetDesc _desc;
-	
+	public GL _gl;
+	public uint _handle;
+
 	public GLRenderTarget(GL gl, uint handle) {
 		_gl = gl;
 		_handle = handle;
@@ -17,9 +17,9 @@ public class GLRenderTarget {
 	public void OnRenderTargetData(in RenderTargetDesc desc) {
 		// Set userdata.
 		_desc = desc;
-		
+
 		_gl.BindFramebuffer(FramebufferTarget.Framebuffer, _handle);
-		
+
 		for (int i = 0; i < desc.ColorAttachments.Length; i++) {
 			uint texture = _gl.GenTexture();
 			_gl.FramebufferTexture2D(

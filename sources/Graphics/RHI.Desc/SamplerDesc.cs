@@ -15,7 +15,7 @@ public record struct SamplerDesc {
 	public float MinLod;
 	public int MipmapLevel;
 	public int SampleCount;
-	public Color4f WrapBorderColor;
+	public Color WrapBorderColor;
 	public TextureWrap WrapX;
 	public TextureWrap WrapY;
 	public TextureWrap WrapZ;
@@ -29,7 +29,7 @@ public record struct SamplerDesc {
 		MinLod = 0.0F;
 		MipmapLevel = 0;
 		SampleCount = 1;
-		WrapBorderColor = Color4f.Empty;
+		WrapBorderColor = Color.Empty;
 		WrapX = TextureWrap.Repeat;
 		WrapY = TextureWrap.Repeat;
 		WrapZ = TextureWrap.Repeat;

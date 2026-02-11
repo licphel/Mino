@@ -95,7 +95,6 @@ public class ExecutorSync : Executor {
 
 			if (shouldRender) {
 				OnRender?.Invoke();
-				window.Present();
 				_renderFrameCounter++;
 			}
 

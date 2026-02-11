@@ -282,7 +282,7 @@ public readonly struct Box2 : IEquatable<Box2> {
 	public static Box2 CreateByPoints(in Vector2 p1, in Vector2 p2) {
 		return new Box2(Vector2.Min(p1, p2), Vector2.Max(p1, p2));
 	}
-	
+
 	// Implicit cast Box3 -> Box2.
 	public static implicit operator Box2(in Box3 box3) {
 		return new Box2(box3.Min, box3.Max);

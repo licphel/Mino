@@ -8,6 +8,7 @@ namespace Mino.Graphics.RHI;
 /// </summary>
 public class RenderSystem {
 	private static RenderBackend? _backend;
+	private static Window? _window;
 	private static Lock _lock = new Lock();
 
 	/// <summary>
@@ -19,6 +20,7 @@ public class RenderSystem {
 	public static void LoadBackend(Window window, RenderBackend backend) {
 		lock (_lock) {
 			_backend = backend;
+			_window = window;
 			_backend.Init(window);
 		}
 	}
@@ -27,10 +29,21 @@ public class RenderSystem {
 	///     Gets current render backend.
 	/// </summary>
 	/// <returns>The current render backend.</returns>
-	/// <exception cref="Error">If there's no render backend.</exception>
+	/// <exception cref="Error">Thrown if there's no render backend.</exception>
 	public static RenderBackend GetBackend() {
 		lock (_lock) {
 			return _backend ?? throw new Error("render backend not loaded");
+		}
+	}
+
+	/// <summary>
+	///     Gets current window.
+	/// </summary>
+	/// <returns>The current window.</returns>
+	/// <exception cref="Error">Thrown if there's no window.</exception>
+	public static Window GetWindow() {
+		lock (_lock) {
+			return _window ?? throw new Error("window not loaded");
 		}
 	}
 

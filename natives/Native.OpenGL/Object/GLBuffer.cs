@@ -40,10 +40,10 @@ public unsafe class GLBuffer {
 		int elementSize = Unsafe.SizeOf<T>();
 		int byteCount = data.Length * elementSize;
 		int byteOffset = offset * elementSize;
-		
+
 		// We do not consider buffer capacity here.
 		// Upper layer will do it.
-		
+
 		_gl.BindBuffer(_target, _handle);
 		fixed (void* ptr = data) {
 			bool shouldOrphan = _desc.Frequency == BufferFrequency.Stream ||

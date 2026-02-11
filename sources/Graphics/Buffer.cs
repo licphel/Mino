@@ -1,22 +1,31 @@
 ﻿using System.Runtime.CompilerServices;
-using Mino.Framework;
 using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
 
 namespace Mino.Graphics;
 
+/// <summary>
+///     Gpu-side auto-expandable buffer object.
+/// </summary>
 public class Buffer : IDisposable {
 	private RenderBackend _backend;
 	private bool _disposed;
 	private uint _handle;
 
 	public Buffer(in BufferDesc desc) {
-		_backend = RenderSystem.GetBackend();
-		_handle = _backend.BufferGen();
 		// Set userdata.
 		Desc = desc;
+
+		_backend = RenderSystem.GetBackend();
+		_handle = _backend.BufferGen();
+
+		// Initially make it expandable.
+		CanExpand = true;
 	}
 
+	/// <summary>
+	///     The buffer desc.
+	/// </summary>
 	public BufferDesc Desc { get; }
 
 	/// <summary>
@@ -29,6 +38,11 @@ public class Buffer : IDisposable {
 	/// </summary>
 	public int LastBound { get; private set; }
 
+	/// <summary>
+	///     Whether the buffer can expand when reaching max capacity.
+	/// </summary>
+	public bool CanExpand { get; set; }
+
 	public void Dispose() {
 		if (_disposed) {
 			return;
@@ -39,13 +53,34 @@ public class Buffer : IDisposable {
 		GC.SuppressFinalize(this);
 	}
 
+	// Finalizer in case.
+	~Buffer() {
+		Dispose();
+	}
+
+	/// <summary>
+	///     Reallocates the buffer by given capacity and data (nullable).
+	/// </summary>
+	/// <param name="capacity">New capacity.</param>
+	/// <param name="data">Initial data.</param>
+	/// <typeparam name="T">Type generic.</typeparam>
+	/// <exception cref="Error">Thrown if capacity is negative.</exception>
+	public void Allocate<T>(int capacity, ReadOnlySpan<T> data) where T : unmanaged {
+		if (capacity < 0) {
+			throw new Error("negative capacity");
+		}
+		_backend.BufferAlloc(_handle, Desc, data, capacity);
+		Capacity = capacity;
+		LastBound = 0;
+	}
+
 	/// <summary>
 	///     Submits a span of data to the buffer.
 	/// </summary>
 	/// <param name="data">Data span.</param>
 	/// <param name="offset">Offset in the buffer.</param>
 	/// <typeparam name="T">Type generic.</typeparam>
-	/// <exception cref="Error">Thrown if offset is negative.</exception>
+	/// <exception cref="Error">Thrown if offset is negative or buffer is unexpectedly expanded.</exception>
 	public void Submit<T>(ReadOnlySpan<T> data, int offset = 0) where T : unmanaged {
 		if (data.IsEmpty) {
 			LastBound = 0;
@@ -61,8 +96,11 @@ public class Buffer : IDisposable {
 
 		// Need to expand.
 		if (bOffset + bCnt > Capacity) {
-			int newcap = Math.Max(bOffset + bCnt, Capacity == 0 ? bCnt : Capacity * 2);
+			if (!CanExpand) {
+				throw new Error("expand disabled");
+			}
 
+			int newcap = Math.Max(bOffset + bCnt, Capacity == 0 ? bCnt : Capacity * 2);
 			// Reallocate.
 			_backend.BufferAlloc<byte>(_handle, Desc, null, newcap);
 			Capacity = newcap;
@@ -72,8 +110,8 @@ public class Buffer : IDisposable {
 		LastBound = bCnt;
 	}
 
-	[NotRecommended]
-	public uint GetBackendHandle() {
-		return _handle;
+	// Implicit cast to native handle.
+	public static implicit operator uint(Buffer obj) {
+		return obj._handle;
 	}
 }

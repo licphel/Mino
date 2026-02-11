@@ -1,7 +1,6 @@
 using Mino.Audio.AHI;
 using Mino.Audio.AHI.Desc;
 using Mino.Audio.AHI.Enum;
-using Mino.Framework;
 
 namespace Mino.Audio;
 
@@ -178,11 +177,6 @@ public class Clip : IDisposable {
 		_backend.ClipStop(_handle);
 	}
 
-	[NotRecommended]
-	public uint GetBackendHandle() {
-		return _handle;
-	}
-
 	private void assert(ClipPlayback? playback = null) {
 		if (_disposed) {
 			throw new Error("disposed");
@@ -190,5 +184,10 @@ public class Clip : IDisposable {
 		if (playback != null && Playback != playback) {
 			throw new Error($"playback error: {playback} expected");
 		}
+	}
+
+	// Implicit cast to native handle.
+	public static implicit operator uint(Clip obj) {
+		return obj._handle;
 	}
 }

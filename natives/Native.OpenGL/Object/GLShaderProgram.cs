@@ -5,10 +5,10 @@ using ShaderType = Mino.Graphics.RHI.Enum.ShaderType;
 namespace Mino.Native.OpenGL.Object;
 
 public class GLShaderProgram {
-	public uint _handle;
-	public GL _gl;
 	public ShaderProgramDesc _desc;
-	
+	public GL _gl;
+	public uint _handle;
+
 	public GLShaderProgram(GL gl, uint handle) {
 		_gl = gl;
 		_handle = handle;
@@ -18,13 +18,13 @@ public class GLShaderProgram {
 		// Set userdata.
 		_desc = desc;
 		uint[] modules = desc.Modules;
-		
+
 		foreach (uint m in modules) {
 			// Convert to gl handle.
 			ref GLShaderModule mi = ref backend._moduleHeap.GetData(m);
-			
+
 			_gl.AttachShader(_handle, mi._handle);
-			
+
 			// Only frag shader has MRT.
 			if (mi._desc.Type == ShaderType.Fragment) {
 				for (int i = 0; i < mi._desc.Targets.Length; i++) {
@@ -39,14 +39,14 @@ public class GLShaderProgram {
 			_gl.GetProgramInfoLog(_handle, out string linkLog);
 			throw new Error($"shader linking failed '{linkLog}'");
 		}
-		
+
 		foreach (uint m in modules) {
 			// Convert to gl handle.
 			ref GLShaderModule mi = ref backend._moduleHeap.GetData(m);
-			
+
 			_gl.DetachShader(_handle, mi._handle);
 		}
-		
+
 		_gl.ValidateProgram(_handle);
 		_gl.GetProgramInfoLog(_handle, out string validateLog);
 

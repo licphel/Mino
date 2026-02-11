@@ -281,16 +281,16 @@ public readonly struct Vector2 : IEquatable<Vector2> {
 		FastTrigonometric.Get(angle, out float sin, out float cos);
 		return new Vector2(cos, sin) * length;
 	}
-	
+
 	// Implicit cast Vector3 -> Vector2.
 	public static implicit operator Vector2(in Vector3 vec3) {
 		return new Vector2(vec3.X, vec3.Y);
-	} 
-	
+	}
+
 	// Implicit cast Vector4 -> Vector2.
 	public static implicit operator Vector2(in Vector4 vec4) {
 		return new Vector2(vec4.X, vec4.Y);
-	} 
+	}
 
 	public bool Equals(Vector2 other) {
 		return Comparison.DoEqual(X, other.X) && Comparison.DoEqual(Y, other.Y);

@@ -328,12 +328,12 @@ public readonly struct Vector3 : IEquatable<Vector3> {
 	// Implicit cast Vector2 -> Vector3.
 	public static implicit operator Vector3(in Vector2 vec2) {
 		return new Vector3(vec2.X, vec2.Y, 0.0F);
-	} 
-	
+	}
+
 	// Implicit cast Vector4 -> Vector3.
 	public static implicit operator Vector3(in Vector4 vec4) {
 		return new Vector3(vec4.X, vec4.Y, vec4.Z);
-	} 
+	}
 
 	public bool Equals(Vector3 other) {
 		return Comparison.DoEqual(X, other.X)
