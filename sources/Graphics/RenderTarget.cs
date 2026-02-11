@@ -75,7 +75,7 @@ public class RenderTarget : IDisposable {
 	/// <summary>
 	///     Gets the ultimate render target.
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>A render target representing the window.</returns>
 	public static RenderTarget GetUltimate() {
 		if (_ultRT == null) {
 			lock (_lock) {
