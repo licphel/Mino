@@ -12,7 +12,7 @@ public class Encoder : IDisposable {
 	private int _cmdCnt = 0;
 	private bool _disposed;
 	private uint _handle;
-
+	
 	public Encoder(in EncoderDesc desc) {
 		// Set userdata.
 		Desc = desc;
@@ -142,6 +142,9 @@ public class Encoder : IDisposable {
 	/// <param name="vertexCount">Vertex count.</param>
 	/// <param name="firstVertex">First vertex.</param>
 	public void Draw(int vertexCount, int firstVertex) {
+		if (vertexCount <= 0 || firstVertex < 0) {
+			return;
+		}
 		_cmdCnt++;
 		_backend.EncoderDraw(_handle, vertexCount, firstVertex);
 	}
@@ -152,6 +155,9 @@ public class Encoder : IDisposable {
 	/// <param name="indexCount">Index count.</param>
 	/// <param name="firstIndex">First index.</param>
 	public void DrawIndexed(int indexCount, int firstIndex) {
+		if (indexCount <= 0 || firstIndex < 0) {
+			return;
+		}
 		_cmdCnt++;
 		_backend.EncoderDrawIndexed(_handle, indexCount, firstIndex);
 	}

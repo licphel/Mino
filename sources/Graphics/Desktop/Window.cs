@@ -162,11 +162,4 @@ public abstract class Window : IDisposable {
 	/// <param name="code">Code of the key.</param>
 	/// <returns>Combined modifiers of the key.</returns>
 	public abstract KeyModifier GetModifiers(KeyCode code);
-
-	/// <summary>
-	///     Creates a key listener.
-	/// </summary>
-	/// <param name="code">Code of the key.</param>
-	/// <returns>A new key listener.</returns>
-	public abstract KeyListener CreateListener(KeyCode code);
 }

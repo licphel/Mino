@@ -21,8 +21,6 @@ public unsafe class GLFWWindow : Window {
 	private bool _cursorRelativeMode = false;
 	private bool _debug;
 	private WindowHandle* _handle;
-	internal ConcurrentDictionary<int, GLFWKeyListener> _keyListenerMap =
-		new ConcurrentDictionary<int, GLFWKeyListener>();
 	internal ConcurrentDictionary<int, int> _keyModMap = new ConcurrentDictionary<int, int>();
 	internal ConcurrentDictionary<int, byte> _keyStatusMap = new ConcurrentDictionary<int, byte>();
 	private string _title = _INITIAL_TITLE;
@@ -223,14 +221,7 @@ public unsafe class GLFWWindow : Window {
 	public override KeyModifier GetModifiers(KeyCode code) {
 		return (KeyModifier) _keyModMap.GetValueOrDefault((int) code, (int) KeyModifier.None);
 	}
-
-	public override KeyListener CreateListener(KeyCode code) {
-		if (_keyListenerMap.TryGetValue((int) code, out GLFWKeyListener? listener)) {
-			return listener;
-		}
-		return _keyListenerMap[(int) code] = new GLFWKeyListener(this, code);
-	}
-
+	
 	public override void Dispose() {
 		_glfw.SetWindowShouldClose(_handle, true);
 		_glfw.Terminate();
@@ -258,14 +249,12 @@ public unsafe class GLFWWindow : Window {
 				KeyEvent?.Invoke((KeyCode) key, (KeyModifier) mods, (KeyStatus) action);
 				_keyStatusMap[(int) key] = (byte) action;
 				_keyModMap[(int) key] = (int) mods;
-				_keyListenerMap.GetValueOrDefault((int) key)?.notify((KeyStatus) action);
 			}));
 		_glfw.SetMouseButtonCallback(
 			_handle, keepAlive<GlfwCallbacks.MouseButtonCallback>((_, key, action, mods) => {
 				key += (int) KeyCode.MouseLeft; // Add an offset.
 				KeyEvent?.Invoke((KeyCode) key, (KeyModifier) mods, (KeyStatus) action);
 				_keyStatusMap[(int) key] = (byte) action;
-				_keyListenerMap.GetValueOrDefault((int) key)?.notify((KeyStatus) action);
 			}));
 		_glfw.SetCursorPosCallback(
 			_handle, keepAlive<GlfwCallbacks.CursorPosCallback>((_, x, y) => {

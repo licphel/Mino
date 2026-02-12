@@ -3,6 +3,7 @@ using Mino.Algorithm.Random;
 using Mino.Framework;
 using Mino.Graphics;
 using Mino.Graphics.Desktop;
+using Mino.Graphics.Input;
 using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
 using Mino.Graphics.RHI.Enum;
@@ -87,7 +88,6 @@ internal static class NoiseVisualization {
 		Image heightmap = genHeightmap(gridSize, gridSize, 8.0);
 		Image colorMap = genColorMap(heightmap);
 		Texture colorTexture = new Texture(TextureDesc.CreateByImage2D(colorMap));
-		
 		genGridMesh(heightmap, vertex, index, gridSize, worldSize);
 
 		// vbo and ebo
@@ -141,9 +141,9 @@ internal static class NoiseVisualization {
 		// pipeline pack
 		Pipeline pipeline = new Pipeline(
 			new PipelineDesc {
-				Blend = BlendDesc.Disabled,
-				Depth = DepthDesc.Leq,
-				Rasterization = RasterizationDesc.Default,
+				Blend = BlendDesc.AlphaMix,
+				Depth = DepthDesc.Disabled,
+				Rasterization = RasterizationDesc.NotCull,
 				ResourceLayouts = [resLayout],
 				VertexLayout = VertexLayout.Bake(
 					new VertexLayout.Attr {
@@ -189,21 +189,48 @@ internal static class NoiseVisualization {
 				ClearDepth = 1.0F
 			}, RenderTarget.GetUltimate());
 
+		float rotation = 0;
+		float flyY = 30;
+		float distX = 70;
+		
 		executor.OnTick += step => {
 			RenderSystem.Update(step);
-			window.Title = $"Demo | FPS: {executor.Fps} | Grid: {gridSize}x{gridSize}";
+			window.Title = $"Demo | FPS: {executor.Fps}";
+			
+			if (KeyListener.Get(KeyCode.D).Hold) {
+				rotation += (float) executor.Delta;
+			}
+			if (KeyListener.Get(KeyCode.A).Hold) {
+				rotation -= (float) executor.Delta;
+			}
+			if (KeyListener.Get(KeyCode.Space).Hold) {
+				flyY += (float) executor.Delta * 25;
+			}
+			if (KeyListener.Get(KeyCode.LeftShift).Hold) {
+				flyY -= (float) executor.Delta * 25;
+			}
+			if (KeyListener.Get(KeyCode.S).Hold) {
+				distX += (float) executor.Delta * 25;
+			}
+			if (KeyListener.Get(KeyCode.W).Hold) {
+				distX -= (float) executor.Delta * 25;
+			}
+			if (KeyListener.Get(KeyCode.Enter).Press) {
+				heightmap = genHeightmap(gridSize, gridSize, 8.0);
+				colorMap = genColorMap(heightmap);
+				colorTexture.Submit(TextureDesc.CreateByImage2D(colorMap));
+				genGridMesh(heightmap, vertex, index, gridSize, worldSize);
+			}
 		};
 		
 		executor.OnRender += () => {
 			// camera orbit
-			float dt = (float) executor.Timestamp.TotalSeconds * 0.3F;
-			
 			CameraPerspective camera = new CameraPerspective();
 			camera.SetPerspective(MathF.PI / 3.0F, 16F / 9F);
 			camera.SetClippingPlanes(0.1F, 1000.0F);
 			camera.Up = Vector3.UnitY;
 			camera.Target = new Vector3(0, heightScale * 0.5F, 0);
-			camera.Position = new Vector3(MathF.Sin(dt) * 50, 40, MathF.Cos(dt) * 50);
+			camera.Position = new Vector3(MathF.Sin(rotation) * distX, flyY, MathF.Cos(rotation) * distX);
 			
 			// upload uniform buffer
 			uniform.Submit([camera.ViewProjectionMatrix]);
@@ -221,7 +248,7 @@ internal static class NoiseVisualization {
 			swapchain.Present();
 		};
 
-		window.Vsync = true;
+		window.Vsync = false;
 		executor.Start(window, 60);
 	}
 	
@@ -256,6 +283,9 @@ internal static class NoiseVisualization {
 	}
 	
 	private static void genGridMesh(Image heightMap, ByteBuffer vertex, ByteBuffer index, int gridSize, float worldSize) {
+		vertex.Clear();
+		index.Clear();
+		
 		float cellSize = worldSize / (gridSize - 1);
 		float halfSize = worldSize * 0.5F;
 		
@@ -271,7 +301,7 @@ internal static class NoiseVisualization {
 				// Position
 				vertex.Write(new Vector3(x, heightMap[i][j].Red * gridSize / 128, z));
 				// Color (white, modulated by texture)
-				vertex.Write(new Color(1.0F, 1.0F, 1.0F).AsHalves());
+				vertex.Write(new Color(1.0F, 1.0F, 1.0F, 0.5F).AsHalves());
 				// UV
 				vertex.Write(new Vector2(u, v));
 			}

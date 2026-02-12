@@ -62,7 +62,7 @@ public static unsafe class Blitter {
 		|| to.Data.Length < to.PixelStride) {
 			throw new Error("no data in image");
 		}
-		const float CMP = 0.1F;
+		const float CMP = 0.01F;
 
 		if (src.MinX < -CMP || src.MaxX - CMP > from.Width ||
 		src.MinY < -CMP || src.MaxY - CMP > from.Height ||
