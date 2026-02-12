@@ -1,9 +1,9 @@
-﻿namespace Mino.Algorithm.Random;
+﻿namespace Mino.Algorithm.Noise;
 
 /// <summary>
 ///     Represents a 3D random noise generator.
 /// </summary>
-public interface RandomNoise {
+public interface NoiseGenerator {
 	/// <summary>
 	///     Generate a 3D noise value.
 	/// </summary>

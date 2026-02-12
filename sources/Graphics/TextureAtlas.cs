@@ -10,6 +10,7 @@ namespace Mino.Graphics;
 /// </summary>
 public class TextureAtlas {
 	private const int INITIAL_SIZE = 64;
+	
 	private bool _ended;
 
 	/*
@@ -66,18 +67,14 @@ public class TextureAtlas {
 			throw new Error("cannot accept");
 		}
 		// Expand till enough.
-		MaximumRect.RectI? nullableRect;
-		while ((nullableRect = MaximumRect.Find(_freeRects, image.Width, image.Height)) == null) {
+		MaximumRect.RectI dstRect;
+		while (!MaximumRect.Find(_freeRects, image.Width, image.Height, out dstRect)) {
 			expand();
 		}
 
-		MaximumRect.RectI rect = nullableRect.Value;
-		Box2 dstRect = Box2.Create(rect.X, rect.Y, rect.Width, rect.Height);
-		
 		// Copy image data.
 		Blitter.BlockCopy(image, BufferImage, dstRect, Box2.Create(0.0F, 0.0F, image.Width, image.Height));
-		
-		return new TexturePart(_texture!, dstRect);
+		return new TexturePart(_texture!, (Box2) dstRect);
 	}
 
 	/// <summary>

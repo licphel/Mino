@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using Mino.Mathematics;
 
 namespace Mino.Algorithm;
 
@@ -6,7 +7,7 @@ namespace Mino.Algorithm;
 ///     Implement the famous "Maximum rect" UV-packing algorithm.
 /// </summary>
 public static class MaximumRect {
-	public static RectI? Find(List<RectI> freeRects, int width, int height, int padding = 1) {
+	public static bool Find(List<RectI> freeRects, int width, int height, out RectI result, int padding = 1) {
         int best = -1;
         int bestScore = int.MaxValue;
         
@@ -28,7 +29,8 @@ public static class MaximumRect {
         }
         
         if (best == -1) {
-            return null;
+            result = new RectI();
+            return false;
         }
 
         RectI used = freeRects[best];
@@ -64,7 +66,8 @@ public static class MaximumRect {
         
         merge(freeRects);
         
-        return new RectI(dx, dy, width, height);
+        result = new RectI(dx, dy, width, height);
+        return true;
     }
     
     private static void append(List<RectI> rects, RectI rect) {
@@ -140,5 +143,9 @@ public static class MaximumRect {
 			Width = width;
 			Height = height;
 		}
+
+        public static implicit operator Box2(in RectI rect) {
+            return Box2.Create(rect.X, rect.Y, rect.Width, rect.Height);
+        }
 	}
 }

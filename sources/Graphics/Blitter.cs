@@ -58,7 +58,8 @@ public static unsafe class Blitter {
 		if (src.Size != dst.Size) {
 			throw new Error("not supported: image scaling");
 		}
-		if (from.Data == null || to.Data == null) {
+		if (from.Data == null || to.Data == null || from.Data.Length < from.PixelStride
+		|| to.Data.Length < to.PixelStride) {
 			throw new Error("no data in image");
 		}
 		const float CMP = 0.1F;

@@ -105,7 +105,7 @@ public class Encoder : IDisposable {
 	/// <param name="height">Viewport height.</param>
 	/// <exception cref="Error">Thrown if width or height is negative.</exception>
 	public void SetViewport(int x, int y, int width, int height) {
-		if (width <= 0 || height <= 0) {
+		if (width < 0 || height < 0) {
 			throw new Error("invalid viewport");
 		}
 		_cmdCnt++;
@@ -118,7 +118,7 @@ public class Encoder : IDisposable {
 	/// <param name="desc">Scissor state.</param>
 	/// <exception cref="Error">Thrown if scissor is invalid.</exception>
 	public void SetScissor(in ScissorDesc desc) {
-		if (desc.Width <= 0 || desc.Height <= 0) {
+		if (desc.Width < 0 || desc.Height < 0) {
 			throw new Error("invalid scissor");
 		}
 		_cmdCnt++;

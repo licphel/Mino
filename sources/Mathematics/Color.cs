@@ -32,7 +32,7 @@ public readonly struct Color : IEquatable<Color> {
 		Blue = color.Blue;
 		Alpha = alpha;
 	}
-	
+
 	/// <summary>
 	///     Gets an additive merge of the two colors.
 	/// </summary>
@@ -150,6 +150,15 @@ public readonly struct Color : IEquatable<Color> {
 				break;
 		}
 		return new Color(f4, f5, f6, alpha);
+	}
+
+	public static Color Lerp(in Color a, in Color b, float t) {
+		return new Color(
+			a.Red + (b.Red - a.Red) * t,
+			a.Green + (b.Green - a.Green) * t,
+			a.Blue + (b.Blue - a.Blue) * t,
+			a.Alpha + (b.Alpha - a.Alpha) * t
+		);
 	}
 
 	public bool Equals(Color other) {

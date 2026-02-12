@@ -1,4 +1,5 @@
-﻿using Mino.Algorithm.Random;
+﻿using Mino.Algorithm.Noise;
+using Mino.Algorithm.Random;
 using Mino.Framework;
 using Mino.Graphics;
 using Mino.Graphics.Desktop;
@@ -56,14 +57,13 @@ internal static class NoiseVisualization {
 		// set logger info and output locations
 		Logger.Global.EnableDebug();
 		Logger.Global.EnableNoexcept();
-		// set output location.
-		// actually it can have multiple locations, but for our demo, one is enough.
 		Logger.Global.OutputTo(new Url("console://out"));
 		
 		// create window with debugger opened
 		Window window = Backend.Find<Window>("GLFW");
 		window.Init(
 			new WindowHints {
+				AutoIconify = false,
 				DebugContext = true
 			});
 		
@@ -73,60 +73,55 @@ internal static class NoiseVisualization {
 		RenderSystem.LoadBackend(window, Backend.Find<RenderBackend>("OpenGL"));
 	
 		ByteBuffer vertex = new ByteBuffer();
-		// set to native endianness
 		vertex.Endianness = Endianness.Native;
 
 		ByteBuffer index = new ByteBuffer();
 		index.Endianness = Endianness.Native;
 
 		Sampler sampler = new Sampler(new SamplerDesc());
-
-		TextureAtlas atlas = new TextureAtlas();
-
-		// visualize noise images
-		// and atlas
-		List<TexturePart> parts = new List<TexturePart>();
-		atlas.Init();
-		for (int i = 25; i >= 3; i--) {
-			for (int j = 0; j < 5; j++) {
-				parts.Add(atlas.Accept(genNoiseTex(i)));
-			}
-		}
-		atlas.EndAccept();
 		
-		// create texture by image
-		Texture texture = parts[0].Src;
+		const int gridSize = 1024;
+		const float worldSize = 50.0F;
+		const float heightScale = 15.0F;
 		
+		Image heightmap = genHeightmap(gridSize, gridSize, 8.0);
+		Image colorMap = genColorMap(heightmap);
+		Texture colorTexture = new Texture(TextureDesc.CreateByImage2D(colorMap));
+		
+		genGridMesh(heightmap, vertex, index, gridSize, worldSize);
+
 		// vbo and ebo
 		Buffer vbo = new Buffer(
 			new BufferDesc {
-				Frequency = BufferFrequency.Stream,
+				Frequency = BufferFrequency.Static,
 				Type = BufferType.Vertex,
 				Usage = BufferUsage.GpuRead | BufferUsage.CpuWrite
 			});
 		vbo.Submit<byte>(vertex.AsSpan());
+		
 		Buffer ebo = new Buffer(
 			new BufferDesc {
-				Frequency = BufferFrequency.Stream,
+				Frequency = BufferFrequency.Static,
 				Type = BufferType.Index,
 				Usage = BufferUsage.GpuRead | BufferUsage.CpuWrite
 			});
 		ebo.Submit<byte>(index.AsSpan());
 
 		// shader compilation
-		ShaderModule m1 = new ShaderModule(
+		ShaderModule vertModule = new ShaderModule(
 			new ShaderModuleDesc {
 				Type = ShaderType.Vertex,
 				Code = VERT_SHADER
 			});
-		ShaderModule m2 = new ShaderModule(
+		ShaderModule fragModule = new ShaderModule(
 			new ShaderModuleDesc {
 				Type = ShaderType.Fragment,
 				Code = FRAG_SHADER
 			});
+		
 		ShaderProgram shaderProgram = new ShaderProgram(
 			new ShaderProgramDesc {
-				Modules = [m1, m2]
+				Modules = [vertModule, fragModule]
 			});
 
 		// resource layout
@@ -146,10 +141,10 @@ internal static class NoiseVisualization {
 		// pipeline pack
 		Pipeline pipeline = new Pipeline(
 			new PipelineDesc {
-				Blend = BlendDesc.AlphaMix,
-				ResourceLayouts = [
-					resLayout
-				],
+				Blend = BlendDesc.Disabled,
+				Depth = DepthDesc.Leq,
+				Rasterization = RasterizationDesc.Default,
+				ResourceLayouts = [resLayout],
 				VertexLayout = VertexLayout.Bake(
 					new VertexLayout.Attr {
 						Components = 3,
@@ -183,58 +178,32 @@ internal static class NoiseVisualization {
 				Usage = EncoderUsage.Render
 			});
 		
-		// reusable resource set
+		// resource sets
 		ResourceSet resourceSet = new ResourceSet(resLayout);
-		resourceSet.BindTexture(0, texture, sampler);
+		resourceSet.BindTexture(0, colorTexture, sampler);
 		resourceSet.BindUniform(1, uniform, 64);
-
-		// bottom left
-		vertex.Write(new Vector3(-20, 0, -20));
-		vertex.Write(Color.PureWhite.AsHalves());
-		vertex.Write(new Vector2(0, 1));
-		// bottom right
-		vertex.Write(new Vector3(-20, 0, 20));
-		vertex.Write(Color.PureWhite.AsHalves());
-		vertex.Write(new Vector2(1, 1));
-		// top right
-		vertex.Write(new Vector3(20, 0, 20));
-		vertex.Write(Color.PureWhite.AsHalves());
-		vertex.Write(new Vector2(1, 0));
-		// top left
-		vertex.Write(new Vector3(20, 0, -20));
-		vertex.Write(Color.PureWhite.AsHalves());
-		vertex.Write(new Vector2(0, 0));
-		vbo.Submit<byte>(vertex.AsSpan());
-
-		// indices
-		index.Write(0U);
-		index.Write(1U);
-		index.Write(3U);
-		index.Write(1U);
-		index.Write(2U);
-		index.Write(3U);
-		ebo.Submit<byte>(index.AsSpan());
 
 		Swapchain swapchain = new Swapchain(
 			new RenderPassDesc {
-				ClearColor = new Color(0.72F, 0.95F, 0.98F)
+				ClearColor = new Color(0.05F, 0.05F, 0.1F),
+				ClearDepth = 1.0F
 			}, RenderTarget.GetUltimate());
 
 		executor.OnTick += step => {
 			RenderSystem.Update(step);
-			window.Title = $"Demo | FPS: {executor.Fps}";
+			window.Title = $"Demo | FPS: {executor.Fps} | Grid: {gridSize}x{gridSize}";
 		};
 		
 		executor.OnRender += () => {
-			// do camera transform
-			float dt = (float) executor.Timestamp.TotalSeconds / 3;
+			// camera orbit
+			float dt = (float) executor.Timestamp.TotalSeconds * 0.3F;
 			
 			CameraPerspective camera = new CameraPerspective();
 			camera.SetPerspective(MathF.PI / 3.0F, 16F / 9F);
 			camera.SetClippingPlanes(0.1F, 1000.0F);
 			camera.Up = Vector3.UnitY;
-			camera.Target = new Vector3(0, 0, 0);
-			camera.Position = new Vector3(MathF.Cos(dt) * 15, 40, MathF.Sin(dt) * 15);
+			camera.Target = new Vector3(0, heightScale * 0.5F, 0);
+			camera.Position = new Vector3(MathF.Sin(dt) * 50, 40, MathF.Cos(dt) * 50);
 			
 			// upload uniform buffer
 			uniform.Submit([camera.ViewProjectionMatrix]);
@@ -247,28 +216,85 @@ internal static class NoiseVisualization {
 			encoder.SetResource(0, resourceSet);
 			encoder.SetTopology(Topology.Triangle);
 			encoder.SetViewport(0, 0, (int) window.Size.X, (int) window.Size.Y);
-			encoder.DrawIndexed(ebo.LastBound / 4, 0);
+			encoder.DrawIndexed(index.ReadableBytes / 4, 0);
 			encoder.QueuedExecute();
 			swapchain.Present();
 		};
 
-		window.Vsync = false;
+		window.Vsync = true;
 		executor.Start(window, 60);
 	}
-
-	private static Image genNoiseTex(int size) {
-		Image img = Image.CreateEmpty(size, size);
-		RandomNoise noise = new RandomNoiseVoronoi(new RandomGeneratorXoroshiro128());
-
-		// Gen image data.
+	
+	private static Image genHeightmap(int width, int height, double scale) {
+		Image img = Image.CreateEmpty(width, height);
+		
+		NoiseGenerator primNoise = new NoiseGeneratorPerlin(new RandomGeneratorXoroshiro128());
+		NoiseGenerator noise = new NoiseGeneratorOctave(primNoise, 2);
+		
 		for (int i = 0; i < img.Width; i++) {
-			float px = (float) i / img.Width;
 			for (int j = 0; j < img.Height; j++) {
-				float py = (float) j / img.Height;
-				img[i][j] = Color.HsvToRgb((float) noise.Generate(px * 5, py * 5), 0.5F, 0.8F);
+				double nx = i / (double) width * scale;
+				double ny = j / (double) height * scale;
+				img[i][j] = new Color((float) noise.Generate(nx, ny, 0.0F), 0.0F, 0.0F);
 			}
 		}
-
+		
 		return img;
+	}
+	
+	private static Image genColorMap(Image heightmap) {
+		Image img = Image.CreateEmpty(heightmap.Width, heightmap.Height);
+		
+		for (int i = 0; i < img.Width; i++) {
+			for (int j = 0; j < img.Height; j++) {
+				float h = heightmap[i][j].Red;
+				img[i][j] = Color.HsvToRgb(h, 0.75F, 0.8F);
+			}
+		}
+		
+		return img;
+	}
+	
+	private static void genGridMesh(Image heightMap, ByteBuffer vertex, ByteBuffer index, int gridSize, float worldSize) {
+		float cellSize = worldSize / (gridSize - 1);
+		float halfSize = worldSize * 0.5F;
+		
+		// Generate vertices
+		for (int j = 0; j < gridSize; j++) {
+			float z = j * cellSize - halfSize;
+			float v = 1.0F - j / (float) (gridSize - 1);
+			
+			for (int i = 0; i < gridSize; i++) {
+				float x = i * cellSize - halfSize;
+				float u = i / (float) (gridSize - 1);
+				
+				// Position
+				vertex.Write(new Vector3(x, heightMap[i][j].Red * gridSize / 128, z));
+				// Color (white, modulated by texture)
+				vertex.Write(new Color(1.0F, 1.0F, 1.0F).AsHalves());
+				// UV
+				vertex.Write(new Vector2(u, v));
+			}
+		}
+		
+		// Generate indices (two triangles per grid cell)
+		for (int j = 0; j < gridSize - 1; j++) {
+			for (int i = 0; i < gridSize - 1; i++) {
+				int topLeft = j * gridSize + i;
+				int topRight = topLeft + 1;
+				int bottomLeft = (j + 1) * gridSize + i;
+				int bottomRight = bottomLeft + 1;
+				
+				// First triangle (top-left, bottom-left, top-right)
+				index.Write((uint) topLeft);
+				index.Write((uint) bottomLeft);
+				index.Write((uint) topRight);
+				
+				// Second triangle (top-right, bottom-left, bottom-right)
+				index.Write((uint) topRight);
+				index.Write((uint) bottomLeft);
+				index.Write((uint) bottomRight);
+			}
+		}
 	}
 }

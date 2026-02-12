@@ -1,12 +1,14 @@
-﻿namespace Mino.Algorithm.Random;
+﻿using Mino.Algorithm.Random;
+
+namespace Mino.Algorithm.Noise;
 
 /// <summary>
 ///     Quick voronoi noise.
 /// </summary>
-public class RandomNoiseVoronoi : RandomNoise {
+public class NoiseGeneratorVoronoi : NoiseGenerator {
 	private readonly long _seed;
 
-	public RandomNoiseVoronoi(RandomGenerator seed) {
+	public NoiseGeneratorVoronoi(RandomGenerator seed) {
 		_seed = seed.NextInt();
 	}
 

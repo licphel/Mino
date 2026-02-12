@@ -1,13 +1,15 @@
-﻿namespace Mino.Algorithm.Random;
+﻿using Mino.Algorithm.Random;
+
+namespace Mino.Algorithm.Noise;
 
 /// <summary>
 ///     Perlin noise, according to Ken Perlin.
 /// </summary>
-public class RandomNoisePerlin : RandomNoise {
+public class NoiseGeneratorPerlin : NoiseGenerator {
 	private readonly int[] _perm = new int[512];
 	private readonly int[] _permHalf = new int[256];
 
-	public RandomNoisePerlin(RandomGenerator seed) {
+	public NoiseGeneratorPerlin(RandomGenerator seed) {
 		for (int i = 0; i < 256; i++) {
 			_permHalf[i] = seed.NextInt(256);
 		}
