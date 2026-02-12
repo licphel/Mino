@@ -3,10 +3,10 @@
 namespace Mino.Graphics.RHI.Desc;
 
 /// <summary>
-///     Describes a pipeline (an immutable list of render states).
+///     Describes a pipe (an immutable list of render states).
 /// </summary>
-public struct PipelineDesc {
-	public PipelineType Type;
+public struct RenderPipeDesc {
+	public RenderPipeUsage Usage;
 	public BlendDesc Blend;
 	public StencilDesc Stencil;
 	public DepthDesc Depth;
@@ -15,8 +15,8 @@ public struct PipelineDesc {
 	public VertexLayout VertexLayout;
 	public ResourceSetLayout[] ResourceLayouts;
 
-	public PipelineDesc() {
-		Type = default;
+	public RenderPipeDesc() {
+		Usage = default;
 		Blend = new BlendDesc();
 		Stencil = new StencilDesc();
 		Depth = new DepthDesc();

@@ -1,6 +1,7 @@
 ﻿using Mino.Algorithm.Noise;
 using Mino.Algorithm.Random;
 using Mino.Framework;
+using Mino.Framework.XPlatform;
 using Mino.Graphics;
 using Mino.Graphics.Desktop;
 using Mino.Graphics.Input;
@@ -61,7 +62,7 @@ internal static class NoiseVisualization {
 		Logger.Global.OutputTo(new Url("console://out"));
 		
 		// create window with debugger opened
-		Window window = Backend.Find<Window>("GLFW");
+		Window window = Service.GetBest<Window>("GLFW");
 		window.Init(
 			new WindowHints {
 				AutoIconify = false,
@@ -71,7 +72,7 @@ internal static class NoiseVisualization {
 		// game main loop controller, the executor
 		Executor executor = new ExecutorSync();
 
-		RenderSystem.LoadBackend(window, Backend.Find<RenderBackend>("OpenGL"));
+		RenderSystem.LoadBackend(window, Service.GetBest<RenderBackend>("OpenGL"));
 	
 		ByteBuffer vertex = new ByteBuffer();
 		vertex.Endianness = Endianness.Native;
@@ -138,9 +139,9 @@ internal static class NoiseVisualization {
 				Type = ResourceType.UniformBuffer
 			});
 
-		// pipeline pack
-		Pipeline pipeline = new Pipeline(
-			new PipelineDesc {
+		// pipe pack
+		RenderPipe pipe = new RenderPipe(
+			new RenderPipeDesc {
 				Blend = BlendDesc.AlphaMix,
 				Depth = DepthDesc.Disabled,
 				Rasterization = RasterizationDesc.NotCull,
@@ -160,7 +161,7 @@ internal static class NoiseVisualization {
 						Type = VertexAttributeType.Float32
 					}),
 				ShaderProgram = shaderProgram,
-				Type = PipelineType.Render
+				Usage = RenderPipeUsage.Render
 			});
 
 		// uniform buffer
@@ -237,7 +238,7 @@ internal static class NoiseVisualization {
 
 			swapchain.Acquire();
 			encoder.Reset();
-			encoder.SetPipeline(pipeline);
+			encoder.SetRenderPipe(pipe);
 			encoder.SetBuffer(vbo);
 			encoder.SetBuffer(ebo);
 			encoder.SetResource(0, resourceSet);

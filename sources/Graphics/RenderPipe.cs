@@ -6,25 +6,25 @@ namespace Mino.Graphics;
 /// <summary>
 ///     An immutable list of render states.
 /// </summary>
-public class Pipeline : IDisposable {
+public class RenderPipe : IDisposable {
 	private RenderBackend _backend;
 	private bool _disposed;
 	private uint _handle;
 
-	public Pipeline(in PipelineDesc desc) {
+	public RenderPipe(in RenderPipeDesc desc) {
 		// Set userdata.
 		Desc = desc;
 
 		_backend = RenderSystem.GetBackend();
-		_handle = _backend.PipelineGen();
-		// Compile the pipeline.
-		_backend.PipelineCompile(_handle, desc);
+		_handle = _backend.RenderPipeGen();
+		// Compile the pipe.
+		_backend.RenderPipeCompile(_handle, desc);
 	}
 
 	/// <summary>
-	///     The pipeline desc.
+	///     The pipe desc.
 	/// </summary>
-	public PipelineDesc Desc { get; }
+	public RenderPipeDesc Desc { get; }
 
 	public void Dispose() {
 		if (_disposed) {
@@ -32,17 +32,17 @@ public class Pipeline : IDisposable {
 		}
 		_disposed = true;
 
-		_backend.PipelineDelete(_handle);
+		_backend.RenderPipeDelete(_handle);
 		GC.SuppressFinalize(this);
 	}
 
 	// Finalizer in case.
-	~Pipeline() {
+	~RenderPipe() {
 		Dispose();
 	}
 
 	// Implicit cast to native handle.
-	public static implicit operator uint(Pipeline obj) {
+	public static implicit operator uint(RenderPipe obj) {
 		return obj._handle;
 	}
 }

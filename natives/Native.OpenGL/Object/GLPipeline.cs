@@ -4,16 +4,16 @@ using Silk.NET.OpenGL;
 
 namespace Mino.Native.OpenGL.Object;
 
-public unsafe class GLPipeline {
-	public PipelineDesc _desc;
+public unsafe class GLRenderPipe {
+	public RenderPipeDesc _desc;
 	public GL _gl;
 	private Dictionary<(uint, uint), uint> _vaoCache = new Dictionary<(uint, uint), uint>();
 
-	public GLPipeline(GL gl) {
+	public GLRenderPipe(GL gl) {
 		_gl = gl;
 	}
 
-	public void OnPipelineData(in PipelineDesc desc) {
+	public void OnRenderPipeData(in RenderPipeDesc desc) {
 		_desc = desc;
 	}
 

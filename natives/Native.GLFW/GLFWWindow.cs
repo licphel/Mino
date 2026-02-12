@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
-using Mino.Framework;
+using Mino.Framework.XPlatform;
 using Mino.Graphics.Desktop;
 using Mino.Graphics.Input;
 using Mino.Mathematics;
@@ -10,12 +10,8 @@ using GLFW_Image = Silk.NET.GLFW.Image;
 
 namespace Mino.Native.GLFW;
 
-[Backend("GLFW", Backend.DESKTOP)]
-public unsafe class GLFWWindow : Window {
-	private const string _INITIAL_TITLE = "Ovil";
-
-	private static Glfw _glfw = Glfw.GetApi();
-
+public unsafe class GLFWWindow : Window, ServiceProvider {
+	private Glfw _glfw = Glfw.GetApi();
 	private bool _closed;
 	private Vector2 _cursor;
 	private bool _cursorRelativeMode = false;
@@ -23,7 +19,7 @@ public unsafe class GLFWWindow : Window {
 	private WindowHandle* _handle;
 	internal ConcurrentDictionary<int, int> _keyModMap = new ConcurrentDictionary<int, int>();
 	internal ConcurrentDictionary<int, byte> _keyStatusMap = new ConcurrentDictionary<int, byte>();
-	private string _title = _INITIAL_TITLE;
+	private string _title = string.Empty;
 	private bool _vsync;
 
 	public override bool Debug { get => _debug; }

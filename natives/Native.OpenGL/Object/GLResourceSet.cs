@@ -24,8 +24,8 @@ public class GLResourceSet {
 		}
 	}
 
-	public void Apply(GLBackend backend, GLPipeline pipeline) {
-		uint program = pipeline._desc.ShaderProgram;
+	public void Apply(GLBackend backend, GLRenderPipe pipe) {
+		uint program = pipe._desc.ShaderProgram;
 		uint nHandle = backend._programHeap.GetData(program)._handle;
 
 		foreach (Bound b in _bounds) {

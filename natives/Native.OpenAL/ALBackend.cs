@@ -2,13 +2,13 @@
 using Mino.Audio.AHI.Desc;
 using Mino.Audio.AHI.Enum;
 using Mino.Framework;
+using Mino.Framework.XPlatform;
 using Mino.Native.OpenAL.Object;
 using Silk.NET.OpenAL;
 
 namespace Mino.Native.OpenAL;
 
-[Backend("OpenAL", Backend.DESKTOP)]
-public unsafe class ALBackend : AudioBackend {
+public unsafe class ALBackend : AudioBackend, ServiceProvider {
 	private AL _al = AL.GetApi();
 	private ALContext _alc = ALContext.GetApi();
 	private Context* _context;

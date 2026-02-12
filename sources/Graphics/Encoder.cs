@@ -81,19 +81,19 @@ public class Encoder : IDisposable {
 	}
 
 	/// <summary>
-	///     Encodes a set pipeline command.
+	///     Encodes a set pipe command.
 	/// </summary>
-	/// <param name="pipeline">Pipeline to bind.</param>
-	/// <exception cref="Error">Thrown if encoder is not compatible with the given pipeline.</exception>
-	public void SetPipeline(Pipeline pipeline) {
+	/// <param name="pipe">Render pipe to bind.</param>
+	/// <exception cref="Error">Thrown if encoder is not compatible with the given pipe.</exception>
+	public void SetRenderPipe(RenderPipe pipe) {
 		EncoderUsage uA = Desc.Usage;
-		PipelineType uB = pipeline.Desc.Type;
+		RenderPipeUsage uB = pipe.Desc.Usage;
 
 		if ((int) uA != (int) uB) {
-			throw new Error("different encoder-pipeline usage");
+			throw new Error("different encoder-pipe usage");
 		}
 		_cmdCnt++;
-		_backend.EncoderPipeline(_handle, pipeline);
+		_backend.EncoderRenderPipe(_handle, pipe);
 	}
 
 	/// <summary>
@@ -131,7 +131,7 @@ public class Encoder : IDisposable {
 	/// <param name="slot">Resource set slot.</param>
 	/// <param name="set">Bound resource set.</param>
 	public void SetResource(int slot, ResourceSet set) {
-		// We do not check slot because bound pipeline is unknown.
+		// We do not check slot because bound pipe is unknown.
 		_cmdCnt++;
 		_backend.EncoderResourceSet(_handle, slot, set);
 	}

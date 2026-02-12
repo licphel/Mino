@@ -64,10 +64,10 @@ public interface RenderBackend : IDisposable {
 	void RenderPassBegin(uint renderTarget, in RenderPassDesc desc);
 	void RenderPassEnd();
 
-	// Pipeline
-	uint PipelineGen();
-	void PipelineCompile(uint pipeline, in PipelineDesc desc);
-	void PipelineDelete(uint pipeline);
+	// RenderPipe
+	uint RenderPipeGen();
+	void RenderPipeCompile(uint pipe, in RenderPipeDesc desc);
+	void RenderPipeDelete(uint pipe);
 
 	// Resource set
 	uint ResourceSetGen();
@@ -90,5 +90,5 @@ public interface RenderBackend : IDisposable {
 	void EncoderDispatch(uint encoder, uint x, uint y, uint z);
 	void EncoderViewport(uint encoder, int x, int y, int width, int height);
 	void EncoderScissor(uint encoder, in ScissorDesc desc);
-	void EncoderPipeline(uint encoder, uint pipeline);
+	void EncoderRenderPipe(uint encoder, uint pipe);
 }

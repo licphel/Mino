@@ -1,5 +1,6 @@
 ﻿using Mino.Algorithm.Random;
 using Mino.Framework;
+using Mino.Framework.XPlatform;
 using Mino.Graphics.Desktop;
 using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
@@ -10,8 +11,7 @@ using Silk.NET.OpenGL;
 
 namespace Mino.Native.OpenGL;
 
-[Backend("OpenGL", Backend.DESKTOP)]
-public unsafe class GLBackend : RenderBackend {
+public unsafe class GLBackend : RenderBackend, ServiceProvider {
 	private bool _disposed;
 	private GL _gl = null!;
 	private bool _init;
@@ -294,17 +294,17 @@ public unsafe class GLBackend : RenderBackend {
 		}
 	}
 
-	public uint PipelineGen() {
-		return _pipelineHeap.Allocate(new GLPipeline(_gl));
+	public uint RenderPipeGen() {
+		return _pipeHeap.Allocate(new GLRenderPipe(_gl));
 	}
 
-	public void PipelineDelete(uint pipeline) {
+	public void RenderPipeDelete(uint pipe) {
 		// No according gl object.
-		_pipelineHeap.Free(pipeline);
+		_pipeHeap.Free(pipe);
 	}
 
-	public void PipelineCompile(uint pipeline, in PipelineDesc desc) {
-		_pipelineHeap.GetData(pipeline).OnPipelineData(desc);
+	public void RenderPipeCompile(uint pipe, in RenderPipeDesc desc) {
+		_pipeHeap.GetData(pipe).OnRenderPipeData(desc);
 	}
 
 	public uint ResourceSetGen() {
@@ -389,8 +389,8 @@ public unsafe class GLBackend : RenderBackend {
 		_encoderHeap.GetData(encoder)._commands.Add(new GLC_SetScissor(desc));
 	}
 
-	public void EncoderPipeline(uint encoder, uint pipeline) {
-		_encoderHeap.GetData(encoder)._commands.Add(new GLC_SetPipeline(pipeline));
+	public void EncoderRenderPipe(uint encoder, uint pipe) {
+		_encoderHeap.GetData(encoder)._commands.Add(new GLC_SetRenderPipe(pipe));
 	}
 
 	private void _disturbGLIDs() {
@@ -407,7 +407,7 @@ public unsafe class GLBackend : RenderBackend {
 		}
 	}
 
-	private void preDraw(GLPipeline _p) {
+	private void preDraw(GLRenderPipe _p) {
 		for (int i = 0; i < _p._desc.ResourceLayouts.Length; i++) {
 			uint rs = _boundResourceSets[i];
 			ref GLResourceSet _s = ref _resourceSetHeap.GetData(rs);
@@ -420,7 +420,7 @@ public unsafe class GLBackend : RenderBackend {
 
 	#region HEAPS
 	internal Heap<GLBuffer> _bufferHeap = new Heap<GLBuffer>();
-	internal Heap<GLPipeline> _pipelineHeap = new Heap<GLPipeline>();
+	internal Heap<GLRenderPipe> _pipeHeap = new Heap<GLRenderPipe>();
 	internal Heap<GLShaderProgram> _programHeap = new Heap<GLShaderProgram>();
 	internal Heap<GLRenderTarget> _renderTargetHeap = new Heap<GLRenderTarget>();
 	internal Heap<GLResourceSet> _resourceSetHeap = new Heap<GLResourceSet>();
@@ -433,7 +433,7 @@ public unsafe class GLBackend : RenderBackend {
 	#region STATES
 	internal uint[] _boundBuffers = new uint[8];
 	internal uint[] _boundResourceSets = new uint[8];
-	internal uint _boundPipeline;
+	internal uint _boundRenderPipe;
 	internal GLEnum _currentPrimitive = GLEnum.Triangles;
 	internal uint _texId = 0;
 	internal uint _ubId = 0;
@@ -451,10 +451,10 @@ public unsafe class GLBackend : RenderBackend {
 		_boundBuffers[(int) type] = bHandle;
 	}
 
-	internal void executeBindPipeline(uint pipeline) {
-		ref GLPipeline _p = ref _pipelineHeap.GetData(pipeline);
+	internal void executeBindRenderPipe(uint pipe) {
+		ref GLRenderPipe _p = ref _pipeHeap.GetData(pipe);
 		_p.Apply(this);
-		_boundPipeline = pipeline;
+		_boundRenderPipe = pipe;
 	}
 
 	internal void executeBindResourceSet(int slot, uint set) {
@@ -462,11 +462,11 @@ public unsafe class GLBackend : RenderBackend {
 	}
 
 	internal void executeDraw(int vertexCount, int firstVertex) {
-		// Bind pipeline:
+		// Bind pipe:
 		// 1. States
 		// 2. VAO
 		// 3. VBO
-		ref GLPipeline _p = ref _pipelineHeap.GetData(_boundPipeline);
+		ref GLRenderPipe _p = ref _pipeHeap.GetData(_boundRenderPipe);
 		uint vbo = _boundBuffers[(int) BufferType.Vertex];
 		_gl.BindVertexArray(_p.FindVao(vbo));
 
@@ -481,12 +481,12 @@ public unsafe class GLBackend : RenderBackend {
 	}
 
 	internal void executeDrawIndexed(int indexCount, int firstIndex) {
-		// Bind pipeline:
+		// Bind pipe:
 		// 1. States
 		// 2. VAO
 		// 3. VBO
 		// 4. EBO
-		ref GLPipeline _p = ref _pipelineHeap.GetData(_boundPipeline);
+		ref GLRenderPipe _p = ref _pipeHeap.GetData(_boundRenderPipe);
 		uint vbo = _boundBuffers[(int) BufferType.Vertex];
 		uint ebo = _boundBuffers[(int) BufferType.Index];
 		_gl.BindVertexArray(_p.FindVao(vbo, ebo));
@@ -503,8 +503,8 @@ public unsafe class GLBackend : RenderBackend {
 	}
 
 	internal void executeDispatch(uint x, uint y, uint z) {
-		// Bind pipeline
-		ref GLPipeline _p = ref _pipelineHeap.GetData(_boundPipeline);
+		// Bind pipe
+		ref GLRenderPipe _p = ref _pipeHeap.GetData(_boundRenderPipe);
 
 		// Apply resources
 		preDraw(_p);
