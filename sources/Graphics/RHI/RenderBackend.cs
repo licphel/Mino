@@ -26,6 +26,7 @@ public interface RenderBackend : IDisposable {
 	uint TextureGen();
 	void TextureDelete(uint texture);
 	void TextureData(uint texture, in TextureDesc desc);
+	void TextureSubmit(uint texture, in TextureSubmission submission);
 	void TextureBlit(
 		uint src, int srcX, int srcY, int srcW, int srcH,
 		uint dst, int dstX, int dstY, int dstW, int dstH,

@@ -1,4 +1,5 @@
-﻿using Mino.Graphics.Desktop;
+﻿using Mino.Framework;
+using Mino.Graphics.Desktop;
 using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
 
@@ -14,7 +15,7 @@ public class RenderTarget : IDisposable {
 	private RenderBackend _backend;
 	private RenderTargetDesc _desc;
 	private bool _disposed;
-	private uint _handle;
+	public readonly HandleRef _handle;
 
 	public RenderTarget(in RenderTargetDesc desc) {
 		// Set userdata.
@@ -22,14 +23,14 @@ public class RenderTarget : IDisposable {
 
 		// Custom RT.
 		_backend = RenderSystem.GetBackend();
-		_handle = _backend.RenderTargetGen();
+		_handle = new HandleRef(_backend.RenderTargetGen());
 		_backend.RenderTargetData(_handle, desc);
 	}
 
 	private RenderTarget() {
 		_backend = RenderSystem.GetBackend();
 		// Ult RT.
-		_handle = _backend.GetUltimateRenderTarget();
+		_handle = new HandleRef(_backend.GetUltimateRenderTarget());
 	}
 
 	/// <summary>

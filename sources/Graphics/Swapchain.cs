@@ -10,7 +10,7 @@ public class Swapchain : IDisposable {
 	private RenderBackend _backend;
 	private bool _disposed;
 	private bool _inPass;
-	private uint _renderTarget;
+	private RenderTarget _renderTarget;
 
 	public Swapchain(in RenderPassDesc desc, RenderTarget rt) {
 		_backend = RenderSystem.GetBackend();
@@ -21,7 +21,7 @@ public class Swapchain : IDisposable {
 	/// <summary>
 	///     The render pass desc.
 	/// </summary>
-	public RenderPassDesc Desc { get; }
+	public RenderPassDesc Desc { get; set; }
 
 	/// <summary>
 	///     If the swapchain is a window swapchain.

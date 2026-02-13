@@ -1,4 +1,5 @@
-﻿using Mino.Graphics.RHI;
+﻿using Mino.Framework;
+using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
 
 namespace Mino.Graphics;
@@ -9,14 +10,14 @@ namespace Mino.Graphics;
 public class RenderPipe : IDisposable {
 	private RenderBackend _backend;
 	private bool _disposed;
-	private uint _handle;
+	public readonly HandleRef _handle;
 
 	public RenderPipe(in RenderPipeDesc desc) {
 		// Set userdata.
 		Desc = desc;
 
 		_backend = RenderSystem.GetBackend();
-		_handle = _backend.RenderPipeGen();
+		_handle = new HandleRef(_backend.RenderPipeGen());
 		// Compile the pipe.
 		_backend.RenderPipeCompile(_handle, desc);
 	}
@@ -24,7 +25,7 @@ public class RenderPipe : IDisposable {
 	/// <summary>
 	///     The pipe desc.
 	/// </summary>
-	public RenderPipeDesc Desc { get; }
+	public RenderPipeDesc Desc { get; set; }
 
 	public void Dispose() {
 		if (_disposed) {

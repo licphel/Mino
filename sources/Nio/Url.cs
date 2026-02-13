@@ -33,6 +33,14 @@ public readonly struct Url : IEquatable<Url> {
 		return await Scheme.OpenStreamAsync(this, ct);
 	}
 
+	/// <summary>
+	///		Converts to a local file path.
+	/// </summary>
+	/// <returns>A local path name.</returns>
+	public string ToFilePath() {
+		return Scheme.ToFilePath(this);
+	}
+
 	private const int _STREAM_BUFFER_SIZE = 1048576;
 
 	/// <summary>

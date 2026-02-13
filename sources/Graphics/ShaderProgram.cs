@@ -1,4 +1,5 @@
-﻿using Mino.Graphics.RHI;
+﻿using Mino.Framework;
+using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
 
 namespace Mino.Graphics;
@@ -9,14 +10,14 @@ namespace Mino.Graphics;
 public class ShaderProgram : IDisposable {
 	private RenderBackend _backend;
 	private bool _disposed;
-	private uint _handle;
+	public readonly HandleRef _handle;
 
 	public ShaderProgram(in ShaderProgramDesc desc) {
 		// Set userdata.
 		Desc = desc;
 
 		_backend = RenderSystem.GetBackend();
-		_handle = _backend.ShaderProgramGen();
+		_handle = new HandleRef(_backend.ShaderProgramGen());
 		// Compile the module.
 		_backend.ShaderProgramLink(_handle, desc);
 	}
@@ -24,7 +25,7 @@ public class ShaderProgram : IDisposable {
 	/// <summary>
 	///     The shader program desc.
 	/// </summary>
-	public ShaderProgramDesc Desc { get; }
+	public ShaderProgramDesc Desc { get; set; }
 
 	public void Dispose() {
 		if (_disposed) {

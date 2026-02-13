@@ -1,6 +1,7 @@
 using Mino.Audio.AHI;
 using Mino.Audio.AHI.Desc;
 using Mino.Audio.AHI.Enum;
+using Mino.Framework;
 
 namespace Mino.Audio;
 
@@ -13,7 +14,7 @@ public class Clip : IDisposable {
 
 	private AudioBackend _backend;
 	private bool _disposed;
-	internal uint _handle;
+	public readonly HandleRef _handle;
 	private bool _loop = false;
 	private float _pan = 0.0F;
 	private float _pitch = 1.0F;
@@ -32,7 +33,7 @@ public class Clip : IDisposable {
 		}
 		// Generates a native source.
 		_backend = AudioSystem.GetBackend();
-		_handle = _backend.ClipGen();
+		_handle = new HandleRef(_backend.ClipGen());
 		_backend.ClipData(_handle, desc);
 
 		// Get total frames.
@@ -59,7 +60,7 @@ public class Clip : IDisposable {
 	/// <summary>
 	///     The clip desc.
 	/// </summary>
-	public ClipDesc Desc { get; }
+	public ClipDesc Desc { get; set; }
 
 	/// <summary>
 	///     Controls whether the clip loops.

@@ -1,4 +1,5 @@
-﻿using Mino.Graphics.RHI;
+﻿using Mino.Framework;
+using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
 
 namespace Mino.Graphics;
@@ -9,14 +10,14 @@ namespace Mino.Graphics;
 public class Sampler : IDisposable {
 	private RenderBackend _backend;
 	private bool _disposed;
-	private uint _handle;
+	public readonly HandleRef _handle;
 
 	public Sampler(in SamplerDesc desc) {
 		// Set userdata.
 		Desc = desc;
 
 		_backend = RenderSystem.GetBackend();
-		_handle = _backend.SamplerGen();
+		_handle = new HandleRef(_backend.SamplerGen());
 		// Compile the sampler.
 		_backend.SamplerData(_handle, desc);
 	}
@@ -24,7 +25,7 @@ public class Sampler : IDisposable {
 	/// <summary>
 	///     The sampler desc.
 	/// </summary>
-	public SamplerDesc Desc { get; }
+	public SamplerDesc Desc { get; set; }
 
 	public void Dispose() {
 		if (_disposed) {

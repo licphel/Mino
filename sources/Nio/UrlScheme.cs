@@ -25,6 +25,8 @@ public interface UrlScheme {
 
 	Task<Stream?> OpenStreamAsync(Url url, CancellationToken ct = default);
 
+	string ToFilePath(Url url);
+
 	public static UrlScheme RegisterScheme(string name, UrlScheme scheme) {
 		return _schemeMapping[name] = scheme;
 	}
@@ -48,6 +50,10 @@ public interface UrlScheme {
 					url.Path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read, 4096,
 					true),
 				ct);
+		}
+
+		public string ToFilePath(Url url) {
+			return url.Path;
 		}
 
 		public override string ToString() {
@@ -90,6 +96,10 @@ public interface UrlScheme {
 				return null;
 			}
 		}
+		
+		public string ToFilePath(Url url) {
+			throw new Error("http url to file");
+		}
 
 		public override string ToString() {
 			return _scheme;
@@ -108,6 +118,10 @@ public interface UrlScheme {
 		public Task<Stream?> OpenStreamAsync(Url url, CancellationToken ct) {
 			return (_runtimeModUrl / url.Path).OpenStreamAsync(ct);
 		}
+		
+		public string ToFilePath(Url url) {
+			return (_runtimeModUrl / url.Path).Path;
+		}
 
 		public override string ToString() {
 			return "rf";
@@ -115,7 +129,7 @@ public interface UrlScheme {
 	}
 
 	// 'console' scheme implementation.
-	// Supports: 'csl://in', 'csl://out', 'csl://err'.
+	// Supports: 'console://in', 'console://out', 'console://err'.
 	private sealed class ConsoleImpl : UrlScheme {
 		public Stream? OpenStream(Url url) {
 			return url.Path.ToLowerInvariant() switch {
@@ -128,6 +142,10 @@ public interface UrlScheme {
 
 		public Task<Stream?> OpenStreamAsync(Url url, CancellationToken ct = default) {
 			return Task.FromResult(OpenStream(url));
+		}
+		
+		public string ToFilePath(Url url) {
+			throw new Error("console url to file");
 		}
 
 		public override string ToString() {

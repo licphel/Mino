@@ -14,7 +14,7 @@ public static unsafe class GLDbg {
 
 		gl.DebugMessageControl(
 			DebugSource.DontCare,
-			DebugType.DontCare,
+			DebugType.DebugTypeError,
 			DebugSeverity.DontCare,
 			0,
 			null,

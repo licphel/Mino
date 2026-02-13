@@ -1,4 +1,5 @@
-﻿using Mino.Graphics.RHI;
+﻿using Mino.Framework;
+using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
 using Mino.Graphics.RHI.Enum;
 
@@ -11,14 +12,14 @@ public class Encoder : IDisposable {
 	private RenderBackend _backend;
 	private int _cmdCnt = 0;
 	private bool _disposed;
-	private uint _handle;
+	public readonly HandleRef _handle;
 	
 	public Encoder(in EncoderDesc desc) {
 		// Set userdata.
 		Desc = desc;
 
 		_backend = RenderSystem.GetBackend();
-		_handle = _backend.EncoderGen();
+		_handle = new HandleRef(_backend.EncoderGen());
 		// Compile the encoder.
 		_backend.EncoderCompile(_handle, desc);
 	}
@@ -26,7 +27,7 @@ public class Encoder : IDisposable {
 	/// <summary>
 	///     The encoder desc.
 	/// </summary>
-	public EncoderDesc Desc { get; }
+	public EncoderDesc Desc { get; set; }
 
 	public void Dispose() {
 		if (_disposed) {

@@ -9,6 +9,18 @@ namespace Mino.Graphics;
 /// </summary>
 public static unsafe class Blitter {
 	/// <summary>
+	///     Copies a texture region to another texture region.
+	/// </summary>
+	/// <param name="from">Source texture.</param>
+	/// <param name="to">Target texture.</param>
+	/// <param name="dst">Dst region.</param>
+	/// <param name="src">Src region.</param>
+	/// <param name="filter">Filter of drawing.</param>
+	public static void Blit(Texture from, Texture to, in Box2 dst, in Box2 src, TextureFilter filter = TextureFilter.Nearest) {
+		Blit(new TexturePart(from, src), new TexturePart(to, dst), filter);
+	}
+	
+	/// <summary>
 	///     Copies a texture part to another texture part.
 	/// </summary>
 	/// <param name="from">Source texture part.</param>
@@ -58,8 +70,8 @@ public static unsafe class Blitter {
 		if (src.Size != dst.Size) {
 			throw new Error("not supported: image scaling");
 		}
-		if (from.Data == null || to.Data == null || from.Data.Length < from.PixelStride
-		|| to.Data.Length < to.PixelStride) {
+		if (from.Bytes == null || to.Bytes == null || from.Bytes.Length < from.PixelStride
+		|| to.Bytes.Length < to.PixelStride) {
 			throw new Error("no data in image");
 		}
 		const float CMP = 0.01F;
@@ -71,8 +83,8 @@ public static unsafe class Blitter {
 			throw new Error("coordinates out of bounds");
 		}
 
-		byte[] fd = from.Data;
-		byte[] td = to.Data;
+		byte[] fd = from.Bytes;
+		byte[] td = to.Bytes;
 		byte[] dstData = td;
 
 		if (from == to) {
@@ -107,6 +119,6 @@ public static unsafe class Blitter {
 			}
 		}
 
-		to.Data = dstData;
+		to.Bytes = dstData;
 	}
 }

@@ -88,7 +88,7 @@ internal static class NoiseVisualization {
 		
 		Image heightmap = genHeightmap(gridSize, gridSize, 8.0);
 		Image colorMap = genColorMap(heightmap);
-		Texture colorTexture = new Texture(TextureDesc.CreateByImage2D(colorMap));
+		Texture colorTexture = new Texture(TextureDesc.CreateByImage(colorMap));
 		genGridMesh(heightmap, vertex, index, gridSize, worldSize);
 
 		// vbo and ebo
@@ -219,7 +219,7 @@ internal static class NoiseVisualization {
 			if (KeyListener.Get(KeyCode.Enter).Press) {
 				heightmap = genHeightmap(gridSize, gridSize, 8.0);
 				colorMap = genColorMap(heightmap);
-				colorTexture.Submit(TextureDesc.CreateByImage2D(colorMap));
+				colorTexture.Submit(TextureSubmission.CreateByImage(colorMap));
 				genGridMesh(heightmap, vertex, index, gridSize, worldSize);
 			}
 		};
@@ -254,7 +254,7 @@ internal static class NoiseVisualization {
 	}
 	
 	private static Image genHeightmap(int width, int height, double scale) {
-		Image img = Image.CreateEmpty(width, height);
+		Image img = Image.Create(width, height);
 		
 		NoiseGenerator primNoise = new NoiseGeneratorPerlin(new RandomGeneratorXoroshiro128());
 		NoiseGenerator noise = new NoiseGeneratorOctave(primNoise, 2);
@@ -271,7 +271,7 @@ internal static class NoiseVisualization {
 	}
 	
 	private static Image genColorMap(Image heightmap) {
-		Image img = Image.CreateEmpty(heightmap.Width, heightmap.Height);
+		Image img = Image.Create(heightmap.Width, heightmap.Height);
 		
 		for (int i = 0; i < img.Width; i++) {
 			for (int j = 0; j < img.Height; j++) {

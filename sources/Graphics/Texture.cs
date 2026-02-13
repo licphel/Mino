@@ -11,7 +11,7 @@ namespace Mino.Graphics;
 public class Texture : IDisposable {
 	private RenderBackend _backend;
 	private bool _disposed;
-	private uint _handle;
+	public readonly HandleRef _handle;
 
 	public Texture(in TextureDesc desc) {
 		// Do not validate the description,
@@ -19,15 +19,22 @@ public class Texture : IDisposable {
 		Desc = desc;
 
 		_backend = RenderSystem.GetBackend();
-		_handle = _backend.TextureGen();
+		_handle = new HandleRef(_backend.TextureGen());
 
-		Submit(Desc);
+		// Validation.
+		if (desc.Width < 0 || desc.Height < 0 || desc.Depth < 0) {
+			throw new Error("invalid size");
+		}
+
+		// Set userdata.
+		Desc = desc;
+		_backend.TextureData(_handle, desc);
 	}
 
 	/// <summary>
 	///     The texture desc.
 	/// </summary>
-	public TextureDesc Desc { get; private set; }
+	public TextureDesc Desc { get; set; }
 
 	/// <summary>
 	///     Size on x-axis.
@@ -68,25 +75,17 @@ public class Texture : IDisposable {
 	/// <summary>
 	///     Submits texture data to gpu.
 	/// </summary>
-	/// <param name="desc">Texture desc.</param>
-	public void Submit(in TextureDesc desc) {
+	/// <param name="submission">Texture submission data.</param>
+	public void Submit(in TextureSubmission submission) {
 		if (_disposed) {
 			throw new Error("disposed");
 		}
 		// Validation.
-		if (desc.Width <= 0) {
+		if (submission.Region.Width < 0 || submission.Region.Height < 0 || submission.Region.Depth < 0) {
 			throw new Error("invalid size");
 		}
-		if (desc.Type == TextureType.Texture2D && desc.Height <= 0) {
-			throw new Error("invalid size");
-		}
-		if (desc.Type == TextureType.Texture3D && (desc.Height <= 0 || desc.Depth <= 0)) {
-			throw new Error("invalid size");
-		}
-
-		// Reset userdata.
-		Desc = desc;
-		_backend.TextureData(_handle, desc);
+		
+		_backend.TextureSubmit(_handle, submission);
 	}
 
 	// Implicit cast to native handle.

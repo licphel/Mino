@@ -10,7 +10,7 @@ namespace Mino.Audio;
 public class Line : LineReader, IDisposable {
 	private AudioBackend _backend;
 	private bool _disposed;
-	internal uint _handle;
+	public readonly HandleRef _handle;
 
 	/// <summary>
 	///     Creates a data line from a data line desc.
@@ -20,14 +20,14 @@ public class Line : LineReader, IDisposable {
 		Desc = desc;
 
 		_backend = AudioSystem.GetBackend();
-		_handle = _backend.LineGen();
+		_handle = new HandleRef(_backend.LineGen());
 		_backend.LineData(_handle, desc);
 	}
 
 	/// <summary>
 	///     The buffer desc.
 	/// </summary>
-	public LineDesc Desc { get; }
+	public LineDesc Desc { get; set; }
 
 	/// <summary>
 	///     The derived clip duration when pitch is normal (1.0F).

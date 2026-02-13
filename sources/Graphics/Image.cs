@@ -12,7 +12,7 @@ public interface Image : IDisposable {
 	/// <summary>
 	///     Image data, whose format may vary.
 	/// </summary>
-	public byte[]? Data { get; set; }
+	public byte[]? Bytes { get; set; }
 
 	/// <summary>
 	///     Width of the image.
@@ -38,19 +38,20 @@ public interface Image : IDisposable {
 		get => new _ImagePixelProxy(x, this);
 	}
 
-	/// <summary>
-	///		Creates an empty image.
-	/// </summary>
-	/// <param name="width">Image width.</param>
-	/// <param name="height">Image height.</param>
-	/// <returns>A blank image.</returns>
-	/// <exception cref="Error">Thrown if size is negative.</exception>
-	public static Image CreateEmpty(int width, int height) {
-		if (width <= 0 || height <= 0) {
+	///  <summary>
+	/// 		Creates a literal image.
+	///  </summary>
+	///  <param name="width">Image width.</param>
+	///  <param name="height">Image height.</param>
+	///  <param name="bytes">Image data.</param>
+	///  <returns>A blank image.</returns>
+	///  <exception cref="Error">Thrown if size is negative.</exception>
+	public static Image Create(int width, int height, byte[]? bytes = null) {
+		if (width < 0 || height < 0) {
 			throw new Error("negative size");
 		}
 		return new LiteralImage() {
-			Data = new byte[4 * width * height],
+			Bytes = bytes ?? new byte[4 * width * height],
 			Width = width,
 			Height = height
 		};
@@ -66,7 +67,7 @@ public interface Image : IDisposable {
 
 		ImageResult? imageResult = ImageResult.FromMemory(buffer.BufferArray, ColorComponents.RedGreenBlueAlpha);
 		LiteralImage img = new LiteralImage {
-			Data = imageResult.Data,
+			Bytes = imageResult.Data,
 			Width = imageResult.Width,
 			Height = imageResult.Height
 		};
@@ -78,7 +79,7 @@ public interface Image : IDisposable {
 	/// </summary>
 	/// <param name="img">A 2D RGBA image.</param>
 	public static void FlipImage2D(Image img) {
-		byte[]? data = img.Data;
+		byte[]? data = img.Bytes;
 		int width = img.Width;
 		int height = img.Height;
 
@@ -102,7 +103,7 @@ public interface Image : IDisposable {
 			}
 		}
 
-		img.Data = flippedData;
+		img.Bytes = flippedData;
 	}
 
 	// Image pixel proxy used in pixel indexer.
@@ -114,7 +115,7 @@ public interface Image : IDisposable {
 
 		public _ImagePixelProxy(int x, Image image) {
 			X = x;
-			Data = image.Data ?? throw new Error("no image data");
+			Data = image.Bytes ?? throw new Error("no image data");
 			W = image.Width;
 			P = image.PixelStride;
 		}
@@ -138,7 +139,7 @@ public interface Image : IDisposable {
 	///     STB image result.
 	/// </summary>
 	private class LiteralImage : Image {
-		public byte[]? Data { get; set; }
+		public byte[]? Bytes { get; set; }
 		public int Height { get; internal init; }
 		public int Width { get; internal init; }
 

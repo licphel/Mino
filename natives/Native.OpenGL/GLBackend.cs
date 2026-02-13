@@ -107,6 +107,10 @@ public unsafe class GLBackend : RenderBackend, ServiceProvider {
 	public void TextureData(uint texture, in TextureDesc desc) {
 		_textureHeap.GetData(texture).OnTextureData(desc);
 	}
+	
+	public void TextureSubmit(uint texture, in TextureSubmission submission) {
+		_textureHeap.GetData(texture).OnTextureSubmit(submission);
+	}
 
 	public void TextureBlit(uint src, int srcX, int srcY, int srcW, int srcH, uint dst, int dstX, int dstY, int dstW,
 		int dstH,
@@ -490,6 +494,11 @@ public unsafe class GLBackend : RenderBackend, ServiceProvider {
 		uint vbo = _boundBuffers[(int) BufferType.Vertex];
 		uint ebo = _boundBuffers[(int) BufferType.Index];
 		_gl.BindVertexArray(_p.FindVao(vbo, ebo));
+		/*
+		 * Bug fixed: ebo binding
+		 * I guess OpenGL do not cache ebo in vao? who knows.
+		 */
+		_gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, ebo);
 
 		// Apply resources
 		preDraw(_p);

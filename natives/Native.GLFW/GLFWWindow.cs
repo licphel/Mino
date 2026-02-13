@@ -137,7 +137,7 @@ public unsafe class GLFWWindow : Window, ServiceProvider {
 
 		// Set cursor data.
 		if (hints.CursorImage != null) {
-			fixed (byte* dataPtr = hints.CursorImage.Data) {
+			fixed (byte* dataPtr = hints.CursorImage.Bytes) {
 				GLFW_Image cimg = new GLFW_Image();
 				cimg.Width = hints.CursorImage.Width;
 				cimg.Height = hints.CursorImage.Height;
@@ -149,7 +149,7 @@ public unsafe class GLFWWindow : Window, ServiceProvider {
 
 		// Set icon data.
 		if (hints.Icon != null) {
-			fixed (byte* dataPtr = hints.Icon.Data) {
+			fixed (byte* dataPtr = hints.Icon.Bytes) {
 				GLFW_Image cimg = new GLFW_Image();
 				cimg.Width = hints.Icon.Width;
 				cimg.Height = hints.Icon.Height;

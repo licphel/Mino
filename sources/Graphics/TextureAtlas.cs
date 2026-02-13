@@ -1,4 +1,5 @@
 ﻿using Mino.Algorithm;
+using Mino.Framework;
 using Mino.Graphics.RHI.Desc;
 using Mino.Graphics.RHI.Enum;
 using Mino.Mathematics;
@@ -11,49 +12,63 @@ namespace Mino.Graphics;
 public class TextureAtlas {
 	private const int INITIAL_SIZE = 64;
 	
-	private bool _ended;
-
 	/*
 	 *	We use maximum rectangle algorithm to manage insertions.
 	 *	That may be not the best, but effective.
 	 */
 	private List<MaximumRect.RectI> _freeRects = new List<MaximumRect.RectI>();
 	private Texture? _texture;
-
-	public Image? BufferImage;
+	private bool _init;
+	private int _size;
 
 	public void Init() {
-		if (BufferImage != null || _ended) {
-			throw new Error("already initialized");
+		if (_init) {
+			throw new Error("duplicated init");
 		}
+		_init = true;
 
-		BufferImage = Image.CreateEmpty(INITIAL_SIZE, INITIAL_SIZE);
-		_freeRects.Add(new MaximumRect.RectI(0, 0, INITIAL_SIZE, INITIAL_SIZE));
+		_size = INITIAL_SIZE;
+		_freeRects.Add(new MaximumRect.RectI(0, 0, _size, _size));
 
-		// Upload null texture.
+		// Upload a null texture.
 		_texture = new Texture(
 			new TextureDesc {
-				Data = null,
+				InitialBytes = null,
 				Format = TextureFormat.RedGreenBlueAlpha8,
-				Width = INITIAL_SIZE,
-				Height = INITIAL_SIZE,
+				Width = _size,
+				Height = _size,
 				Type = TextureType.Texture2D
 			});
 	}
 
 	private void expand() {
-		Image tmp = BufferImage!;
-		int size = tmp.Width;
-
+		int oldSize = _size;
+		_size *= 2;
+		
 		// Generate new image and transfer data.
-		BufferImage = Image.CreateEmpty(size * 2, size * 2);
-		Box2 cpyRegion = Box2.Create(0.0F, 0.0F, size, size);
-		Blitter.BlockCopy(tmp, BufferImage, cpyRegion, cpyRegion);
+		Texture newTex = new Texture(
+			new TextureDesc {
+				Width = _size,
+				Height = _size,
+			});
+		Box2 cpyRegion = Box2.Create(0.0F, 0.0F, oldSize, oldSize);
+		Blitter.Blit(_texture!, newTex, cpyRegion, cpyRegion);
+		
+		/*
+		 * We swap these two handles to let
+		 * the old texture get a new handle and new size,
+		 * and the old handle can dispose with the new texture.
+		 */
+		{
+			HandleRef.Swap(newTex._handle, _texture!._handle);
+			_texture.Desc = newTex.Desc; // Update desc.
+			newTex.Dispose();
+		}
 
 		// Add new free places.
-		_freeRects.Add(new MaximumRect.RectI(size, 0, size, size));
-		_freeRects.Add(new MaximumRect.RectI(0, size, size, size));
-		_freeRects.Add(new MaximumRect.RectI(size, size, size, size));
+		_freeRects.Add(new MaximumRect.RectI(oldSize, 0, oldSize, oldSize));
+		_freeRects.Add(new MaximumRect.RectI(0, oldSize, oldSize, oldSize));
+		_freeRects.Add(new MaximumRect.RectI(oldSize, oldSize, oldSize, oldSize));
 	}
 
 	/// <summary>
@@ -63,7 +78,7 @@ public class TextureAtlas {
 	/// <returns>A texture part, not ready for usage.</returns>
 	/// <exception cref="Error">Thrown if not initialized or ended.</exception>
 	public TexturePart Accept(Image image) {
-		if (BufferImage == null || _ended) {
+		if (!_init) {
 			throw new Error("cannot accept");
 		}
 		// Expand till enough.
@@ -73,23 +88,11 @@ public class TextureAtlas {
 		}
 
 		// Copy image data.
-		Blitter.BlockCopy(image, BufferImage, dstRect, Box2.Create(0.0F, 0.0F, image.Width, image.Height));
+		_texture!.Submit(new TextureSubmission {
+			Bytes = image.Bytes,
+			Region = (Box2) dstRect
+		});
+		
 		return new TexturePart(_texture!, (Box2) dstRect);
-	}
-
-	/// <summary>
-	///     Ends the atlas and submits accepted images.
-	/// </summary>
-	public void EndAccept() {
-		if (BufferImage == null) {
-			throw new Error("not initialized");
-		}
-		if (_ended) {
-			return;
-		}
-		_ended = true;
-
-		// Finally, upload data.
-		_texture!.Submit(TextureDesc.CreateByImage2D(BufferImage));
 	}
 }

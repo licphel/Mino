@@ -1,4 +1,5 @@
-﻿using Mino.Graphics.RHI;
+﻿using Mino.Framework;
+using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
 using Mino.Graphics.RHI.Enum;
 
@@ -10,14 +11,14 @@ namespace Mino.Graphics;
 public class ResourceSet : IDisposable {
 	private RenderBackend _backend;
 	private bool _disposed;
-	private uint _handle;
+	public readonly HandleRef _handle;
 
 	public ResourceSet(in ResourceSetLayout layout) {
 		// Set userdata.
 		Layout = layout;
 
 		_backend = RenderSystem.GetBackend();
-		_handle = _backend.ResourceSetGen();
+		_handle = new HandleRef(_backend.ResourceSetGen());
 		// Compile the rs.
 		_backend.ResourceSetLayout(_handle, layout);
 	}

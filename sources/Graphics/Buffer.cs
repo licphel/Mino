@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using Mino.Framework;
 using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
 
@@ -10,14 +11,14 @@ namespace Mino.Graphics;
 public class Buffer : IDisposable {
 	private RenderBackend _backend;
 	private bool _disposed;
-	private uint _handle;
+	public readonly HandleRef _handle;
 
 	public Buffer(in BufferDesc desc) {
 		// Set userdata.
 		Desc = desc;
 
 		_backend = RenderSystem.GetBackend();
-		_handle = _backend.BufferGen();
+		_handle = new HandleRef(_backend.BufferGen());
 
 		// Initially make it expandable.
 		CanExpand = true;
@@ -26,7 +27,7 @@ public class Buffer : IDisposable {
 	/// <summary>
 	///     The buffer desc.
 	/// </summary>
-	public BufferDesc Desc { get; }
+	public BufferDesc Desc { get; set; }
 
 	/// <summary>
 	///     Current capacity of the buffer.
