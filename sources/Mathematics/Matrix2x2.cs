@@ -3,7 +3,7 @@
 /// <summary>
 ///     Immutable column major ordered matrix 2x2.
 /// </summary>
-public readonly struct Matrix2x2 {
+public readonly struct Matrix2x2 : Matrix<Matrix2x2> {
 	public static readonly Matrix2x2 Identity = new Matrix2x2();
 
 	public readonly float M00 = 1.0F;

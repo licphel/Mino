@@ -5,7 +5,7 @@ namespace Mino.Mathematics;
 /// <summary>
 ///     Immutable column major ordered matrix 4x4.
 /// </summary>
-public readonly struct Matrix4x4 {
+public readonly struct Matrix4x4 : Matrix<Matrix4x4> {
 	public static readonly Matrix4x4 Identity = new Matrix4x4();
 
 	public readonly float M00 = 1.0F;

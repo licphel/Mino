@@ -9,8 +9,8 @@ namespace Mino.Audio;
 /// </summary>
 public class Line : LineReader, IDisposable {
 	private AudioBackend _backend;
-	private bool _disposed;
 	public readonly HandleRef _handle;
+	private bool _disposed;
 
 	/// <summary>
 	///     Creates a data line from a data line desc.
@@ -56,11 +56,6 @@ public class Line : LineReader, IDisposable {
 	[NotRecommended]
 	public uint GetBackendHandle() {
 		return _handle;
-	}
-
-	// Finalizer in case.
-	~Line() {
-		Dispose();
 	}
 	
 	// Implicit cast to native handle.

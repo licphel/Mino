@@ -11,11 +11,24 @@ namespace Mino.Graphics;
 public class RenderTarget : IDisposable {
 	private static RenderTarget? _ultRT;
 	private static Lock _lock = new Lock();
+	
+	/// <summary>
+	///     Gets the ultimate render target.
+	/// </summary>
+	/// <returns>A render target representing the window.</returns>
+	public static RenderTarget GetUltimate() {
+		if (_ultRT == null) {
+			lock (_lock) {
+				_ultRT ??= new RenderTarget();
+			}
+		}
+		return _ultRT;
+	}
 
 	private RenderBackend _backend;
+	public readonly HandleRef _handle;
 	private RenderTargetDesc _desc;
 	private bool _disposed;
-	public readonly HandleRef _handle;
 
 	public RenderTarget(in RenderTargetDesc desc) {
 		// Set userdata.
@@ -72,25 +85,7 @@ public class RenderTarget : IDisposable {
 		_backend.RenderTargetDelete(_handle);
 		GC.SuppressFinalize(this);
 	}
-
-	/// <summary>
-	///     Gets the ultimate render target.
-	/// </summary>
-	/// <returns>A render target representing the window.</returns>
-	public static RenderTarget GetUltimate() {
-		if (_ultRT == null) {
-			lock (_lock) {
-				_ultRT ??= new RenderTarget();
-			}
-		}
-		return _ultRT;
-	}
-
-	// Finalizer in case.
-	~RenderTarget() {
-		Dispose();
-	}
-
+	
 	// Implicit cast to native handle.
 	public static implicit operator uint(RenderTarget obj) {
 		return obj._handle;

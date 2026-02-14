@@ -5,9 +5,9 @@ using Silk.NET.OpenGL;
 namespace Mino.Native.OpenGL.Object;
 
 public class GLRenderTarget {
-	public RenderTargetDesc _desc;
 	public GL _gl;
 	public uint _handle;
+	public RenderTargetDesc _desc;
 
 	public GLRenderTarget(GL gl, uint handle) {
 		_gl = gl;

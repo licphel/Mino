@@ -13,8 +13,9 @@ public class Clip : IDisposable {
 	public const float MAX_VOLUME = 1024.0F;
 
 	private AudioBackend _backend;
-	private bool _disposed;
 	public readonly HandleRef _handle;
+	private bool _disposed;
+	
 	private bool _loop = false;
 	private float _pan = 0.0F;
 	private float _pitch = 1.0F;
@@ -153,11 +154,6 @@ public class Clip : IDisposable {
 
 		_backend.ClipDelete(_handle);
 		GC.SuppressFinalize(this);
-	}
-
-	// Finalizer in case.
-	~Clip() {
-		Dispose();
 	}
 
 	/// <summary>

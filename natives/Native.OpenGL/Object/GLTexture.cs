@@ -6,13 +6,13 @@ using Silk.NET.OpenGL;
 namespace Mino.Native.OpenGL.Object;
 
 public unsafe class GLTexture {
-	public TextureDesc _desc;
 	public GL _gl;
 	public uint _handle;
 	public GLEnum _iFormat;
 	public GLEnum _pixFormat;
 	public GLEnum _pixType;
 	public GLEnum _target;
+	public TextureDesc _desc;
 
 	public GLTexture(GL gl, uint handle) {
 		_gl = gl;

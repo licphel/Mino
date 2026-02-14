@@ -8,12 +8,12 @@ namespace Mino.Graphics;
 /// <summary>
 ///     Gpu-side auto-expandable buffer object.
 /// </summary>
-public class Buffer : IDisposable {
+public class BufferObject : IDisposable {
 	private RenderBackend _backend;
-	private bool _disposed;
 	public readonly HandleRef _handle;
+	private bool _disposed;
 
-	public Buffer(in BufferDesc desc) {
+	public BufferObject(in BufferDesc desc) {
 		// Set userdata.
 		Desc = desc;
 
@@ -52,11 +52,6 @@ public class Buffer : IDisposable {
 
 		_backend.BufferDelete(_handle);
 		GC.SuppressFinalize(this);
-	}
-
-	// Finalizer in case.
-	~Buffer() {
-		Dispose();
 	}
 
 	/// <summary>
@@ -112,7 +107,7 @@ public class Buffer : IDisposable {
 	}
 
 	// Implicit cast to native handle.
-	public static implicit operator uint(Buffer obj) {
+	public static implicit operator uint(BufferObject obj) {
 		return obj._handle;
 	}
 }

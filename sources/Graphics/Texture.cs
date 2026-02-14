@@ -1,7 +1,6 @@
 ﻿using Mino.Framework;
 using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
-using Mino.Graphics.RHI.Enum;
 
 namespace Mino.Graphics;
 
@@ -10,8 +9,8 @@ namespace Mino.Graphics;
 /// </summary>
 public class Texture : IDisposable {
 	private RenderBackend _backend;
-	private bool _disposed;
 	public readonly HandleRef _handle;
+	private bool _disposed;
 
 	public Texture(in TextureDesc desc) {
 		// Do not validate the description,
@@ -66,12 +65,7 @@ public class Texture : IDisposable {
 		_backend.TextureDelete(_handle);
 		GC.SuppressFinalize(this);
 	}
-
-	// Finalizer in case.
-	~Texture() {
-		Dispose();
-	}
-
+	
 	/// <summary>
 	///     Submits texture data to gpu.
 	/// </summary>

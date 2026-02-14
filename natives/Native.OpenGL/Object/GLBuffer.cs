@@ -6,12 +6,12 @@ using Silk.NET.OpenGL;
 namespace Mino.Native.OpenGL.Object;
 
 public unsafe class GLBuffer {
-	public int _capacity;
-	public BufferDesc _desc;
 	public GL _gl;
 	public uint _handle;
 	public GLEnum _hint;
 	public GLEnum _target;
+	public int _capacity;
+	public BufferDesc _desc;
 
 	public GLBuffer(GL gl, uint handle) {
 		_gl = gl;

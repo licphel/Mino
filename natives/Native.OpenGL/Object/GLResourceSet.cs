@@ -5,8 +5,10 @@ using Silk.NET.OpenGL;
 namespace Mino.Native.OpenGL.Object;
 
 public class GLResourceSet {
-	public List<Bound> _bounds = new List<Bound>();
 	public GL _gl;
+	// Bug fixed: resource set List<Bound> behaves wrongly.
+	// Use array instead.
+	public Bound[] _bounds = [];
 	public ResourceSetLayout _layout = ResourceSetLayout.Bake();
 
 	public GLResourceSet(GL gl) {
@@ -22,6 +24,8 @@ public class GLResourceSet {
 				throw new Error($"null name at slot {slot.Binding}");
 			}
 		}
+		// Init bounds.
+		_bounds = new Bound[layout.Slots.Length];
 	}
 
 	public void Apply(GLBackend backend, GLRenderPipe pipe) {

@@ -9,8 +9,8 @@ namespace Mino.Graphics;
 /// </summary>
 public class ShaderModule : IDisposable {
 	private RenderBackend _backend;
-	private bool _disposed;
 	public readonly HandleRef _handle;
+	private bool _disposed;
 
 	public ShaderModule(in ShaderModuleDesc desc) {
 		// Set userdata.
@@ -36,12 +36,7 @@ public class ShaderModule : IDisposable {
 		_backend.ShaderModuleDelete(_handle);
 		GC.SuppressFinalize(this);
 	}
-
-	// Finalizer in case.
-	~ShaderModule() {
-		Dispose();
-	}
-
+	
 	// Implicit cast to native handle.
 	public static implicit operator uint(ShaderModule obj) {
 		return obj._handle;

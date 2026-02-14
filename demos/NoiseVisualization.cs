@@ -11,7 +11,6 @@ using Mino.Graphics.RHI.Enum;
 using Mino.Mathematics;
 using Mino.Mathematics.Spatial;
 using Mino.Nio;
-using Buffer = Mino.Graphics.Buffer;
 
 namespace Mino;
 
@@ -92,7 +91,7 @@ internal static class NoiseVisualization {
 		genGridMesh(heightmap, vertex, index, gridSize, worldSize);
 
 		// vbo and ebo
-		Buffer vbo = new Buffer(
+		BufferObject vbo = new BufferObject(
 			new BufferDesc {
 				Frequency = BufferFrequency.Static,
 				Type = BufferType.Vertex,
@@ -100,7 +99,7 @@ internal static class NoiseVisualization {
 			});
 		vbo.Submit<byte>(vertex.AsSpan());
 		
-		Buffer ebo = new Buffer(
+		BufferObject ebo = new BufferObject(
 			new BufferDesc {
 				Frequency = BufferFrequency.Static,
 				Type = BufferType.Index,
@@ -165,7 +164,7 @@ internal static class NoiseVisualization {
 			});
 
 		// uniform buffer
-		Buffer uniform = new Buffer(
+		BufferObject uniform = new BufferObject(
 			new BufferDesc {
 				Frequency = BufferFrequency.Stream,
 				Type = BufferType.Uniform,
@@ -184,11 +183,7 @@ internal static class NoiseVisualization {
 		resourceSet.BindTexture(0, colorTexture, sampler);
 		resourceSet.BindUniform(1, uniform, 64);
 
-		Swapchain swapchain = new Swapchain(
-			new RenderPassDesc {
-				ClearColor = new Color(0.05F, 0.05F, 0.1F),
-				ClearDepth = 1.0F
-			}, RenderTarget.GetUltimate());
+		Swapchain swapchain = new Swapchain(RenderTarget.GetUltimate());
 
 		float rotation = 0;
 		float flyY = 30;

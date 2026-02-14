@@ -9,8 +9,8 @@ namespace Mino.Graphics;
 /// </summary>
 public class Sampler : IDisposable {
 	private RenderBackend _backend;
-	private bool _disposed;
 	public readonly HandleRef _handle;
+	private bool _disposed;
 
 	public Sampler(in SamplerDesc desc) {
 		// Set userdata.
@@ -36,12 +36,7 @@ public class Sampler : IDisposable {
 		_backend.SamplerDelete(_handle);
 		GC.SuppressFinalize(this);
 	}
-
-	// Finalizer in case.
-	~Sampler() {
-		Dispose();
-	}
-
+	
 	// Implicit cast to native handle.
 	public static implicit operator uint(Sampler obj) {
 		return obj._handle;

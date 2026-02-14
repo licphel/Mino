@@ -1,5 +1,4 @@
 ﻿using Mino.Algorithm.Random;
-using Mino.Framework;
 using Mino.Framework.XPlatform;
 using Mino.Graphics.Desktop;
 using Mino.Graphics.RHI;
@@ -12,10 +11,10 @@ using Silk.NET.OpenGL;
 namespace Mino.Native.OpenGL;
 
 public unsafe class GLBackend : RenderBackend, ServiceProvider {
-	private bool _disposed;
 	private GL _gl = null!;
-	private bool _init;
 	private Window _window = null!;
+	private bool _init;
+	private bool _disposed;
 
 	public void Init(Window window) {
 		if (_init) {
@@ -30,14 +29,8 @@ public unsafe class GLBackend : RenderBackend, ServiceProvider {
 		}
 
 		// Initial NDC args.
-		_gl.DepthRange(1.0, 0.0);
-
-		if (window.Debug) {
-			// Disturbs GL ids to let it differ from our handles.
-			// This may expose some errors.
-
-			// _disturbGLIDs();
-		}
+		// Default 0 near 1 far.
+		_gl.DepthRange(0.0, 1.0);
 	}
 
 	public void Dispose() {
@@ -324,12 +317,11 @@ public unsafe class GLBackend : RenderBackend, ServiceProvider {
 	}
 
 	public void ResourceSetBindBuffer(uint set, int slot, ResourceType type, uint buffer, int offset, int size) {
-		_resourceSetHeap.GetData(set)._bounds.Add(new GLResourceSet.Bound(type, slot, [buffer], offset, size));
+		_resourceSetHeap.GetData(set)._bounds[slot] = new GLResourceSet.Bound(type, slot, [buffer], offset, size);
 	}
 
 	public void ResourceSetBindTexture(uint set, int slot, uint texture, uint sampler) {
-		_resourceSetHeap.GetData(set)._bounds
-			.Add(new GLResourceSet.Bound(ResourceType.Texture, slot, [texture, sampler]));
+		_resourceSetHeap.GetData(set)._bounds[slot] = new GLResourceSet.Bound(ResourceType.Texture, slot, [texture, sampler]);
 	}
 
 	public uint EncoderGen() {
@@ -395,20 +387,6 @@ public unsafe class GLBackend : RenderBackend, ServiceProvider {
 
 	public void EncoderRenderPipe(uint encoder, uint pipe) {
 		_encoderHeap.GetData(encoder)._commands.Add(new GLC_SetRenderPipe(pipe));
-	}
-
-	private void _disturbGLIDs() {
-		// Random disturbing levels.
-		int lvl = RandomGenerator.Default.NextInt(5, 20);
-		for (int i = 0; i < lvl; i++) {
-			_gl.GenTexture();
-			_gl.GenBuffer();
-			_gl.GenFramebuffer();
-			_gl.GenSampler();
-			_gl.CreateShader(GLEnum.VertexShader);
-			_gl.CreateProgram();
-			_gl.GenVertexArray();
-		}
 	}
 
 	private void preDraw(GLRenderPipe _p) {

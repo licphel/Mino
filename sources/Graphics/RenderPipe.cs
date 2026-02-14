@@ -9,8 +9,8 @@ namespace Mino.Graphics;
 /// </summary>
 public class RenderPipe : IDisposable {
 	private RenderBackend _backend;
-	private bool _disposed;
 	public readonly HandleRef _handle;
+	private bool _disposed;
 
 	public RenderPipe(in RenderPipeDesc desc) {
 		// Set userdata.
@@ -35,11 +35,6 @@ public class RenderPipe : IDisposable {
 
 		_backend.RenderPipeDelete(_handle);
 		GC.SuppressFinalize(this);
-	}
-
-	// Finalizer in case.
-	~RenderPipe() {
-		Dispose();
 	}
 
 	// Implicit cast to native handle.

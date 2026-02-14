@@ -10,9 +10,9 @@ namespace Mino.Graphics;
 /// </summary>
 public class Encoder : IDisposable {
 	private RenderBackend _backend;
+	public readonly HandleRef _handle;
 	private int _cmdCnt = 0;
 	private bool _disposed;
-	public readonly HandleRef _handle;
 	
 	public Encoder(in EncoderDesc desc) {
 		// Set userdata.
@@ -73,7 +73,7 @@ public class Encoder : IDisposable {
 	/// </summary>
 	/// <param name="buffer">Buffer like index buffer, vertex buffer, etc.</param>
 	/// <exception cref="Error">Thrown if buffer type is invalid.</exception>
-	public void SetBuffer(Buffer buffer) {
+	public void SetBuffer(BufferObject buffer) {
 		if (buffer.Desc.Type == BufferType.Uniform) {
 			throw new Error("unexpected uniform buffer");
 		}
@@ -172,11 +172,6 @@ public class Encoder : IDisposable {
 	public void Dispatch(uint x, uint y, uint z) {
 		_cmdCnt++;
 		_backend.EncoderDispatch(_handle, x, y, z);
-	}
-
-	// Finalizer in case.
-	~Encoder() {
-		Dispose();
 	}
 
 	// Implicit cast to native handle.

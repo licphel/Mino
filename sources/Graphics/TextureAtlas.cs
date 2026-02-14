@@ -9,7 +9,7 @@ namespace Mino.Graphics;
 /// <summary>
 ///     Blits small textures to a bigger one to curb state changes.
 /// </summary>
-public class TextureAtlas {
+public class TextureAtlas : IDisposable {
 	private const int INITIAL_SIZE = 64;
 	
 	/*
@@ -20,6 +20,7 @@ public class TextureAtlas {
 	private Texture? _texture;
 	private bool _init;
 	private int _size;
+	private bool _disposed;
 
 	public void Init() {
 		if (_init) {
@@ -78,7 +79,7 @@ public class TextureAtlas {
 	/// <returns>A texture part, not ready for usage.</returns>
 	/// <exception cref="Error">Thrown if not initialized or ended.</exception>
 	public TexturePart Accept(Image image) {
-		if (!_init) {
+		if (!_init || _disposed) {
 			throw new Error("cannot accept");
 		}
 		// Expand till enough.
@@ -94,5 +95,16 @@ public class TextureAtlas {
 		});
 		
 		return new TexturePart(_texture!, (Box2) dstRect);
+	}
+	
+	public void Dispose() {
+		if (_disposed) {
+			return;
+		}
+		_disposed = true;
+		
+		// Texture itself has safeguarded dupe disposing.
+		_texture?.Dispose();
+		GC.SuppressFinalize(this);
 	}
 }

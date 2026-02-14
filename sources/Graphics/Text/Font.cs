@@ -20,14 +20,14 @@ public unsafe class Font : IDisposable {
 	 * To render, for example 32px text, we can calculate scaling based on this.
 	 */
 	public const float BASIC_LH = 16.0F;
-	private TextureAtlas _atlas = new TextureAtlas();
-
-	private bool _disposed;
+	
 	private FT_FaceRec_* _ftFace;
 	private FT_LibraryRec_* _ftLib;
+	private TextureAtlas _atlas = new TextureAtlas();
 	private Dictionary<char, Glyph> _glyphs = new Dictionary<char, Glyph>();
 	private uint _resolution;
-
+	private bool _disposed;
+	
 	// Forbit everyone directly new a font.
 	private Font() {
 	}
@@ -113,11 +113,6 @@ public unsafe class Font : IDisposable {
 	/// <returns>A baked text blob.</returns>
 	public TextBlob Bake(string text, float maxWidth = int.MaxValue, TextNextLine nextLine = TextNextLine.Latin, float lineH = BASIC_LH) {
 		return new TextBlob(text, this, lineH, maxWidth, nextLine);
-	}
-
-	// Finalizer in case.
-	~Font() {
-		Dispose();
 	}
 
 	private void init() {

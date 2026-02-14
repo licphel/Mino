@@ -5,8 +5,8 @@ using Silk.NET.OpenGL;
 namespace Mino.Native.OpenGL.Object;
 
 public unsafe class GLRenderPipe {
-	public RenderPipeDesc _desc;
 	public GL _gl;
+	public RenderPipeDesc _desc;
 	private Dictionary<(uint, uint), uint> _vaoCache = new Dictionary<(uint, uint), uint>();
 
 	public GLRenderPipe(GL gl) {

@@ -6,22 +6,15 @@ namespace Mino.Graphics.Text;
 ///     A baked text instance, used for rendering and testing.
 /// </summary>
 public class TextBlob {
-	private readonly Font _font;
-	private readonly float _lineH;
-	private readonly string _text;
-
 	internal TextBlob(string text, Font font, float lineH, float maxWidth, TextNextLine nextLine) {
-		_text = text;
-		_font = font;
-		_lineH = lineH;
-
 		float cursorX = 0;
 		float cursorY = 0;
-		float descender = font.Info.Descender;
-		float lineGap = font.Info.LineGap;
 		int currentLine = 0;
 		int lastSpaceIndex = -1;
 		float maxLineWidth = 0;
+		float scale = lineH / Font.BASIC_LH;
+		float descender = font.Info.Descender * scale;
+		float lineGap = font.Info.LineGap * scale;
 
 		for (int i = 0; i < text.Length; i++) {
 			char c = text[i];
@@ -39,7 +32,7 @@ public class TextBlob {
 				continue;
 			}
 
-			Glyph glyph = font.GetGlyph(c);
+			Glyph glyph = font.GetGlyph(c).Scale(scale);
 
 			if (char.IsWhiteSpace(c) && !char.IsControl(c)) {
 				lastSpaceIndex = i;

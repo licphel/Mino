@@ -8,21 +8,15 @@ namespace Mino.Graphics;
 /// </summary>
 public class Swapchain : IDisposable {
 	private RenderBackend _backend;
+	private RenderTarget _renderTarget;
 	private bool _disposed;
 	private bool _inPass;
-	private RenderTarget _renderTarget;
 
-	public Swapchain(in RenderPassDesc desc, RenderTarget rt) {
+	public Swapchain(RenderTarget rt) {
 		_backend = RenderSystem.GetBackend();
 		_renderTarget = rt;
-		Desc = desc;
 	}
-
-	/// <summary>
-	///     The render pass desc.
-	/// </summary>
-	public RenderPassDesc Desc { get; set; }
-
+	
 	/// <summary>
 	///     If the swapchain is a window swapchain.
 	/// </summary>
@@ -45,7 +39,7 @@ public class Swapchain : IDisposable {
 	/// <summary>
 	///     Acquires next frame.
 	/// </summary>
-	public void Acquire() {
+	public void Acquire(in RenderPassDesc? desc = null) {
 		if (_inPass) {
 			throw new Error("duplicated acquire");
 		}
@@ -53,7 +47,7 @@ public class Swapchain : IDisposable {
 		if (IsUltimate) {
 			_backend.FrameBegin();
 		}
-		_backend.RenderPassBegin(_renderTarget, Desc);
+		_backend.RenderPassBegin(_renderTarget, desc ?? new RenderPassDesc());
 	}
 
 	/// <summary>
@@ -68,10 +62,5 @@ public class Swapchain : IDisposable {
 		if (IsUltimate) {
 			_backend.FrameEnd();
 		}
-	}
-
-	// Finalizer in case.
-	~Swapchain() {
-		Dispose();
 	}
 }

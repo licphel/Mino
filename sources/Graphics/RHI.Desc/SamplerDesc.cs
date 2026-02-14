@@ -7,19 +7,19 @@ namespace Mino.Graphics.RHI.Desc;
 ///     Describes a texture sampler.
 /// </summary>
 public record struct SamplerDesc {
-	public float AnisotropyLevel;
-	public float LodBias;
 	public TextureFilter MagFilter;
-	public float MaxLod;
 	public TextureFilter MinFilter;
-	public float MinLod;
 	public int MipmapLevel;
 	public int SampleCount;
-	public Color WrapBorderColor;
 	public TextureWrap WrapX;
 	public TextureWrap WrapY;
 	public TextureWrap WrapZ;
-
+	public Color WrapBorderColor;
+	public float LodBias;
+	public float MinLod;
+	public float MaxLod;
+	public float AnisotropyLevel;
+	
 	public SamplerDesc() {
 		AnisotropyLevel = 1.0F;
 		LodBias = 0.0F;

@@ -4,9 +4,9 @@ using Silk.NET.OpenGL;
 namespace Mino.Native.OpenGL.Object;
 
 public class GLSampler {
-	public SamplerDesc _desc;
 	public GL _gl;
 	public uint _handle;
+	public SamplerDesc _desc;
 
 	public GLSampler(GL gl, uint handle) {
 		_gl = gl;

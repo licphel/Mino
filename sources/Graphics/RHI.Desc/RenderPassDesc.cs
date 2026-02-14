@@ -14,7 +14,7 @@ public struct RenderPassDesc {
 
 	public RenderPassDesc() {
 		ClearColor = Color.PureBlack;
-		ClearDepth = 0.0;
+		ClearDepth = 1.0;
 		ClearStencil = 0;
 		Clear = ClearMask.Color | ClearMask.Depth | ClearMask.Stencil;
 	}

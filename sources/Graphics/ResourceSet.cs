@@ -10,8 +10,8 @@ namespace Mino.Graphics;
 /// </summary>
 public class ResourceSet : IDisposable {
 	private RenderBackend _backend;
-	private bool _disposed;
 	public readonly HandleRef _handle;
+	private bool _disposed;
 
 	public ResourceSet(in ResourceSetLayout layout) {
 		// Set userdata.
@@ -57,7 +57,7 @@ public class ResourceSet : IDisposable {
 	/// <param name="size">Buffer data size in bytes.</param>
 	/// <param name="offset">Buffer data offset in bytes.</param>
 	/// <exception cref="Error">Thrown if size or offset is invalid.</exception>
-	public void BindUniform(int slot, Buffer buffer, int size, int offset = 0) {
+	public void BindUniform(int slot, BufferObject buffer, int size, int offset = 0) {
 		assert(ResourceType.UniformBuffer, slot);
 		if (size <= 0 || offset < 0) {
 			throw new Error("no uniform data");
@@ -76,11 +76,6 @@ public class ResourceSet : IDisposable {
 		if (expectedType != type) {
 			throw new Error($"validation failed: {expectedType} expected");
 		}
-	}
-
-	// Finalizer in case.
-	~ResourceSet() {
-		Dispose();
 	}
 
 	// Implicit cast to native handle.

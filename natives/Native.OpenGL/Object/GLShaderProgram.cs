@@ -5,9 +5,9 @@ using ShaderType = Mino.Graphics.RHI.Enum.ShaderType;
 namespace Mino.Native.OpenGL.Object;
 
 public class GLShaderProgram {
-	public ShaderProgramDesc _desc;
 	public GL _gl;
 	public uint _handle;
+	public ShaderProgramDesc _desc;
 
 	public GLShaderProgram(GL gl, uint handle) {
 		_gl = gl;

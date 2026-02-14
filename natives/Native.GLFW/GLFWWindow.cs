@@ -12,16 +12,16 @@ namespace Mino.Native.GLFW;
 
 public unsafe class GLFWWindow : Window, ServiceProvider {
 	private Glfw _glfw = Glfw.GetApi();
-	private bool _closed;
-	private Vector2 _cursor;
-	private bool _cursorRelativeMode = false;
-	private bool _debug;
 	private WindowHandle* _handle;
 	internal ConcurrentDictionary<int, int> _keyModMap = new ConcurrentDictionary<int, int>();
 	internal ConcurrentDictionary<int, byte> _keyStatusMap = new ConcurrentDictionary<int, byte>();
+	private Vector2 _cursor;
 	private string _title = string.Empty;
 	private bool _vsync;
-
+	private bool _closed;
+	private bool _cursorRelativeMode = false;
+	private bool _debug;
+	
 	public override bool Debug { get => _debug; }
 
 	public override Vector2 Size {

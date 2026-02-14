@@ -4,9 +4,9 @@ using Silk.NET.OpenGL;
 namespace Mino.Native.OpenGL.Object;
 
 public class GLShaderModule {
-	public ShaderModuleDesc _desc;
 	public GL _gl;
 	public uint _handle;
+	public ShaderModuleDesc _desc;
 
 	public GLShaderModule(GL gl, uint handle) {
 		_gl = gl;
