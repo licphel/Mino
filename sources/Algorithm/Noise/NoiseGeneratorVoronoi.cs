@@ -51,17 +51,15 @@ public class NoiseGeneratorVoronoi : NoiseGenerator {
 	}
 
 	private static double hash(int x, int y, int z, long seed) {
-		const ulong FNV_PRIME = 1099511628211UL;
-		const ulong FNV_OFFSET = 14695981039346656037UL;
-		ulong hash = FNV_OFFSET;
+		ulong hash = 14695981039346656037UL;
 		hash ^= (ulong) x;
-		hash *= FNV_PRIME;
+		hash *= 1099511628211UL;
 		hash ^= (ulong) y;
-		hash *= FNV_PRIME;
+		hash *= 1099511628211UL;
 		hash ^= (ulong) z;
-		hash *= FNV_PRIME;
+		hash *= 1099511628211UL;
 		hash ^= (ulong) seed;
-		hash *= FNV_PRIME;
+		hash *= 1099511628211UL;
 		hash ^= hash >> 33;
 		hash *= 0xff51afd7ed558ccdUL;
 		hash ^= hash >> 33;

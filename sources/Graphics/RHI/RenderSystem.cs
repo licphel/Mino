@@ -1,6 +1,6 @@
 ﻿#region
+using Mino.Desktop;
 using Mino.Framework;
-using Mino.Graphics.Desktop;
 #endregion
 
 namespace Mino.Graphics.RHI;
@@ -53,7 +53,7 @@ public class RenderSystem {
 	///     Updates the render system.
 	/// </summary>
 	/// <param name="step">Update fixed step.</param>
-	public static void Update(FixedStep step) {
+	public static void Update(TimeStep step) {
 		lock (_lock) {
 			if (_backend == null) {
 				return;

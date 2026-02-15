@@ -1,4 +1,4 @@
-﻿namespace Mino.Graphics.Desktop;
+﻿namespace Mino.Desktop;
 
 /// <summary>
 ///     Opaque window context locator.

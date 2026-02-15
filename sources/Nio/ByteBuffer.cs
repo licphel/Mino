@@ -9,16 +9,16 @@ namespace Mino.Nio;
 ///     Endianness-careful byte buffer.
 /// </summary>
 public class ByteBuffer {
-	public const int DEFAULT_CAPACITY = 64;
+	public const int DefaultCapacity = 64;
 	private Endianness _endianness;
 
-	private bool _useLE;
+	private bool _littleEndian;
 	public byte[] BufferArray;
 	public int Capacity;
 	public int ReadIndex;
 	public int WriteIndex;
 
-	public ByteBuffer(int cap = DEFAULT_CAPACITY, Endianness endianness = Endianness.Unsure) {
+	public ByteBuffer(int cap = DefaultCapacity, Endianness endianness = Endianness.Unsure) {
 		BufferArray = new byte[cap];
 		Capacity = cap;
 		ReadIndex = 0;
@@ -42,11 +42,11 @@ public class ByteBuffer {
 		get => _endianness;
 		set {
 			_endianness = value;
-			_useLE = value switch {
+			_littleEndian = value switch {
 				Endianness.Little => true,
 				Endianness.Big => false,
 				Endianness.Native => BitConverter.IsLittleEndian,
-				_ => _useLE
+				_ => _littleEndian
 			};
 		}
 	}
@@ -142,7 +142,7 @@ public class ByteBuffer {
 		Span<byte> span = BufferArray.AsSpan(WriteIndex, size);
 		MemoryMarshal.Write(span, value);
 
-		if (_useLE ^ BitConverter.IsLittleEndian) {
+		if (_littleEndian ^ BitConverter.IsLittleEndian) {
 			span.Reverse();
 		}
 		WriteIndex += size;
@@ -207,7 +207,7 @@ public class ByteBuffer {
 		Span<byte> span = BufferArray.AsSpan(ReadIndex, size);
 		ReadIndex += size;
 
-		if (_useLE ^ BitConverter.IsLittleEndian) {
+		if (_littleEndian ^ BitConverter.IsLittleEndian) {
 			Span<byte> temp = stackalloc byte[size];
 			span.CopyTo(temp);
 			temp.Reverse();

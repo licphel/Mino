@@ -43,7 +43,7 @@ public readonly struct Url : IEquatable<Url> {
 		return Scheme.ToFilePath(this);
 	}
 
-	private const int _STREAM_BUFFER_SIZE = 1048576;
+	private const int StreamBufferSize = 1048576;
 
 	/// <summary>
 	///     Synchronously reads the resource of the url.
@@ -56,7 +56,7 @@ public readonly struct Url : IEquatable<Url> {
 			throw new Error("URL cannot open a stream");
 		}
 		using MemoryStream memoryStream = new MemoryStream();
-		stream.CopyTo(memoryStream, _STREAM_BUFFER_SIZE);
+		stream.CopyTo(memoryStream, StreamBufferSize);
 		return new ByteBuffer(memoryStream.ToArray());
 	}
 
@@ -71,7 +71,7 @@ public readonly struct Url : IEquatable<Url> {
 			throw new Error("URL cannot open a stream");
 		}
 		using MemoryStream memoryStream = new MemoryStream();
-		await stream.CopyToAsync(memoryStream, _STREAM_BUFFER_SIZE);
+		await stream.CopyToAsync(memoryStream, StreamBufferSize);
 		return new ByteBuffer(memoryStream.ToArray());
 	}
 

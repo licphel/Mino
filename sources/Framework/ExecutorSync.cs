@@ -1,7 +1,7 @@
 ﻿#region
 using System.Diagnostics;
-using Mino.Graphics.Desktop;
-using Mino.Graphics.Input;
+using Mino.Desktop;
+using Mino.Input;
 #endregion
 
 namespace Mino.Framework;
@@ -11,13 +11,13 @@ namespace Mino.Framework;
 ///     Uses fixed timestep for logic updates and variable frame rate for rendering.
 /// </summary>
 public class ExecutorSync : Executor {
-	private const double _ONE_NANO = 1_000_000_000.0;
+	private const double OneNano = 1_000_000_000.0;
+	
 	private double _lastFixedTickTime;
 	private double _lastRenderTime;
 	private double _lastStatUpdateTime;
 	private double _lastTickTime;
 	private int _renderFrameCounter;
-
 	private int _tickFrameCounter;
 	private double _timeAccumulator;
 	private Stopwatch _timer = new Stopwatch();
@@ -33,27 +33,29 @@ public class ExecutorSync : Executor {
 			throw new Error("negative tps");
 		}
 
-		const double MAX_FRAME_TIME = 0.25 * _ONE_NANO;
+		const double MaxFrameTime = 0.25 * OneNano;
 
 		_timer.Start();
 
-		KeyListener.AddListeningThread(Thread.CurrentThread);
+		Key.AddListeningThread(Thread.CurrentThread);
 
-		double targetTickInterval = _ONE_NANO / tps;
-		double targetFrameInterval = fps > 0 ? _ONE_NANO / fps : 0.0;
+		double targetTickInterval = OneNano / tps;
+		double targetFrameInterval = fps > 0 ? OneNano / fps : 0.0;
 		double currentTime = getCurrentNanos();
 
 		_lastStatUpdateTime = currentTime;
 		_lastRenderTime = currentTime;
 		_lastTickTime = currentTime;
 		_lastFixedTickTime = currentTime;
+		
+		TimeSpan timeStamp = TimeSpan.Zero;
 
 		while (!window.Closed) {
 			currentTime = getCurrentNanos();
 
 			window.ProcessWindowEvents();
 
-			double frameTime = Math.Min(currentTime - _lastTickTime, MAX_FRAME_TIME);
+			double frameTime = Math.Min(currentTime - _lastTickTime, MaxFrameTime);
 			_lastTickTime = currentTime;
 			_timeAccumulator += frameTime;
 
@@ -62,13 +64,13 @@ public class ExecutorSync : Executor {
 				double tickStartTime = getCurrentNanos();
 				double diffFixed = tickStartTime - _lastFixedTickTime;
 				// Calculate delta from tick diffs.
-				Delta = Math.Clamp(diffFixed / _ONE_NANO, 0.0, 0.1);
-				OnTick?.Invoke(new FixedStep(this));
+				double Delta = Math.Clamp(diffFixed / OneNano, 0.0, 0.1);
+				OnTick?.Invoke(new TimeStep(timeStamp, Delta));
 				_lastFixedTickTime = tickStartTime;
 
-				KeyListener.NextListeningRoll();
+				Key.NextListeningRoll();
 				Ticks++;
-				Timestamp += TimeSpan.FromSeconds(targetTickInterval / _ONE_NANO);
+				timeStamp += TimeSpan.FromSeconds(targetTickInterval / OneNano);
 
 				_timeAccumulator -= targetTickInterval;
 				ticksThisFrame++;
@@ -113,12 +115,12 @@ public class ExecutorSync : Executor {
 	}
 
 	private void doStatistics(double currentTime) {
-		const double STAT_INTERVAL = 0.5 * _ONE_NANO;
+		const double StatInterval = 0.5 * OneNano;
 
 		double elapsed = currentTime - _lastStatUpdateTime;
 
-		if (elapsed >= STAT_INTERVAL) {
-			double seconds = elapsed / _ONE_NANO;
+		if (elapsed >= StatInterval) {
+			double seconds = elapsed / OneNano;
 
 			if (seconds > 0) {
 				Fps = (int) (_renderFrameCounter / seconds);
@@ -171,6 +173,6 @@ public class ExecutorSync : Executor {
 	}
 
 	private double getCurrentNanos() {
-		return (double) _timer.ElapsedTicks / Stopwatch.Frequency * _ONE_NANO;
+		return (double) _timer.ElapsedTicks / Stopwatch.Frequency * OneNano;
 	}
 }

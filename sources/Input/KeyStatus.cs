@@ -1,4 +1,4 @@
-﻿namespace Mino.Graphics.Input;
+﻿namespace Mino.Input;
 
 /// <summary>
 ///     Key statuses.

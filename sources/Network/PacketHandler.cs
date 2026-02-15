@@ -17,12 +17,12 @@ public class PacketHandler : IDisposable {
 	private readonly ConcurrentQueue<Packet> _consumption = new ConcurrentQueue<Packet>();
 	private readonly CancellationTokenSource _disposeCts = new CancellationTokenSource();
 	private readonly BlockingCollection<Packet> _packets = new BlockingCollection<Packet>();
-	private byte[] _compressionBuffer = new byte[Net.COMPRESSION_BUFFER_SIZE];
+	private byte[] _compressionBuffer = new byte[Net.CompressionBufferSize];
 	private volatile bool _connected;
-	private byte[] _decompressionBuffer = new byte[Net.DECOMPRESSION_BUFFER_SIZE];
+	private byte[] _decompressionBuffer = new byte[Net.DecompressionBufferSize];
 	private volatile bool _disposed;
 	private DateTime _lastHeartbeat = DateTime.UtcNow;
-	private ByteBuffer _rcvBuf = new ByteBuffer(Net.BUFFER_SIZE, Endianness.Big);
+	private ByteBuffer _rcvBuf = new ByteBuffer(Net.BufferSize, Endianness.Big);
 	private volatile bool _rcvSt;
 	private volatile bool _sendSt;
 	private Socket? _socket;
@@ -248,7 +248,7 @@ public class PacketHandler : IDisposable {
 					byte[] bytes = listener.Receive(ref groupEp);
 					string msg = Encoding.UTF8.GetString(bytes);
 
-					if (msg.StartsWith(Net.BROADCAST_HEADER)) {
+					if (msg.StartsWith(Net.BroadcastHeader)) {
 						int idx1 = msg.IndexOf('[');
 						int idx2 = msg.LastIndexOf(']');
 						if (idx1 < 0 || idx2 < 0 || idx2 < idx1) {
@@ -371,7 +371,7 @@ public class PacketHandler : IDisposable {
 			int readMark = _rcvBuf.ReadIndex;
 			int len = _rcvBuf.Read<int>();
 
-			if (len is < 0 or > Net.COMPRESSION_BUFFER_SIZE) {
+			if (len is < 0 or > Net.CompressionBufferSize) {
 				// Invalid length, disconnect.
 				Logger.Global.Debug($"Invalid packet length: {len}");
 				Disconnect();

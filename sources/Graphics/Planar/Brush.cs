@@ -1,6 +1,5 @@
 ﻿#region
 using System.Runtime.InteropServices;
-using Mino.Graphics;
 using Mino.Graphics.RHI.Desc;
 using Mino.Graphics.RHI.Enum;
 using Mino.Graphics.Text;
@@ -8,14 +7,14 @@ using Mino.Mathematics;
 using Mino.Nio;
 #endregion
 
-namespace Mino.Render2D;
+namespace Mino.Graphics.Planar;
 
 /// <summary>
 ///     2D batched brush,
 ///     provides integrated 2D rendering solution.
 /// </summary>
 public unsafe class Brush : IDisposable {
-	private const string VERT_SHADER_TEX = """
+	private const string VertShaderTex = """
 										   #version 330 core
 
 										   layout(location = 0) in vec3 i_position;
@@ -36,7 +35,7 @@ public unsafe class Brush : IDisposable {
 										       gl_Position =  u_viewProjection * vec4(i_position, 1.0);
 										   }
 										   """;
-	private const string FRAG_SHADER_TEX = """
+	private const string FragShaderTex = """
 										   #version 330 core
 
 										   in vec4 o_color;
@@ -49,7 +48,7 @@ public unsafe class Brush : IDisposable {
 										       gl_FragColor = o_color * col;
 										   }
 										   """;
-	private const string VERT_SHADER_COL = """
+	private const string VertShaderCol = """
 										   #version 330 core
 
 										   layout(location = 0) in vec3 i_position;
@@ -67,7 +66,7 @@ public unsafe class Brush : IDisposable {
 										       gl_Position =  u_viewProjection * vec4(i_position, 1.0);
 										   }
 										   """;
-	private const string FRAG_SHADER_COL = """
+	private const string FragShaderCol = """
 										   #version 330 core
 
 										   in vec4 o_color;
@@ -597,7 +596,7 @@ public unsafe class Brush : IDisposable {
 	/// <param name="y">Drawing offset y.</param>
 	/// <param name="alignment">Text alignment.</param>
 	public void DrawText(TextBlob blob, float x, float y, Alignment? alignment = null) {
-		alignment??= Alignment.Default;
+		alignment??= Alignment.LeftUp;
 		
 		float w = blob.Width;
 		float h = blob.Height;
@@ -630,6 +629,16 @@ public unsafe class Brush : IDisposable {
 			ref GlyphInstance gi = ref CollectionsMarshal.AsSpan(blob.GlyphRunList)[i];
 			DrawTexture(gi.Glyph.TexPart, gi.Bounds.Translate(x, y));
 		}
+	}
+
+	/// <summary>
+	///		Draws a text blob.
+	/// </summary>
+	/// <param name="blob">The blob to draw.</param>
+	/// <param name="pos">Drawing offset.</param>
+	/// <param name="alignment">Text alignment.</param>
+	public void DrawText(TextBlob blob, in Vector2 pos, in Alignment? alignment = null) {
+		DrawText(blob, pos.X, pos.Y, alignment);
 	}
 
 	public void Dispose() {
@@ -678,8 +687,8 @@ public unsafe class Brush : IDisposable {
 		 * 0 - colored
 		 * 1 - textured
 		 */
-		ShaderProgram program_0 = ShaderProgram.FragVert(VERT_SHADER_COL, FRAG_SHADER_COL);
-		ShaderProgram program_1 = ShaderProgram.FragVert(VERT_SHADER_TEX, FRAG_SHADER_TEX);
+		ShaderProgram program_0 = ShaderProgram.FragVert(VertShaderCol, FragShaderCol);
+		ShaderProgram program_1 = ShaderProgram.FragVert(VertShaderTex, FragShaderTex);
 		ResourceSetLayout layout_0 = ResourceSetLayout.Bake(
 			new ResourceSetLayout.Slot {
 				Count = 1,

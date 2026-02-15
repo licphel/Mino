@@ -1,4 +1,4 @@
-﻿namespace Mino.Framework.XPlatform;
+﻿namespace Mino.Framework.BSP;
 
 /// <summary>
 ///     Validates service availability.

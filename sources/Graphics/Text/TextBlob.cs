@@ -14,7 +14,7 @@ public class TextBlob {
 		int currentLine = 0;
 		int lastSpaceIndex = -1;
 		float maxLineWidth = 0;
-		float scale = lineH / Font.BASIC_LH;
+		float scale = lineH / Font.BasicLineHeight;
 		float descender = font.Info.Descender * scale;
 		float lineGap = font.Info.LineGap * scale;
 

@@ -36,8 +36,8 @@ public interface Image : IDisposable {
 	/// <summary>
 	///     Image pixel indexer.
 	/// </summary>
-	public _ImagePixelProxy this[int x] {
-		get => new _ImagePixelProxy(x, this);
+	public ImagePixelProxy this[int x] {
+		get => new ImagePixelProxy(x, this);
 	}
 
 	/// <summary>
@@ -109,13 +109,13 @@ public interface Image : IDisposable {
 	}
 
 	// Image pixel proxy used in pixel indexer.
-	public class _ImagePixelProxy {
+	public class ImagePixelProxy {
 		public int X;
 		public byte[] Data;
 		public int W;
 		public int P;
 
-		public _ImagePixelProxy(int x, Image image) {
+		public ImagePixelProxy(int x, Image image) {
 			X = x;
 			Data = image.Bytes ?? throw new Error("no image data");
 			W = image.Width;

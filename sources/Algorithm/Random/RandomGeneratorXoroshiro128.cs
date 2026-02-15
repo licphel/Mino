@@ -4,8 +4,8 @@ namespace Mino.Algorithm.Random;
 ///     Xoroshiro128+ random generator.
 /// </summary>
 public class RandomGeneratorXoroshiro128 : RandomGenerator {
-	public const ulong XOR128_HEADER = 128UL;
-	private const double _DOUBLE_NORM = 1.0 / (1UL << 53);
+	public const ulong Xor128Header = 128UL;
+	private const double DoubleNorm = 1.0 / (1UL << 53);
 
 	private ulong _stateA;
 	private ulong _stateB;
@@ -30,7 +30,7 @@ public class RandomGeneratorXoroshiro128 : RandomGenerator {
 	}
 
 	public double NextDouble() {
-		return (nextULong() >> 11) * _DOUBLE_NORM;
+		return (nextULong() >> 11) * DoubleNorm;
 	}
 
 	public int NextInt(int bound) {
@@ -50,11 +50,11 @@ public class RandomGeneratorXoroshiro128 : RandomGenerator {
 	}
 
 	public ulong[] InitialState {
-		get => [XOR128_HEADER, _stateIA, _stateIB];
+		get => [Xor128Header, _stateIA, _stateIB];
 	}
 
 	public ulong[] State {
-		get => [XOR128_HEADER, _stateA, _stateB];
+		get => [Xor128Header, _stateA, _stateB];
 	}
 
 	public RandomGenerator Drift(ulong x) {
@@ -69,7 +69,7 @@ public class RandomGeneratorXoroshiro128 : RandomGenerator {
 	}
 
 	public void Recover(ulong[] state) {
-		if (state.Length != 3 || state[0] != XOR128_HEADER) {
+		if (state.Length != 3 || state[0] != Xor128Header) {
 			throw new Error("unknown state format");
 		}
 		_stateIA = _stateA = state[1];

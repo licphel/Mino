@@ -77,12 +77,12 @@ public static unsafe class Blitter {
 		|| to.Bytes.Length < to.PixelStride) {
 			throw new Error("no data in image");
 		}
-		const float CMP = 0.01F;
+		const float Epsilon = 0.01F;
 
-		if (src.MinX < -CMP || src.MaxX - CMP > from.Width ||
-		src.MinY < -CMP || src.MaxY - CMP > from.Height ||
-		dst.MinX < -CMP || dst.MaxX - CMP > to.Width ||
-		dst.MinY < -CMP || dst.MaxY - CMP > to.Height) {
+		if (src.MinX < -Epsilon || src.MaxX - Epsilon > from.Width ||
+		src.MinY < -Epsilon || src.MaxY - Epsilon > from.Height ||
+		dst.MinX < -Epsilon || dst.MaxX - Epsilon > to.Width ||
+		dst.MinY < -Epsilon || dst.MaxY - Epsilon > to.Height) {
 			throw new Error("coordinates out of bounds");
 		}
 

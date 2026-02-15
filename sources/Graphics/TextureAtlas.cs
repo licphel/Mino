@@ -12,7 +12,7 @@ namespace Mino.Graphics;
 ///     Blits small textures to a bigger one to curb state changes.
 /// </summary>
 public class TextureAtlas : IDisposable {
-	private const int INITIAL_SIZE = 64;
+	private const int InitialSize = 64;
 
 	/*
 	 *	We use maximum rectangle algorithm to manage insertions.
@@ -30,7 +30,7 @@ public class TextureAtlas : IDisposable {
 		}
 		_init = true;
 
-		_size = INITIAL_SIZE;
+		_size = InitialSize;
 		_freeRects.Add(new MaximumRect.RectI(0, 0, _size, _size));
 
 		// Upload a null texture.

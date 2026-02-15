@@ -1,4 +1,4 @@
-﻿namespace Mino.Render2D;
+﻿namespace Mino.Graphics.Planar;
 
 /// <summary>
 ///     Brush draw flags.

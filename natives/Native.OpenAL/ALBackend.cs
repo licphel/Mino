@@ -3,7 +3,7 @@ using Mino.Audio.AHI;
 using Mino.Audio.AHI.Desc;
 using Mino.Audio.AHI.Enum;
 using Mino.Framework;
-using Mino.Framework.XPlatform;
+using Mino.Framework.BSP;
 using Mino.Native.OpenAL.Object;
 using Silk.NET.OpenAL;
 #endregion

@@ -21,21 +21,21 @@ public static class TagSystem {
 	 */
 
 	// Type IDs.
-	private const byte NULL = 1;
-	private const byte MAP = 2;
-	private const byte LIST = 3;
-	private const byte BYTE = 4;
-	private const byte SHORT = 5;
-	private const byte USHORT = 6;
-	private const byte INT = 7;
-	private const byte UINT = 8;
-	private const byte LONG = 9;
-	private const byte ULONG = 10;
-	private const byte FLOAT = 11;
-	private const byte DOUBLE = 12;
-	private const byte BOOL = 13;
-	private const byte STRING = 14;
-	private const byte BYTES = 15;
+	private const byte Null = 1;
+	private const byte Map = 2;
+	private const byte List = 3;
+	private const byte Byte = 4;
+	private const byte Short = 5;
+	private const byte Ushort = 6;
+	private const byte Int = 7;
+	private const byte Uint = 8;
+	private const byte Long = 9;
+	private const byte Ulong = 10;
+	private const byte Float = 11;
+	private const byte Double = 12;
+	private const byte Bool = 13;
+	private const byte String = 14;
+	private const byte Bytes = 15;
 
 	public static bool Validate(object? o) {
 		return Tell(o) != 0;
@@ -67,23 +67,23 @@ public static class TagSystem {
 
 	public static byte Tell(object? o) {
 		if (o is null) {
-			return NULL;
+			return Null;
 		}
 		return o switch {
-			TagMap => MAP,
-			TagList => LIST,
-			byte => BYTE,
-			short => SHORT,
-			ushort => USHORT,
-			int => INT,
-			uint => UINT,
-			long => LONG,
-			ulong => ULONG,
-			float => FLOAT,
-			double => DOUBLE,
-			bool => BOOL,
-			string => STRING,
-			byte[] => BYTES,
+			TagMap => Map,
+			TagList => List,
+			byte => Byte,
+			short => Short,
+			ushort => Ushort,
+			int => Int,
+			uint => Uint,
+			long => Long,
+			ulong => Ulong,
+			float => Float,
+			double => Double,
+			bool => Bool,
+			string => String,
+			byte[] => Bytes,
 			_ => 0
 		};
 	}
@@ -122,7 +122,7 @@ public static class TagSystem {
 			string key = input.ReadString();
 			object? data;
 
-			if (id == NULL) {
+			if (id == Null) {
 				data = null;
 			} else {
 				data = decodePrimitive(input, id);
@@ -134,10 +134,10 @@ public static class TagSystem {
 	}
 
 	private static object? decodePrimitive(ByteBuffer input, byte id) {
-		if (id == MAP) {
+		if (id == Map) {
 			return Decode(input);
 		}
-		if (id == LIST) {
+		if (id == List) {
 			TagList list = new TagList();
 			int size = input.Read<int>();
 			for (int i = 0; i < size; i++) {
@@ -147,40 +147,40 @@ public static class TagSystem {
 			}
 			return list;
 		}
-		if (id == BYTE) {
+		if (id == Byte) {
 			return input.Read<byte>();
 		}
-		if (id == SHORT) {
+		if (id == Short) {
 			return input.Read<short>();
 		}
-		if (id == USHORT) {
+		if (id == Ushort) {
 			return input.Read<ushort>();
 		}
-		if (id == INT) {
+		if (id == Int) {
 			return input.Read<int>();
 		}
-		if (id == UINT) {
+		if (id == Uint) {
 			return input.Read<uint>();
 		}
-		if (id == LONG) {
+		if (id == Long) {
 			return input.Read<long>();
 		}
-		if (id == ULONG) {
+		if (id == Ulong) {
 			return input.Read<ulong>();
 		}
-		if (id == FLOAT) {
+		if (id == Float) {
 			return input.Read<float>();
 		}
-		if (id == DOUBLE) {
+		if (id == Double) {
 			return input.Read<double>();
 		}
-		if (id == BOOL) {
+		if (id == Bool) {
 			return input.Read<bool>();
 		}
-		if (id == STRING) {
+		if (id == String) {
 			return input.ReadString();
 		}
-		if (id == BYTES) {
+		if (id == Bytes) {
 			int size = input.Read<int>();
 			byte[] array = new byte[size];
 			input.ReadBytes(array, size);

@@ -13,15 +13,15 @@ namespace Mino.Graphics.Text;
 ///     Freetype based font.
 /// </summary>
 public unsafe class Font : IDisposable {
-	public const string NUMBER = "1234567890";
-	public const string ALPHABETIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-	public const string ASCII = "!@#$%^&*()_+-=[]{}|\\;':\"<>,./?~`" + ALPHABETIC + NUMBER;
+	public const string Number = "1234567890";
+	public const string Alphabetic = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	public const string Ascii = "!@#$%^&*()_+-=[]{}|\\;':\"<>,./?~`" + Alphabetic + Number;
 
 	/*
 	 * Basic line height.
 	 * To render, for example 32px text, we can calculate scaling based on this.
 	 */
-	public const float BASIC_LH = 1.0F;
+	public const float BasicLineHeight = 1.0F;
 
 	private FT_FaceRec_* _ftFace;
 	private FT_LibraryRec_* _ftLib;
@@ -81,7 +81,7 @@ public unsafe class Font : IDisposable {
 		TexturePart texture =
 			_atlas.Accept(Image.Create((int) ftGlyph->bitmap.width, (int) ftGlyph->bitmap.rows, imgData));
 
-		float scale = 1.0F / (_resolution / BASIC_LH * 64.0F);
+		float scale = 1.0F / (_resolution / BasicLineHeight * 64.0F);
 
 		// Creates glyph data.
 		return _glyphs[ch] = new Glyph(
@@ -113,14 +113,14 @@ public unsafe class Font : IDisposable {
 	/// <param name="lineH">Line height.</param>
 	/// <returns>A baked text blob.</returns>
 	public TextBlob Bake(string text, float maxWidth = int.MaxValue, TextNextLine nextLine = TextNextLine.Latin,
-		float lineH = BASIC_LH) {
+		float lineH = BasicLineHeight) {
 		return new TextBlob(text, this, lineH, maxWidth, nextLine);
 	}
 
 	private void init() {
 		_atlas.Init();
 
-		float scale = 1.0F / (_resolution / BASIC_LH * 64.0F);
+		float scale = 1.0F / (_resolution / BasicLineHeight * 64.0F);
 		// Init info.
 		Info = new FontInfo(
 			_ftFace->ascender * scale,

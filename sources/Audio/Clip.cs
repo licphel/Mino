@@ -11,8 +11,8 @@ namespace Mino.Audio;
 ///     A re-playable audio clip.
 /// </summary>
 public class Clip : IDisposable {
-	public const float MAX_PITCH = 1024.0F;
-	public const float MAX_VOLUME = 1024.0F;
+	public const float MaxPitch = 1024.0F;
+	public const float MaxVolume = 1024.0F;
 
 	private AudioBackend _backend;
 	public readonly HandleRef _handle;
@@ -83,7 +83,7 @@ public class Clip : IDisposable {
 		get => _volume;
 		set {
 			assert();
-			_volume = Math.Clamp(value, 0.0F, MAX_VOLUME);
+			_volume = Math.Clamp(value, 0.0F, MaxVolume);
 			_backend.ClipSetProperty(_handle, ClipProperty.Gain, _volume);
 		}
 	}
@@ -95,7 +95,7 @@ public class Clip : IDisposable {
 		get => _pitch;
 		set {
 			assert();
-			_pitch = Math.Clamp(value, 0.0F, MAX_PITCH);
+			_pitch = Math.Clamp(value, 0.0F, MaxPitch);
 			_backend.ClipSetProperty(_handle, ClipProperty.Pitch, _pitch);
 		}
 	}

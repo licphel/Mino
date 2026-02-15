@@ -1,9 +1,7 @@
 ﻿#region
-using Mino.Graphics;
-using Mino.Mathematics;
 #endregion
 
-namespace Mino.Render2D;
+namespace Mino.Graphics.Planar;
 
 /// <summary>
 ///     Drawable object.

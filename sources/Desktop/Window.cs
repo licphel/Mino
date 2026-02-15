@@ -1,10 +1,10 @@
 ﻿#region
-using Mino.Graphics.Input;
+using Mino.Input;
 using Mino.Mathematics;
 using Mino.Nio;
 #endregion
 
-namespace Mino.Graphics.Desktop;
+namespace Mino.Desktop;
 
 /// <summary>
 ///     Represents a native window.
@@ -34,7 +34,7 @@ public abstract class Window : IDisposable {
 	/// <summary>
 	///     Called when a key is pressed or released.
 	/// </summary>
-	public Action<KeyCode, KeyModifier, KeyStatus>? KeyEvent;
+	public Action<uint, uint, KeyStatus>? KeyEvent;
 	/// <summary>
 	///     Called when window gets or loses focus.
 	/// </summary>
@@ -156,12 +156,12 @@ public abstract class Window : IDisposable {
 	/// </summary>
 	/// <param name="code">Code of the key.</param>
 	/// <returns>Status of the key.</returns>
-	public abstract KeyStatus GetStatus(KeyCode code);
+	public abstract KeyStatus GetStatus(uint code);
 
 	/// <summary>
 	///     Gets a key's modifiers.
 	/// </summary>
 	/// <param name="code">Code of the key.</param>
 	/// <returns>Combined modifiers of the key.</returns>
-	public abstract KeyModifier GetModifiers(KeyCode code);
+	public abstract uint GetModifiers(uint code);
 }

@@ -10,10 +10,10 @@ namespace Mino.Network;
 ///     Provides network utility functions.
 /// </summary>
 public static class Net {
-	public const int BUFFER_SIZE = 1024 * 1024;
-	public const int COMPRESSION_BUFFER_SIZE = 1024 * 1024;
-	public const int DECOMPRESSION_BUFFER_SIZE = 1024 * 1024;
-	public const string BROADCAST_HEADER = "79062786-685F-45F9-A6F8-94CAE5143CF3";
+	public const int BufferSize = 1024 * 1024;
+	public const int CompressionBufferSize = 1024 * 1024;
+	public const int DecompressionBufferSize = 1024 * 1024;
+	public const string BroadcastHeader = "79062786-685F-45F9-A6F8-94CAE5143CF3";
 
 	/// <summary>
 	///     Used in integrated client-server connection.

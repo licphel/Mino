@@ -1,8 +1,9 @@
 ﻿#region
+using Mino.Graphics;
 using Mino.Mathematics;
 #endregion
 
-namespace Mino.Graphics.Desktop;
+namespace Mino.Desktop;
 
 /// <summary>
 ///     A series of settings used to create a window.
@@ -12,6 +13,7 @@ public record struct WindowHints {
 	public Vector2 CursorHotspot = Vector2.Zero;
 	public Image? CursorImage = null;
 	public Image? Icon = null;
+	public string Title = string.Empty;
 	public bool DebugContext = false;
 	public bool AutoIconify = false;
 	public bool Decorated = true;
@@ -19,7 +21,6 @@ public record struct WindowHints {
 	public bool FocusOnShow = false;
 	public bool Maximized = false;
 	public bool Resizable = true;
-	public string Title = string.Empty;
 	public bool Visible = true;
 	public bool Vsync = true;
 

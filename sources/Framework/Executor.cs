@@ -1,5 +1,5 @@
 ﻿#region
-using Mino.Graphics.Desktop;
+using Mino.Desktop;
 #endregion
 
 namespace Mino.Framework;
@@ -27,21 +27,16 @@ public abstract class Executor {
 	///     Rendering partial tick used to lerp.
 	/// </summary>
 	public float Partial { get; protected set; }
-
+	
 	/// <summary>
-	///     Tick delta second.
+	///     Current time step.
 	/// </summary>
-	public double Delta { get; protected set; }
-
-	/// <summary>
-	///     Second-based timestamp.
-	/// </summary>
-	public TimeSpan Timestamp { get; protected set; }
+	public TimeStep Step { get; protected set; }
 
 	/// <summary>
 	///     Called on logic ticks.
 	/// </summary>
-	public Action<FixedStep>? OnTick { get; set; }
+	public Action<TimeStep>? OnTick { get; set; }
 
 	/// <summary>
 	///     Called on render ticks.

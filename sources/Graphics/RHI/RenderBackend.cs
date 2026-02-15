@@ -1,5 +1,5 @@
 ﻿#region
-using Mino.Graphics.Desktop;
+using Mino.Desktop;
 using Mino.Graphics.RHI.Desc;
 using Mino.Graphics.RHI.Enum;
 #endregion

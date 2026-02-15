@@ -6,9 +6,9 @@ namespace Mino.Mathematics;
 ///     Provides tabled fast trigonometric calculation.
 /// </summary>
 public static class FastTrigonometric {
-	private const int _TABLE_SIZE = 4096;
-	private const float _TWO_PI = MathF.PI * 2.0F;
-	private const float _INV_TWO_PI = 1.0F / _TWO_PI;
+	private const int TableSize = 4096;
+	private const float TwoPi = MathF.PI * 2.0F;
+	private const float InvTwoPi = 1.0F / TwoPi;
 
 	/// <summary>
 	///     Gets the sine and cosine value of a radian in a pre-calculated table.
@@ -20,24 +20,24 @@ public static class FastTrigonometric {
 #if HIGHP
 		(sin, cos) = MathF.SinCos(rad);
 #else
-		float index = mod(rad) * _INV_TWO_PI * _TABLE_SIZE;
-		int indexInt = (int) index & _TABLE_SIZE - 1;
+		float index = mod(rad) * InvTwoPi * TableSize;
+		int indexInt = (int) index & TableSize - 1;
 		float fraction = index - indexInt;
 		// Find sine.
-		int nextIndex = indexInt + 1 & _TABLE_SIZE - 1;
-		indexInt &= _TABLE_SIZE - 1;
+		int nextIndex = indexInt + 1 & TableSize - 1;
+		indexInt &= TableSize - 1;
 		sin = lerp(_table[indexInt], _table[nextIndex], fraction);
 		// Find cosine.
-		int cosIndex = indexInt + _TABLE_SIZE / 4 & _TABLE_SIZE - 1;
-		int cosNextIndex = cosIndex + 1 & _TABLE_SIZE - 1;
+		int cosIndex = indexInt + TableSize / 4 & TableSize - 1;
+		int cosNextIndex = cosIndex + 1 & TableSize - 1;
 		cos = lerp(_table[cosIndex], _table[cosNextIndex], fraction);
 #endif
 	}
 
 	private static float mod(float rad) {
-		rad %= _TWO_PI;
+		rad %= TwoPi;
 		if (rad < 0) {
-			rad += _TWO_PI;
+			rad += TwoPi;
 		}
 		return rad;
 	}
@@ -47,11 +47,11 @@ public static class FastTrigonometric {
 	}
 
 #if !HIGHP
-	private static readonly float[] _table = new float[_TABLE_SIZE];
+	private static readonly float[] _table = new float[TableSize];
 
 	static FastTrigonometric() {
-		for (int i = 0; i < _TABLE_SIZE; i++) {
-			float angle = i * _TWO_PI / _TABLE_SIZE;
+		for (int i = 0; i < TableSize; i++) {
+			float angle = i * TwoPi / TableSize;
 			_table[i] = MathF.Sin(angle);
 		}
 	}

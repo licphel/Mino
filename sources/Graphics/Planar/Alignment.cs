@@ -1,4 +1,4 @@
-﻿namespace Mino.Render2D;
+﻿namespace Mino.Graphics.Planar;
 
 /// <summary>
 ///		Drawing alignment.
@@ -17,8 +17,18 @@ public struct Alignment {
 	 */
 	public int Vertical;
 
-	public static readonly Alignment Default = new Alignment {
+	public static readonly Alignment LeftUp = new Alignment {
 		Horizontal = -1,
+		Vertical = -1
+	};
+	
+	public static readonly Alignment RightUp = new Alignment {
+		Horizontal = 1,
+		Vertical = -1
+	};
+	
+	public static readonly Alignment CentralUp = new Alignment {
+		Horizontal = 0,
 		Vertical = -1
 	};
 	

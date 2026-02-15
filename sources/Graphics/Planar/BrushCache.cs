@@ -2,7 +2,7 @@
 using Mino.Nio;
 #endregion
 
-namespace Mino.Render2D;
+namespace Mino.Graphics.Planar;
 
 /// <summary>
 ///     Brush draw-to cache.

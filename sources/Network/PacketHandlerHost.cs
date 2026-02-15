@@ -337,7 +337,7 @@ public class PacketHandlerHost : IDisposable {
 		broadcaster.Client.SendTimeout = 1000;
 
 		IPEndPoint broadcastEp = new IPEndPoint(IPAddress.Broadcast, 15000);
-		string message = $"{Net.BROADCAST_HEADER}[{port}]";
+		string message = $"{Net.BroadcastHeader}[{port}]";
 		byte[] bytes = Encoding.UTF8.GetBytes(message);
 
 		while (_active && !_disposeCts.Token.IsCancellationRequested) {
@@ -487,15 +487,15 @@ public class PacketHandlerHost : IDisposable {
 	/// </summary>
 	public class Channel : IDisposable {
 		private readonly CancellationTokenSource _channelCts = new CancellationTokenSource();
-		private readonly byte[] _compressionBuffer = new byte[Net.COMPRESSION_BUFFER_SIZE];
-		private readonly byte[] _decompressionBuffer = new byte[Net.DECOMPRESSION_BUFFER_SIZE];
+		private readonly byte[] _compressionBuffer = new byte[Net.CompressionBufferSize];
+		private readonly byte[] _decompressionBuffer = new byte[Net.DecompressionBufferSize];
 		internal readonly BlockingCollection<Packet> _packets = new BlockingCollection<Packet>();
 		private readonly Socket _socket;
 		private volatile bool _connected = true;
 		private volatile bool _disposed;
 		private DateTime _lastPoll = DateTime.UtcNow;
 		internal bool _pollError;
-		private ByteBuffer _rcvBuf = new ByteBuffer(Net.BUFFER_SIZE, Endianness.Big);
+		private ByteBuffer _rcvBuf = new ByteBuffer(Net.BufferSize, Endianness.Big);
 		private Thread? _receiveThread;
 		private Thread? _sendThread;
 
@@ -705,7 +705,7 @@ public class PacketHandlerHost : IDisposable {
 				int readMark = _rcvBuf.ReadIndex;
 				int len = _rcvBuf.Read<int>();
 
-				if (len is < 0 or > Net.COMPRESSION_BUFFER_SIZE) {
+				if (len is < 0 or > Net.CompressionBufferSize) {
 					Logger.Global.Debug($"Invalid packet length from {EndpointName}: {len}");
 					Disconnect();
 					return;

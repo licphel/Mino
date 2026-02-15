@@ -1,9 +1,9 @@
 ﻿#region
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
-using Mino.Framework.XPlatform;
-using Mino.Graphics.Desktop;
-using Mino.Graphics.Input;
+using Mino.Desktop;
+using Mino.Framework.BSP;
+using Mino.Input;
 using Mino.Mathematics;
 using Mino.Nio;
 using Silk.NET.GLFW;
@@ -212,12 +212,12 @@ public unsafe class GLFWWindow : Window, ServiceProvider {
 		_glfw.SwapBuffers(_handle);
 	}
 
-	public override KeyStatus GetStatus(KeyCode code) {
+	public override KeyStatus GetStatus(uint code) {
 		return (KeyStatus) _keyStatusMap.GetValueOrDefault((int) code, (byte) KeyStatus.Release);
 	}
 
-	public override KeyModifier GetModifiers(KeyCode code) {
-		return (KeyModifier) _keyModMap.GetValueOrDefault((int) code, (int) KeyModifier.None);
+	public override uint GetModifiers(uint code) {
+		return (uint) _keyModMap.GetValueOrDefault((int) code, (int) Key.ModNone);
 	}
 
 	public override void Dispose() {
@@ -244,14 +244,14 @@ public unsafe class GLFWWindow : Window, ServiceProvider {
 			}));
 		_glfw.SetKeyCallback(
 			_handle, keepAlive<GlfwCallbacks.KeyCallback>((_, key, _, action, mods) => {
-				KeyEvent?.Invoke((KeyCode) key, (KeyModifier) mods, (KeyStatus) action);
+				KeyEvent?.Invoke((uint) key, (uint) mods, (KeyStatus) action);
 				_keyStatusMap[(int) key] = (byte) action;
 				_keyModMap[(int) key] = (int) mods;
 			}));
 		_glfw.SetMouseButtonCallback(
 			_handle, keepAlive<GlfwCallbacks.MouseButtonCallback>((_, key, action, mods) => {
-				key += (int) KeyCode.MouseLeft; // Add an offset.
-				KeyEvent?.Invoke((KeyCode) key, (KeyModifier) mods, (KeyStatus) action);
+				key += (int) Key.MouseLeft; // Add an offset.
+				KeyEvent?.Invoke((uint) key, (uint) mods, (KeyStatus) action);
 				_keyStatusMap[(int) key] = (byte) action;
 			}));
 		_glfw.SetCursorPosCallback(

@@ -20,8 +20,4 @@
         <None Remove="Mino.csproj.DotSettings"/>
     </ItemGroup>
 
-    <ItemGroup>
-        <Folder Include="sources\Render2D\UI\" />
-    </ItemGroup>
-
 </Project>

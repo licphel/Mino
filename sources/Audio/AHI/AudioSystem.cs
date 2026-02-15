@@ -38,7 +38,7 @@ public static class AudioSystem {
 	///     Updates the audio system.
 	/// </summary>
 	/// <param name="step">Update fixed step.</param>
-	public static void Update(FixedStep step) {
+	public static void Update(TimeStep step) {
 		lock (_lock) {
 			if (_backend == null) {
 				return;

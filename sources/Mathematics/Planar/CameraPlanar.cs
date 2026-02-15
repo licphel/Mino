@@ -1,4 +1,7 @@
-﻿namespace Mino.Mathematics.Planar;
+﻿using Mino.Graphics.RHI;
+using Mino.Mathematics.Spatial;
+
+namespace Mino.Mathematics.Planar;
 
 /// <summary>
 ///     Represents a 2D orthographic camera for 2D GUI rendering (Y-Down, top-left origin).
@@ -172,5 +175,83 @@ public sealed class CameraPlanar {
 			-(right + left) / (right - left), -(top + bottom) / (top - bottom), 0.0F, 1.0F
 		);
 		_isDirty = false;
+	}
+
+	/*
+	 * TMP CAMERA
+	 */
+	private static CameraPlanar _cache = new CameraPlanar();
+
+	/// <summary>
+	///		Gets a temporary window-sized camera.
+	/// </summary>
+	/// <returns>A normal camera.</returns>
+	public static CameraPlanar Normal() {
+		Vector2 size = RenderSystem.GetWindow().Size;
+		
+		if (size.X <= 1E-3F || size.Y <= 1E-3F) {
+			// Avoid NaN.
+			size = new Vector2(0.1F, 0.1F);
+		}
+		
+		_cache.SetOrthographic(size.X, size.Y);
+		_cache.Position = size / 2.0F;
+		return _cache;
+	}
+
+	///  <summary>
+	/// 		Gets a temporary resolved-to-size camera.
+	///  </summary>
+	///  <param name="onlyInt">If true, the camera resolution will be limited to integer.</param>
+	///  <param name="fixedResolution">Positive if you want a fixed resolution.</param>
+	///  <returns>A resolved camera.</returns>
+	public static CameraPlanar Resolved(bool onlyInt = false, float fixedResolution = -1.0F) {
+		Vector2 size = RenderSystem.GetWindow().Size;
+		
+		if (size.X <= 1E-3F || size.Y <= 1E-3F) {
+			// Avoid NaN.
+			size = new Vector2(0.1F, 0.1F);
+		}
+		
+		float factor = fixedResolution;
+		if (fixedResolution <= 0) {
+			factor = 0.5F;
+			while (size.X / (factor + 0.5F) >= 800.0F && size.Y / (factor + 0.5F) >= 450.0F) {
+				factor += 0.5F;
+			}
+
+			if (onlyInt && (int) (factor * 2) % 2 != 0 && factor - 0.5F > 0) {
+				factor -= 0.5F;
+			}
+		}
+		
+		_cache.SetOrthographic(size.X / factor, size.Y / factor);
+		_cache.Position = new Vector2(size.X / factor, size.Y / factor) / 2.0F;
+		return _cache;
+	}
+
+	/// <summary>
+	///		Gets a temporary world camera.
+	/// </summary>
+	/// <param name="center">Sight center.</param>
+	/// <param name="horiSight">Sight horizontal size.</param>
+	/// <returns>A world camera.</returns>
+	public static CameraPlanar World(in Vector2 center, float horiSight) {
+		Vector2 size = RenderSystem.GetWindow().Size;
+		
+		if (size.X <= 1E-3F || size.Y <= 1E-3F) {
+			// Avoid NaN.
+			size = new Vector2(0.1F, 0.1F);
+		}
+		
+		if (horiSight <= 1E-3F) {
+			// Avoid NaN.
+			horiSight = 0.1F;
+		}
+		
+		// Fit to window ratio.
+		_cache.SetOrthographicByAspect(horiSight, size.X / size.Y);
+		_cache.Position = center;
+		return _cache;
 	}
 }
