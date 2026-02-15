@@ -1,6 +1,8 @@
-﻿using System.Runtime.CompilerServices;
+﻿#region
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Mino.Nio;
+#endregion
 
 namespace Mino.Framework;
 

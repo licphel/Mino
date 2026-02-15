@@ -1,7 +1,9 @@
-﻿using Mino.Mathematics;
+﻿#region
+using Mino.Mathematics;
 using Mino.Nio;
 using StbImageSharp;
 using ColorComponents = StbImageSharp.ColorComponents;
+#endregion
 
 namespace Mino.Graphics;
 
@@ -38,25 +40,25 @@ public interface Image : IDisposable {
 		get => new _ImagePixelProxy(x, this);
 	}
 
-	///  <summary>
-	/// 		Creates a literal image.
-	///  </summary>
-	///  <param name="width">Image width.</param>
-	///  <param name="height">Image height.</param>
-	///  <param name="bytes">Image data.</param>
-	///  <returns>A blank image.</returns>
-	///  <exception cref="Error">Thrown if size is negative.</exception>
+	/// <summary>
+	///     Creates a literal image.
+	/// </summary>
+	/// <param name="width">Image width.</param>
+	/// <param name="height">Image height.</param>
+	/// <param name="bytes">Image data.</param>
+	/// <returns>A blank image.</returns>
+	/// <exception cref="Error">Thrown if size is negative.</exception>
 	public static Image Create(int width, int height, byte[]? bytes = null) {
 		if (width < 0 || height < 0) {
 			throw new Error("negative size");
 		}
-		return new LiteralImage() {
+		return new LiteralImage {
 			Bytes = bytes ?? new byte[4 * width * height],
 			Width = width,
 			Height = height
 		};
 	}
-	
+
 	/// <summary>
 	///     Parses an RGBA image data from a byte buffer.
 	/// </summary>

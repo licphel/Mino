@@ -1,5 +1,7 @@
-﻿using Mino.Audio.AHI.Desc;
+﻿#region
+using Mino.Audio.AHI.Desc;
 using Silk.NET.OpenAL;
+#endregion
 
 namespace Mino.Native.OpenAL.Object;
 

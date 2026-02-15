@@ -1,6 +1,8 @@
-﻿using Mino.Graphics.Input;
+﻿#region
+using Mino.Graphics.Input;
 using Mino.Mathematics;
 using Mino.Nio;
+#endregion
 
 namespace Mino.Graphics.Desktop;
 

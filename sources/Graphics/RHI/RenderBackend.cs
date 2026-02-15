@@ -1,6 +1,8 @@
-﻿using Mino.Graphics.Desktop;
+﻿#region
+using Mino.Graphics.Desktop;
 using Mino.Graphics.RHI.Desc;
 using Mino.Graphics.RHI.Enum;
+#endregion
 
 namespace Mino.Graphics.RHI;
 

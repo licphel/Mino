@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿#region
+using System.Reflection;
+#endregion
 
 namespace Mino.Nio;
 
@@ -34,7 +36,7 @@ public readonly struct Url : IEquatable<Url> {
 	}
 
 	/// <summary>
-	///		Converts to a local file path.
+	///     Converts to a local file path.
 	/// </summary>
 	/// <returns>A local path name.</returns>
 	public string ToFilePath() {

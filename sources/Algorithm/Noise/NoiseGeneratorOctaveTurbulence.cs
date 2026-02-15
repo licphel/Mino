@@ -1,7 +1,7 @@
 ﻿namespace Mino.Algorithm.Noise;
 
 /// <summary>
-///		Generates fluid pattern like noise.
+///     Generates fluid pattern like noise.
 /// </summary>
 public class NoiseGeneratorOctaveTurbulence : NoiseGenerator {
 	private readonly NoiseGenerator _noise;
@@ -18,7 +18,7 @@ public class NoiseGeneratorOctaveTurbulence : NoiseGenerator {
 		double lacunarity = 2.0,
 		double amplitudeScale = 1.0,
 		double frequencyScale = 1.0) {
-        
+
 		_noise = noise;
 		_octaves = octaves;
 		_persistence = persistence;
@@ -37,13 +37,13 @@ public class NoiseGeneratorOctaveTurbulence : NoiseGenerator {
 			double nx = x * frequency * _frequencyScale;
 			double ny = y * frequency * _frequencyScale;
 			double nz = z * frequency * _frequencyScale;
-            
+
 			// Absolute value creates turbulence.
 			double n = Math.Abs(_noise.Generate(nx, ny, nz) * 2.0 - 1.0);
-            
+
 			noiseValue += n * amplitude;
 			maxAmplitude += amplitude;
-            
+
 			amplitude *= _persistence;
 			frequency *= _lacunarity;
 		}

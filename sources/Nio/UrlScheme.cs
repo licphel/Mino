@@ -1,4 +1,6 @@
-﻿using System.Collections.Concurrent;
+﻿#region
+using System.Collections.Concurrent;
+#endregion
 
 namespace Mino.Nio;
 
@@ -96,7 +98,7 @@ public interface UrlScheme {
 				return null;
 			}
 		}
-		
+
 		public string ToFilePath(Url url) {
 			throw new Error("http url to file");
 		}
@@ -118,7 +120,7 @@ public interface UrlScheme {
 		public Task<Stream?> OpenStreamAsync(Url url, CancellationToken ct) {
 			return (_runtimeModUrl / url.Path).OpenStreamAsync(ct);
 		}
-		
+
 		public string ToFilePath(Url url) {
 			return (_runtimeModUrl / url.Path).Path;
 		}
@@ -143,7 +145,7 @@ public interface UrlScheme {
 		public Task<Stream?> OpenStreamAsync(Url url, CancellationToken ct = default) {
 			return Task.FromResult(OpenStream(url));
 		}
-		
+
 		public string ToFilePath(Url url) {
 			throw new Error("console url to file");
 		}

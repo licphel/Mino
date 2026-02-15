@@ -1,4 +1,4 @@
-﻿namespace Mino.Scene;
+﻿namespace Mino.Render2D;
 
 [Flags]
 public enum BrushPrimitive {

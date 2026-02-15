@@ -1,7 +1,9 @@
+#region
 using Mino.Audio.AHI;
 using Mino.Audio.AHI.Desc;
 using Mino.Audio.AHI.Enum;
 using Mino.Framework;
+#endregion
 
 namespace Mino.Audio;
 
@@ -15,7 +17,7 @@ public class Clip : IDisposable {
 	private AudioBackend _backend;
 	public readonly HandleRef _handle;
 	private bool _disposed;
-	
+
 	private bool _loop = false;
 	private float _pan = 0.0F;
 	private float _pitch = 1.0F;

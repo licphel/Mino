@@ -1,5 +1,7 @@
-﻿using System.Runtime.CompilerServices;
+﻿#region
+using System.Runtime.CompilerServices;
 using Mino.Mathematics.Spatial;
+#endregion
 
 namespace Mino.Mathematics;
 

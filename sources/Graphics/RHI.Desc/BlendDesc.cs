@@ -1,5 +1,7 @@
-﻿using Mino.Graphics.RHI.Enum;
+﻿#region
+using Mino.Graphics.RHI.Enum;
 using Mino.Mathematics;
+#endregion
 
 namespace Mino.Graphics.RHI.Desc;
 

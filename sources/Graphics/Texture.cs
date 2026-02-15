@@ -1,6 +1,8 @@
-﻿using Mino.Framework;
+﻿#region
+using Mino.Framework;
 using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
+#endregion
 
 namespace Mino.Graphics;
 
@@ -65,7 +67,7 @@ public class Texture : IDisposable {
 		_backend.TextureDelete(_handle);
 		GC.SuppressFinalize(this);
 	}
-	
+
 	/// <summary>
 	///     Submits texture data to gpu.
 	/// </summary>
@@ -78,7 +80,7 @@ public class Texture : IDisposable {
 		if (submission.Region.Width < 0 || submission.Region.Height < 0 || submission.Region.Depth < 0) {
 			throw new Error("invalid size");
 		}
-		
+
 		_backend.TextureSubmit(_handle, submission);
 	}
 

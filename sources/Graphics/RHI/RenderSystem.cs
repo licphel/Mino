@@ -1,5 +1,7 @@
-﻿using Mino.Framework;
+﻿#region
+using Mino.Framework;
 using Mino.Graphics.Desktop;
+#endregion
 
 namespace Mino.Graphics.RHI;
 

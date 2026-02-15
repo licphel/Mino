@@ -1,8 +1,10 @@
-﻿using Mino.Algorithm;
+﻿#region
+using Mino.Algorithm;
 using Mino.Framework;
 using Mino.Graphics.RHI.Desc;
 using Mino.Graphics.RHI.Enum;
 using Mino.Mathematics;
+#endregion
 
 namespace Mino.Graphics;
 
@@ -11,7 +13,7 @@ namespace Mino.Graphics;
 /// </summary>
 public class TextureAtlas : IDisposable {
 	private const int INITIAL_SIZE = 64;
-	
+
 	/*
 	 *	We use maximum rectangle algorithm to manage insertions.
 	 *	That may be not the best, but effective.
@@ -45,16 +47,16 @@ public class TextureAtlas : IDisposable {
 	private void expand() {
 		int oldSize = _size;
 		_size *= 2;
-		
+
 		// Generate new image and transfer data.
 		Texture newTex = new Texture(
 			new TextureDesc {
 				Width = _size,
-				Height = _size,
+				Height = _size
 			});
 		Box2 cpyRegion = Box2.Create(0.0F, 0.0F, oldSize, oldSize);
 		Blitter.Blit(_texture!, newTex, cpyRegion, cpyRegion);
-		
+
 		/*
 		 * We swap these two handles to let
 		 * the old texture get a new handle and new size,
@@ -89,20 +91,21 @@ public class TextureAtlas : IDisposable {
 		}
 
 		// Copy image data.
-		_texture!.Submit(new TextureSubmission {
-			Bytes = image.Bytes,
-			Region = (Box2) dstRect
-		});
-		
+		_texture!.Submit(
+			new TextureSubmission {
+				Bytes = image.Bytes,
+				Region = (Box2) dstRect
+			});
+
 		return new TexturePart(_texture!, (Box2) dstRect);
 	}
-	
+
 	public void Dispose() {
 		if (_disposed) {
 			return;
 		}
 		_disposed = true;
-		
+
 		// Texture itself has safeguarded dupe disposing.
 		_texture?.Dispose();
 		GC.SuppressFinalize(this);

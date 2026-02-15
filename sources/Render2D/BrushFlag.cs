@@ -1,7 +1,7 @@
-﻿namespace Mino.Scene;
+﻿namespace Mino.Render2D;
 
 /// <summary>
-///		Brush draw flags.
+///     Brush draw flags.
 /// </summary>
 [Flags]
 public enum BrushFlag {

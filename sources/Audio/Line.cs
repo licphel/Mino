@@ -1,6 +1,8 @@
-﻿using Mino.Audio.AHI;
+﻿#region
+using Mino.Audio.AHI;
 using Mino.Audio.AHI.Desc;
 using Mino.Framework;
+#endregion
 
 namespace Mino.Audio;
 
@@ -57,7 +59,7 @@ public class Line : LineReader, IDisposable {
 	public uint GetBackendHandle() {
 		return _handle;
 	}
-	
+
 	// Implicit cast to native handle.
 	public static implicit operator uint(Line obj) {
 		return obj._handle;

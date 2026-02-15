@@ -1,9 +1,7 @@
-﻿using Mino.Mathematics;
-
-namespace Mino.Scene;
+﻿namespace Mino.Mathematics;
 
 /// <summary>
-///     A 2d transformation matrix stack.
+///     A transformation matrix stack.
 /// </summary>
 public class MatrixStack<T> where T : Matrix<T>, new() {
 	private Action? _onDirty;
@@ -50,7 +48,7 @@ public class MatrixStack<T> where T : Matrix<T>, new() {
 		assertNonempty();
 		Top = mat;
 	}
-	
+
 	private void assertNonempty() {
 		if (IsEmpty) {
 			throw new Error("cannot modify base matrix");

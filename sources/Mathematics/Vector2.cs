@@ -1,4 +1,6 @@
+#region
 using System.Runtime.CompilerServices;
+#endregion
 
 namespace Mino.Mathematics;
 

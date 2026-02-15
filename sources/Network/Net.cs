@@ -1,6 +1,8 @@
-﻿using System.Net;
+﻿#region
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+#endregion
 
 namespace Mino.Network;
 

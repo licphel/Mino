@@ -1,7 +1,9 @@
-﻿using Mino.Framework;
+﻿#region
+using Mino.Framework;
 using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
 using Mino.Graphics.RHI.Enum;
+#endregion
 
 namespace Mino.Graphics;
 
@@ -13,7 +15,7 @@ public class Encoder : IDisposable {
 	public readonly HandleRef _handle;
 	private int _cmdCnt = 0;
 	private bool _disposed;
-	
+
 	public Encoder(in EncoderDesc desc) {
 		// Set userdata.
 		Desc = desc;

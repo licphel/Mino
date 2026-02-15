@@ -20,7 +20,7 @@ public class NoiseGeneratorOctaveRidge : NoiseGenerator {
 		double amplitudeScale = 1.0,
 		double frequencyScale = 1.0,
 		double ridgeOffset = 1.0) {
-        
+
 		_noise = noise;
 		_octaves = octaves;
 		_persistence = persistence;
@@ -40,15 +40,15 @@ public class NoiseGeneratorOctaveRidge : NoiseGenerator {
 			double nx = x * frequency * _frequencyScale;
 			double ny = y * frequency * _frequencyScale;
 			double nz = z * frequency * _frequencyScale;
-            
+
 			// Get noise and apply ridge transform.
 			double n = _noise.Generate(nx, ny, nz);
 			// Convert to ridge.
-			n = _ridgeOffset - Math.Abs(n * 2.0 - 1.0); 
-            
+			n = _ridgeOffset - Math.Abs(n * 2.0 - 1.0);
+
 			noiseValue += n * amplitude;
 			maxAmplitude += amplitude * _ridgeOffset;
-            
+
 			amplitude *= _persistence;
 			frequency *= _lacunarity;
 		}

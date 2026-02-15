@@ -1,6 +1,8 @@
-﻿using Mino.Native.GLFW;
+﻿#region
+using Mino.Native.GLFW;
 using Mino.Native.OpenAL;
 using Mino.Native.OpenGL;
+#endregion
 
 namespace Mino.Framework.XPlatform;
 
@@ -12,7 +14,7 @@ internal class BuiltinServices {
 		load(new GLFWWindow(), "GLFW", Platform.DESKTOP, 0);
 		load(new GLBackend(), "OpenGL", Platform.DESKTOP, 0);
 	}
-	
+
 	private static void load<T>(T obj, string name, uint os, int priority) where T : ServiceProvider {
 		try {
 			Service._load(obj, name, os, priority);

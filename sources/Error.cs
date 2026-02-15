@@ -1,4 +1,6 @@
-﻿using Mino.Framework;
+﻿#region
+using Mino.Framework;
+#endregion
 
 namespace Mino;
 

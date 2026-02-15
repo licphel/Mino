@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿#region
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using Mino.Framework.XPlatform;
 using Mino.Graphics.Desktop;
@@ -7,6 +8,7 @@ using Mino.Mathematics;
 using Mino.Nio;
 using Silk.NET.GLFW;
 using GLFW_Image = Silk.NET.GLFW.Image;
+#endregion
 
 namespace Mino.Native.GLFW;
 
@@ -21,7 +23,7 @@ public unsafe class GLFWWindow : Window, ServiceProvider {
 	private bool _closed;
 	private bool _cursorRelativeMode = false;
 	private bool _debug;
-	
+
 	public override bool Debug { get => _debug; }
 
 	public override Vector2 Size {
@@ -217,7 +219,7 @@ public unsafe class GLFWWindow : Window, ServiceProvider {
 	public override KeyModifier GetModifiers(KeyCode code) {
 		return (KeyModifier) _keyModMap.GetValueOrDefault((int) code, (int) KeyModifier.None);
 	}
-	
+
 	public override void Dispose() {
 		_glfw.SetWindowShouldClose(_handle, true);
 		_glfw.Terminate();

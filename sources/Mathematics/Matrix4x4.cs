@@ -1,4 +1,6 @@
-﻿using Mino.Mathematics.Spatial;
+﻿#region
+using Mino.Mathematics.Spatial;
+#endregion
 
 namespace Mino.Mathematics;
 

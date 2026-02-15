@@ -1,7 +1,9 @@
-﻿using Mino.Framework;
+﻿#region
+using Mino.Framework;
 using Mino.Graphics.Desktop;
 using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
+#endregion
 
 namespace Mino.Graphics;
 
@@ -11,7 +13,7 @@ namespace Mino.Graphics;
 public class RenderTarget : IDisposable {
 	private static RenderTarget? _ultRT;
 	private static Lock _lock = new Lock();
-	
+
 	/// <summary>
 	///     Gets the ultimate render target.
 	/// </summary>
@@ -85,7 +87,7 @@ public class RenderTarget : IDisposable {
 		_backend.RenderTargetDelete(_handle);
 		GC.SuppressFinalize(this);
 	}
-	
+
 	// Implicit cast to native handle.
 	public static implicit operator uint(RenderTarget obj) {
 		return obj._handle;

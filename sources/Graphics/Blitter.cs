@@ -1,6 +1,8 @@
-﻿using Mino.Graphics.RHI;
+﻿#region
+using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Enum;
 using Mino.Mathematics;
+#endregion
 
 namespace Mino.Graphics;
 
@@ -16,10 +18,11 @@ public static unsafe class Blitter {
 	/// <param name="dst">Dst region.</param>
 	/// <param name="src">Src region.</param>
 	/// <param name="filter">Filter of drawing.</param>
-	public static void Blit(Texture from, Texture to, in Box2 dst, in Box2 src, TextureFilter filter = TextureFilter.Nearest) {
+	public static void Blit(Texture from, Texture to, in Box2 dst, in Box2 src,
+		TextureFilter filter = TextureFilter.Nearest) {
 		Blit(new TexturePart(from, src), new TexturePart(to, dst), filter);
 	}
-	
+
 	/// <summary>
 	///     Copies a texture part to another texture part.
 	/// </summary>

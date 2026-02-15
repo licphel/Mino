@@ -1,8 +1,10 @@
-﻿using System.Diagnostics;
+﻿#region
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Mino.Framework;
 using Silk.NET.OpenGL;
+#endregion
 
 namespace Mino.Native.OpenGL;
 

@@ -1,6 +1,8 @@
-﻿using Mino.Framework;
+﻿#region
+using Mino.Framework;
 using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
+#endregion
 
 namespace Mino.Graphics;
 
@@ -36,7 +38,7 @@ public class ShaderModule : IDisposable {
 		_backend.ShaderModuleDelete(_handle);
 		GC.SuppressFinalize(this);
 	}
-	
+
 	// Implicit cast to native handle.
 	public static implicit operator uint(ShaderModule obj) {
 		return obj._handle;

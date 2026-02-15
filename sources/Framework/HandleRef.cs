@@ -1,11 +1,11 @@
 ﻿namespace Mino.Framework;
 
 /// <summary>
-///		A handle reference.
+///     A handle reference.
 /// </summary>
 public class HandleRef {
 	public uint Handle;
-	
+
 	public HandleRef(uint handle) {
 		Handle = handle;
 	}

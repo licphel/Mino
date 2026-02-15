@@ -1,6 +1,8 @@
-﻿using System.Collections.Concurrent;
+﻿#region
+using System.Collections.Concurrent;
 using Mino.Graphics.Desktop;
 using Mino.Graphics.RHI;
+#endregion
 
 namespace Mino.Graphics.Input;
 
@@ -79,7 +81,7 @@ public class KeyListener {
 		}
 		return false;
 	}
-	
+
 	/// <summary>
 	///     Gets a key listener instance.
 	/// </summary>

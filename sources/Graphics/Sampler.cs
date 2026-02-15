@@ -1,11 +1,13 @@
-﻿using Mino.Framework;
+﻿#region
+using Mino.Framework;
 using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
+#endregion
 
 namespace Mino.Graphics;
 
 /// <summary>
-///		Represents a texture sampler.
+///     Represents a texture sampler.
 /// </summary>
 public class Sampler : IDisposable {
 	private RenderBackend _backend;
@@ -36,7 +38,7 @@ public class Sampler : IDisposable {
 		_backend.SamplerDelete(_handle);
 		GC.SuppressFinalize(this);
 	}
-	
+
 	// Implicit cast to native handle.
 	public static implicit operator uint(Sampler obj) {
 		return obj._handle;

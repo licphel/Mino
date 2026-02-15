@@ -1,4 +1,6 @@
-﻿using Mino.Mathematics;
+﻿#region
+using Mino.Mathematics;
+#endregion
 
 namespace Mino.Graphics.Text;
 
@@ -26,7 +28,7 @@ public class TextBlob {
 
 			if (c == '\n') {
 				cursorX = 0;
-				cursorY += lineGap + lineH;
+				cursorY += lineGap;
 				currentLine++;
 				lastSpaceIndex = -1;
 				continue;
@@ -53,7 +55,7 @@ public class TextBlob {
 				}
 
 				cursorX = 0;
-				cursorY += lineGap + lineH;
+				cursorY += lineGap;
 				currentLine++;
 				// Roll back to this char.
 				i--;
@@ -61,16 +63,13 @@ public class TextBlob {
 			}
 
 			float x = cursorX + glyph.BearingX;
-			float y = cursorY - glyph.BearingY;
-
-			float top = y;
+			float y = cursorY + lineH - glyph.BearingY;
+			
 			float bottom = y + glyph.Height;
-			float left = x;
 			float right = x + glyph.Width;
 
-			Box2 bounds = Box2.CreateByPoints(left, top, right, bottom);
-
-			GlyphRunList.Add(new GlyphInstance(glyph, new Vector2(x, y), bounds, i, currentLine));
+			Box2 bounds = Box2.CreateByPoints(x, y, right, bottom);
+			GlyphRunList.Add(new GlyphInstance(glyph, bounds, i, currentLine));
 
 			cursorX += glyph.Advance;
 			maxLineWidth = Math.Max(maxLineWidth, cursorX);
@@ -85,7 +84,7 @@ public class TextBlob {
 		float maxDescender = 0;
 		foreach (GlyphInstance gi in GlyphRunList) {
 			if (gi.Line == currentLine) {
-				float desc = gi.Position.Y + gi.Glyph.Height - cursorY;
+				float desc = gi.Bounds.MaxY - cursorY;
 				maxDescender = Math.Max(maxDescender, desc);
 			}
 		}

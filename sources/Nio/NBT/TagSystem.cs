@@ -1,17 +1,17 @@
 ﻿namespace Mino.Nio.NBT;
 
 /// <summary>
-///		Provides tag map serialization and tag validation.
+///     Provides tag map serialization and tag validation.
 /// </summary>
 public static class TagSystem {
 	/*
 	 * TYPE CONVERSION RULES:
-	 * 
+	 *
 	 * I. value type: take int for example,
 	 * | Get<int>("key") -> 0 if not exists or null.
 	 * | Get<int>("key", fallback) -> fallback if not exists or null.
 	 * | TryGet<int>("key", out int val) -> false if not exists or null. Otherwise, val = actual value.
-	 * 
+	 *
 	 * II. ref type: we only support string.
 	 * | Get<string>("key") -> string.Empty if not exists or null.
 	 * | Get<string>("key", fallback) -> fallback if not exists or null.
@@ -19,7 +19,7 @@ public static class TagSystem {
 	 *
 	 * Anyway, NEVER use nullable generic in tag system (like int? v = map.Get<int?>("key"), which is undefined.)
 	 */
-	
+
 	// Type IDs.
 	private const byte NULL = 1;
 	private const byte MAP = 2;
@@ -57,7 +57,7 @@ public static class TagSystem {
 		}
 		return (T) Convert.ChangeType(v, typeof(T));
 	}
-	
+
 	public static T AsWithFallback<T>(object? v, Func<T> fallback) {
 		if (v == null) {
 			return fallback.Invoke();
@@ -89,7 +89,7 @@ public static class TagSystem {
 	}
 
 	/// <summary>
-	///		Encodes a tag map into a byte buffer.
+	///     Encodes a tag map into a byte buffer.
 	/// </summary>
 	/// <param name="map">Serialized map.</param>
 	/// <param name="output">Output buffer.</param>
@@ -106,7 +106,7 @@ public static class TagSystem {
 	}
 
 	/// <summary>
-	///		Deserializes a tag map from a byte buffer.
+	///     Deserializes a tag map from a byte buffer.
 	/// </summary>
 	/// <param name="input">Input buffer.</param>
 	/// <returns>A new tag map deserialized from the input.</returns>

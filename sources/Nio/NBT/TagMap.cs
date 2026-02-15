@@ -1,34 +1,36 @@
-﻿using System.Collections;
+﻿#region
+using System.Collections;
+#endregion
 
 namespace Mino.Nio.NBT;
 
 /// <summary>
-///		NBT Map component.
+///     NBT Map component.
 /// </summary>
 public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	// Toolkit factories.
 	// Used like map.Get<TagMap>("my_key", TagMap.NewMap);
 	public static readonly Func<TagMap> NewMap = () => new TagMap();
 	public static readonly Func<TagList> NewList = () => new TagList();
-	
+
 	private Dictionary<string, object?> _dict = new Dictionary<string, object?>();
 
 	/// <summary>
-	///		Count of the map.
+	///     Count of the map.
 	/// </summary>
 	public int Count {
 		get => _dict.Count;
 	}
-	
+
 	/// <summary>
-	///		Clears the map.
+	///     Clears the map.
 	/// </summary>
 	public void Clear() {
 		_dict.Clear();
 	}
-	
+
 	/// <summary>
-	///		Checks if the map has a key.
+	///     Checks if the map has a key.
 	/// </summary>
 	/// <param name="key">Checking key.</param>
 	/// <returns>True if has, otherwise false.</returns>
@@ -36,27 +38,28 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 		return _dict.ContainsKey(key);
 	}
 
-	///  <summary>
-	/// 		Gets the value under the given key.
-	///  </summary>
-	///  <param name="key">Map key.</param>
-	/// ///  <param name="fallback">Fallback value.</param>
-	///  <typeparam name="T">Type cast target.</typeparam>
-	///  <returns>A casted value.</returns>
+	/// <summary>
+	///     Gets the value under the given key.
+	/// </summary>
+	/// <param name="key">Map key.</param>
+	/// ///
+	/// <param name="fallback">Fallback value.</param>
+	/// <typeparam name="T">Type cast target.</typeparam>
+	/// <returns>A casted value.</returns>
 	public T Get<T>(string key, T? fallback = default) {
 		if (_dict.TryGetValue(key, out object? value)) {
 			return TagSystem.AsWithFallback(value, fallback);
 		}
 		return TagSystem.GetNonnullFallback(fallback);
 	}
-	
-	///  <summary>
-	/// 		Gets the value under the given key.
-	///  </summary>
-	///  <param name="key">Map key.</param>
-	///  <param name="fallback">Fallback value.</param>
-	///  <typeparam name="T">Type cast target.</typeparam>
-	///  <returns>A casted value.</returns>
+
+	/// <summary>
+	///     Gets the value under the given key.
+	/// </summary>
+	/// <param name="key">Map key.</param>
+	/// <param name="fallback">Fallback value.</param>
+	/// <typeparam name="T">Type cast target.</typeparam>
+	/// <returns>A casted value.</returns>
 	public T Get<T>(string key, Func<T> fallback) {
 		if (_dict.TryGetValue(key, out object? value)) {
 			return TagSystem.AsWithFallback(value, fallback);
@@ -65,7 +68,7 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	}
 
 	/// <summary>
-	///		Seeks by a key sequence like "key1.key2.key3".
+	///     Seeks by a key sequence like "key1.key2.key3".
 	/// </summary>
 	/// <param name="key">Key sequence.</param>
 	/// <param name="fallback">Fallback value.</param>
@@ -86,7 +89,7 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	}
 
 	/// <summary>
-	///		Seeks by a key sequence like "key1.key2.key3".
+	///     Seeks by a key sequence like "key1.key2.key3".
 	/// </summary>
 	/// <param name="key">Key sequence.</param>
 	/// <param name="fallback">Fallback value.</param>
@@ -106,13 +109,13 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 		return map.Get(keys[^1], fallback);
 	}
 
-	///  <summary>
-	/// 		Tries getting a value.
-	///  </summary>
-	///  <param name="key">Map key.</param>
-	///  <param name="value">Output value.</param>
-	///  <typeparam name="T">Type cast target.</typeparam>
-	///  <returns>True if this map has the key, otherwise false.</returns>
+	/// <summary>
+	///     Tries getting a value.
+	/// </summary>
+	/// <param name="key">Map key.</param>
+	/// <param name="value">Output value.</param>
+	/// <typeparam name="T">Type cast target.</typeparam>
+	/// <returns>True if this map has the key, otherwise false.</returns>
 	public bool TryGet<T>(string key, out T value) {
 		if (_dict.TryGetValue(key, out object? raw)) {
 			if (raw != null) {
@@ -125,7 +128,7 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	}
 
 	/// <summary>
-	///		Sets the value with the given key.
+	///     Sets the value with the given key.
 	/// </summary>
 	/// <param name="key">Map key.</param>
 	/// <param name="v">Set value.</param>
@@ -138,7 +141,7 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	}
 
 	/// <summary>
-	///		Removes a key-value pair.
+	///     Removes a key-value pair.
 	/// </summary>
 	/// <param name="key">Map key.</param>
 	public void Remove(string key) {
@@ -154,7 +157,7 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	}
 
 	/// <summary>
-	///		Clones the map.
+	///     Clones the map.
 	/// </summary>
 	/// <returns>A new identical map.</returns>
 	public TagMap Clone() {
@@ -172,20 +175,20 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 
 		return newMap;
 	}
-	
+
 	public override bool Equals(object? obj) {
 		return obj is TagMap map && Equals(map);
 	}
-	
+
 	public override int GetHashCode() {
 		// Hashcode is not stable.
 		throw new Error("cannot use as key");
 	}
-	
+
 	public static bool operator ==(TagMap? left, TagMap? right) {
 		return Equals(left, right);
 	}
-	
+
 	public static bool operator !=(TagMap? left, TagMap? right) {
 		return !Equals(left, right);
 	}
@@ -194,8 +197,8 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 		if (Count != other.Count) {
 			return false;
 		}
-		
-		foreach(var kv in this) {
+
+		foreach (KeyValuePair<string, object> kv in this) {
 			if (!other._dict.TryGetValue(kv.Key, out object? obj)) {
 				return false;
 			}

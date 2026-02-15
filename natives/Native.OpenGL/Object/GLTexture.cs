@@ -1,7 +1,9 @@
-﻿using System.Runtime.InteropServices;
+﻿#region
+using System.Runtime.InteropServices;
 using Mino.Graphics.RHI.Desc;
 using Mino.Graphics.RHI.Enum;
 using Silk.NET.OpenGL;
+#endregion
 
 namespace Mino.Native.OpenGL.Object;
 
@@ -22,7 +24,7 @@ public unsafe class GLTexture {
 	public void OnTextureData(in TextureDesc desc) {
 		// Set userdata.
 		_desc = desc;
-		
+
 		// Cache enums.
 		_target = GLEnumC.Cast(desc.Type);
 		(_iFormat, _pixFormat, _pixType) = GLEnumC.Cast(desc.Format);

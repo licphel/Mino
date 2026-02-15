@@ -1,4 +1,6 @@
-﻿using Mino.Mathematics;
+﻿#region
+using Mino.Mathematics;
+#endregion
 
 namespace Mino.Graphics;
 
@@ -27,6 +29,34 @@ public readonly struct TexturePart : IEquatable<TexturePart> {
 		if (!part.Region.Contains(Region)) {
 			throw new InvalidOperationException("Region is outside of the parent part.");
 		}
+	}
+
+	/// <summary>
+	///     Texture part u.
+	/// </summary>
+	public float U {
+		get => Region.MinX;
+	}
+
+	/// <summary>
+	///     Texture part v.
+	/// </summary>
+	public float V {
+		get => Region.MinY;
+	}
+
+	/// <summary>
+	///     Texture part width.
+	/// </summary>
+	public float Width {
+		get => Region.Width;
+	}
+
+	/// <summary>
+	///     Texture part height.
+	/// </summary>
+	public float Height {
+		get => Region.Height;
 	}
 
 	/// <summary>

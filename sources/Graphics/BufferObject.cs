@@ -1,7 +1,9 @@
-﻿using System.Runtime.CompilerServices;
+﻿#region
+using System.Runtime.CompilerServices;
 using Mino.Framework;
 using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
+#endregion
 
 namespace Mino.Graphics;
 

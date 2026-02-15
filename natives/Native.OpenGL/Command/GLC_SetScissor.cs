@@ -1,4 +1,6 @@
-﻿using Mino.Graphics.RHI.Desc;
+﻿#region
+using Mino.Graphics.RHI.Desc;
+#endregion
 
 namespace Mino.Native.OpenGL.Command;
 

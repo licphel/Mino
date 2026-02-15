@@ -1,4 +1,4 @@
-﻿using Mino.Algorithm.Random;
+﻿#region
 using Mino.Framework.XPlatform;
 using Mino.Graphics.Desktop;
 using Mino.Graphics.RHI;
@@ -7,6 +7,7 @@ using Mino.Graphics.RHI.Enum;
 using Mino.Native.OpenGL.Command;
 using Mino.Native.OpenGL.Object;
 using Silk.NET.OpenGL;
+#endregion
 
 namespace Mino.Native.OpenGL;
 
@@ -100,7 +101,7 @@ public unsafe class GLBackend : RenderBackend, ServiceProvider {
 	public void TextureData(uint texture, in TextureDesc desc) {
 		_textureHeap.GetData(texture).OnTextureData(desc);
 	}
-	
+
 	public void TextureSubmit(uint texture, in TextureSubmission submission) {
 		_textureHeap.GetData(texture).OnTextureSubmit(submission);
 	}
@@ -321,7 +322,8 @@ public unsafe class GLBackend : RenderBackend, ServiceProvider {
 	}
 
 	public void ResourceSetBindTexture(uint set, int slot, uint texture, uint sampler) {
-		_resourceSetHeap.GetData(set)._bounds[slot] = new GLResourceSet.Bound(ResourceType.Texture, slot, [texture, sampler]);
+		_resourceSetHeap.GetData(set)._bounds[slot] =
+			new GLResourceSet.Bound(ResourceType.Texture, slot, [texture, sampler]);
 	}
 
 	public uint EncoderGen() {
@@ -400,7 +402,6 @@ public unsafe class GLBackend : RenderBackend, ServiceProvider {
 		_texId = _ubId = 0;
 	}
 
-	#region HEAPS
 	internal Heap<GLBuffer> _bufferHeap = new Heap<GLBuffer>();
 	internal Heap<GLRenderPipe> _pipeHeap = new Heap<GLRenderPipe>();
 	internal Heap<GLShaderProgram> _programHeap = new Heap<GLShaderProgram>();
@@ -410,9 +411,7 @@ public unsafe class GLBackend : RenderBackend, ServiceProvider {
 	internal Heap<GLTexture> _textureHeap = new Heap<GLTexture>();
 	internal Heap<GLShaderModule> _moduleHeap = new Heap<GLShaderModule>();
 	internal Heap<GLEncoder> _encoderHeap = new Heap<GLEncoder>();
-	#endregion
 
-	#region STATES
 	internal uint[] _boundBuffers = new uint[8];
 	internal uint[] _boundResourceSets = new uint[8];
 	internal uint _boundRenderPipe;
@@ -420,9 +419,7 @@ public unsafe class GLBackend : RenderBackend, ServiceProvider {
 	internal uint _texId = 0;
 	internal uint _ubId = 0;
 	private uint _curFBO = 0;
-	#endregion
 
-	#region ENCODER_EXECUTION
 	internal void executeSetTopology(Topology topology) {
 		_currentPrimitive = GLEnumC.Cast(topology);
 	}
@@ -512,5 +509,4 @@ public unsafe class GLBackend : RenderBackend, ServiceProvider {
 			_gl.Disable(EnableCap.ScissorTest);
 		}
 	}
-	#endregion
 }

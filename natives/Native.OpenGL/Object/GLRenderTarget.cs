@@ -1,6 +1,8 @@
-﻿using Mino.Graphics.RHI.Desc;
+﻿#region
+using Mino.Graphics.RHI.Desc;
 using Mino.Graphics.RHI.Enum;
 using Silk.NET.OpenGL;
+#endregion
 
 namespace Mino.Native.OpenGL.Object;
 

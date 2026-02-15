@@ -1,7 +1,9 @@
-﻿using Mino.Framework;
+﻿#region
+using Mino.Framework;
 using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
 using Mino.Graphics.RHI.Enum;
+#endregion
 
 namespace Mino.Graphics;
 
@@ -44,7 +46,7 @@ public class ShaderProgram : IDisposable {
 	}
 
 	/// <summary>
-	///		Compiles a default vertex-fragment shader program.
+	///     Compiles a default vertex-fragment shader program.
 	/// </summary>
 	/// <param name="vert">Vert shader code.</param>
 	/// <param name="frag">Frag shader code.</param>

@@ -1,5 +1,7 @@
-﻿using Mino.Graphics.RHI;
+﻿#region
+using Mino.Graphics.RHI;
 using Mino.Graphics.RHI.Desc;
+#endregion
 
 namespace Mino.Graphics;
 
@@ -16,7 +18,7 @@ public class Swapchain : IDisposable {
 		_backend = RenderSystem.GetBackend();
 		_renderTarget = rt;
 	}
-	
+
 	/// <summary>
 	///     If the swapchain is a window swapchain.
 	/// </summary>

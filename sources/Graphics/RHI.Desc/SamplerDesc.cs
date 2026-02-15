@@ -1,5 +1,7 @@
-﻿using Mino.Graphics.RHI.Enum;
+﻿#region
+using Mino.Graphics.RHI.Enum;
 using Mino.Mathematics;
+#endregion
 
 namespace Mino.Graphics.RHI.Desc;
 
@@ -19,7 +21,7 @@ public record struct SamplerDesc {
 	public float MinLod;
 	public float MaxLod;
 	public float AnisotropyLevel;
-	
+
 	public SamplerDesc() {
 		AnisotropyLevel = 1.0F;
 		LodBias = 0.0F;

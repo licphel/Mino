@@ -1,5 +1,7 @@
-﻿using System.Globalization;
+﻿#region
+using System.Globalization;
 using Mino.Nio;
+#endregion
 
 namespace Mino.Framework;
 

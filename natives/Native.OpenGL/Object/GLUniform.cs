@@ -1,7 +1,9 @@
-﻿using System.Runtime.InteropServices;
+﻿#region
+using System.Runtime.InteropServices;
 using Mino.Framework;
 using Mino.Mathematics;
 using Silk.NET.OpenGL;
+#endregion
 
 namespace Mino.Native.OpenGL.Object;
 

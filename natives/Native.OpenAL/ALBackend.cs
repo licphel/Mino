@@ -1,10 +1,12 @@
-﻿using Mino.Audio.AHI;
+﻿#region
+using Mino.Audio.AHI;
 using Mino.Audio.AHI.Desc;
 using Mino.Audio.AHI.Enum;
 using Mino.Framework;
 using Mino.Framework.XPlatform;
 using Mino.Native.OpenAL.Object;
 using Silk.NET.OpenAL;
+#endregion
 
 namespace Mino.Native.OpenAL;
 
@@ -185,8 +187,6 @@ public unsafe class ALBackend : AudioBackend, ServiceProvider {
 		Dispose();
 	}
 
-	#region HEAPS
 	private Heap<ALClip> _clipHeap = new Heap<ALClip>();
 	private Heap<ALLine> _lineHeap = new Heap<ALLine>();
-	#endregion
 }

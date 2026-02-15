@@ -1,6 +1,8 @@
-﻿using System.Diagnostics;
+﻿#region
+using System.Diagnostics;
 using Mino.Graphics.Desktop;
 using Mino.Graphics.Input;
+#endregion
 
 namespace Mino.Framework;
 

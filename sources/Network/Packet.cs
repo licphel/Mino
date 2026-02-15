@@ -1,5 +1,7 @@
-﻿using System.IO.Compression;
+﻿#region
+using System.IO.Compression;
 using Mino.Nio;
+#endregion
 
 namespace Mino.Network;
 

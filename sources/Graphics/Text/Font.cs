@@ -1,9 +1,11 @@
-﻿using System.Runtime.InteropServices;
+﻿#region
+using System.Runtime.InteropServices;
 using FreeTypeSharp;
 using Mino.Nio;
 using static FreeTypeSharp.FT;
 using static FreeTypeSharp.FT_LOAD;
 using static FreeTypeSharp.FT_Render_Mode_;
+#endregion
 
 namespace Mino.Graphics.Text;
 
@@ -19,15 +21,15 @@ public unsafe class Font : IDisposable {
 	 * Basic line height.
 	 * To render, for example 32px text, we can calculate scaling based on this.
 	 */
-	public const float BASIC_LH = 16.0F;
-	
+	public const float BASIC_LH = 1.0F;
+
 	private FT_FaceRec_* _ftFace;
 	private FT_LibraryRec_* _ftLib;
 	private TextureAtlas _atlas = new TextureAtlas();
 	private Dictionary<char, Glyph> _glyphs = new Dictionary<char, Glyph>();
 	private uint _resolution;
 	private bool _disposed;
-	
+
 	// Forbit everyone directly new a font.
 	private Font() {
 	}
@@ -59,7 +61,6 @@ public unsafe class Font : IDisposable {
 		}
 
 		uint idx = FT_Get_Char_Index(_ftFace, ch);
-		FT_Set_Pixel_Sizes(_ftFace, 0, _resolution);
 		FT_Load_Glyph(_ftFace, idx, FT_LOAD_DEFAULT);
 		FT_Render_Glyph(_ftFace->glyph, FT_RENDER_MODE_NORMAL);
 		FT_Bitmap_ m0 = _ftFace->glyph->bitmap;
@@ -111,7 +112,8 @@ public unsafe class Font : IDisposable {
 	/// <param name="nextLine">Next line strategy.</param>
 	/// <param name="lineH">Line height.</param>
 	/// <returns>A baked text blob.</returns>
-	public TextBlob Bake(string text, float maxWidth = int.MaxValue, TextNextLine nextLine = TextNextLine.Latin, float lineH = BASIC_LH) {
+	public TextBlob Bake(string text, float maxWidth = int.MaxValue, TextNextLine nextLine = TextNextLine.Latin,
+		float lineH = BASIC_LH) {
 		return new TextBlob(text, this, lineH, maxWidth, nextLine);
 	}
 
@@ -123,8 +125,7 @@ public unsafe class Font : IDisposable {
 		Info = new FontInfo(
 			_ftFace->ascender * scale,
 			_ftFace->descender * scale,
-			(_ftFace->ascender - _ftFace->descender) * scale,
-			BASIC_LH
+			_ftFace->size->metrics.height * scale
 		);
 	}
 
@@ -148,6 +149,8 @@ public unsafe class Font : IDisposable {
 			FontQuality.High => 128U,
 			_ => throw new Error("invalid arg: " + nameof(quality))
 		};
+		FT_Set_Pixel_Sizes(face, 0, res);
+		
 		Font font = new Font { _ftLib = lib, _ftFace = face, _resolution = res };
 		font.init();
 		return font;

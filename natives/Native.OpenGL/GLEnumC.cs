@@ -1,7 +1,9 @@
-﻿using Mino.Graphics.RHI.Enum;
+﻿#region
+using Mino.Graphics.RHI.Enum;
 using Silk.NET.OpenGL;
 using PolygonMode = Mino.Graphics.RHI.Enum.PolygonMode;
 using ShaderType = Mino.Graphics.RHI.Enum.ShaderType;
+#endregion
 
 namespace Mino.Native.OpenGL;
 

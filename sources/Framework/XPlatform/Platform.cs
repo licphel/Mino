@@ -1,7 +1,7 @@
 ﻿namespace Mino.Framework.XPlatform;
 
 /// <summary>
-///		Identifies current os platform.
+///     Identifies current os platform.
 /// </summary>
 public static class Platform {
 	/*
@@ -16,9 +16,9 @@ public static class Platform {
 	public const uint DESKTOP = WINDOWS | LINUX | MACOS;
 	public const uint MOBILE = ANDROID | IOS;
 	public const uint ALL = DESKTOP | MOBILE;
-	
+
 	/// <summary>
-	///		Gets current os platform.
+	///     Gets current os platform.
 	/// </summary>
 	public static uint Current {
 		get {

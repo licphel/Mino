@@ -197,7 +197,7 @@ public readonly struct Box2 : IEquatable<Box2> {
 	public Box2 Scale(float scalarX, float scalarY) {
 		return Scale(new Vector2(scalarX, scalarY));
 	}
-	
+
 	/// <summary>
 	///     Scales the bounding box by the specified amounts.
 	/// </summary>

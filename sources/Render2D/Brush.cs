@@ -1,19 +1,20 @@
-﻿using Mino.Graphics;
+﻿#region
+using System.Runtime.InteropServices;
+using Mino.Graphics;
 using Mino.Graphics.RHI.Desc;
 using Mino.Graphics.RHI.Enum;
+using Mino.Graphics.Text;
 using Mino.Mathematics;
 using Mino.Nio;
+#endregion
 
-namespace Mino.Scene;
+namespace Mino.Render2D;
 
 /// <summary>
 ///     2D batched brush,
 ///     provides integrated 2D rendering solution.
 /// </summary>
 public unsafe class Brush : IDisposable {
-	/*
-	 * Default shaders:
-	 */
 	private const string VERT_SHADER_TEX = """
 										   #version 330 core
 
@@ -126,7 +127,7 @@ public unsafe class Brush : IDisposable {
 
 	/// <summary>
 	///     Current texture sampler.
-	///		This operation will flush the brush.
+	///     This operation will flush the brush.
 	/// </summary>
 	public Sampler Sampler {
 		get => _sampler;
@@ -138,7 +139,7 @@ public unsafe class Brush : IDisposable {
 
 	/// <summary>
 	///     Brush render target.
-	///		This operation will flush the brush.
+	///     This operation will flush the brush.
 	/// </summary>
 	public RenderTarget RenderTarget {
 		get => _renderTarget;
@@ -148,23 +149,28 @@ public unsafe class Brush : IDisposable {
 			_swapchain = new Swapchain(value);
 		}
 	}
-	
+
 	/// <summary>
 	///     Brush depth value. By default is 0.0F (near).
 	/// </summary>
 	public float Depth { get; set; } = 0.0F;
 
 	/// <summary>
-	///		Begins a render pass.
-	///		This operation will flush the brush.
+	///     Brush drawing flags.
+	/// </summary>
+	public BrushFlag Flags { get; set; } = BrushFlag.None;
+
+	/// <summary>
+	///     Begins a render pass.
+	///     This operation will flush the brush.
 	/// </summary>
 	public void Begin(in RenderPassDesc? desc = null) {
 		_swapchain.Acquire(desc);
 	}
 
 	/// <summary>
-	///		Ends a render pass.
-	///		This operation will flush the brush.
+	///     Ends a render pass.
+	///     This operation will flush the brush.
 	/// </summary>
 	public void End() {
 		Flush();
@@ -172,7 +178,7 @@ public unsafe class Brush : IDisposable {
 	}
 
 	/// <summary>
-	///		Flushes the brush, clears all buffers and submits the draw.
+	///     Flushes the brush, clears all buffers and submits the draw.
 	/// </summary>
 	public void Flush() {
 		if (_ast_Set == null || _ast_Pipe == null || _ast_Primitive == null) {
@@ -189,7 +195,7 @@ public unsafe class Brush : IDisposable {
 
 		_vbo.Submit<byte>(vBuf.AsSpan());
 		_encoder.SetBuffer(_vbo);
-		
+
 		_ast_Set.BindUniform(0, _ubo, sizeof(Matrix4x4));
 		_encoder.SetResource(0, _ast_Set);
 
@@ -229,8 +235,8 @@ public unsafe class Brush : IDisposable {
 	}
 
 	/// <summary>
-	///		Sets drawing view-projection matrix.
-	///		This operation will flush the brush.
+	///     Sets drawing view-projection matrix.
+	///     This operation will flush the brush.
 	/// </summary>
 	/// <param name="vpm">The matrix, column-majored.</param>
 	public void SetViewProjection(in Matrix4x4 vpm) {
@@ -240,18 +246,18 @@ public unsafe class Brush : IDisposable {
 	}
 
 	/// <summary>
-	///		Sets drawing viewport.
-	///		This operation will flush the brush.
+	///     Sets drawing viewport.
+	///     This operation will flush the brush.
 	/// </summary>
 	/// <param name="box">Viewport box.</param>
 	public void SetViewport(in Box2 box) {
 		Flush();
 		_encoder.SetViewport((int) box.MinX, (int) box.MinY, (int) box.Width, (int) box.Height);
 	}
-	
+
 	/// <summary>
-	///		Sets scissor test.
-	/// This operation will flush the brush.
+	///     Sets scissor test.
+	///     This operation will flush the brush.
 	/// </summary>
 	/// <param name="desc">Scissor test desc.</param>
 	public void SetScissor(in ScissorDesc desc) {
@@ -260,13 +266,18 @@ public unsafe class Brush : IDisposable {
 	}
 
 	/// <summary>
-	///		Draws a texture part.
+	///     Draws a texture.
 	/// </summary>
 	/// <param name="tex">Texture to draw.</param>
-	/// <param name="dst">Draw destination.</param>
-	/// <param name="src">Texture source.</param>
-	/// <param name="flags">Drawing flags.</param>
-	public void DrawTexture(Texture? tex, in Box2 dst, in Box2 src, BrushFlag flags = BrushFlag.None) {
+	/// <param name="x">Dst x.</param>
+	/// <param name="y">Dst y.</param>
+	/// <param name="w">Dst width.</param>
+	/// <param name="h">Dst height.</param>
+	/// <param name="u">Src u.</param>
+	/// <param name="v">Src v.</param>
+	/// <param name="uw">Src width.</param>
+	/// <param name="vh">Src height.</param>
+	public void DrawTexture(Texture? tex, float x, float y, float w, float h, float u, float v, float uw, float vh) {
 		if (tex == null) {
 			return;
 		}
@@ -276,22 +287,18 @@ public unsafe class Brush : IDisposable {
 		ByteBuffer vBuf = _target.VertexBuf;
 		ByteBuffer iBuf = _target.IndexBuf;
 
-		float u = src.MinX * _invWidth;
-		float v = src.MinY * _invHeight;
-		float u2 = src.MaxX * _invWidth;
-		float v2 = src.MaxY * _invHeight;
+		u *= _invWidth;
+		v *= _invHeight;
+		float u2 = u + uw * _invWidth;
+		float v2 = v + vh * _invHeight;
 
-		if ((flags & BrushFlag.FlipX) != 0) {
+		if ((Flags & BrushFlag.FlipX) != 0) {
 			(u, u2) = (u2, u);
 		}
-		if ((flags & BrushFlag.FlipY) != 0) {
+		if ((Flags & BrushFlag.FlipY) != 0) {
 			(v, v2) = (v2, v);
 		}
 
-		float x = dst.MinX;
-		float y = dst.MinY;
-		float w = dst.Width;
-		float h = dst.Height;
 		float x1 = x;
 		float y1 = y;
 		float x2 = x + w;
@@ -338,45 +345,141 @@ public unsafe class Brush : IDisposable {
 	}
 
 	/// <summary>
-	///		Draws a texture part.
+	///     Draws a texture part.
 	/// </summary>
-	/// <param name="tex">Texture part to draw.</param>
+	/// <param name="tex">Texture to draw.</param>
 	/// <param name="dst">Draw destination.</param>
-	/// <param name="flags">Drawing flags.</param>
-	public void DrawTexture(TexturePart tex, in Box2 dst, BrushFlag flags = BrushFlag.None) {
-		DrawTexture(tex.Src, dst, tex.Region, flags);
+	/// <param name="src">Texture source.</param>
+	public void DrawTexture(Texture? tex, in Box2 dst, in Box2 src) {
+		DrawTexture(tex, dst.MinX, dst.MinY, dst.Width, dst.Height, src.MinX, src.MinY, src.Width, src.Height);
 	}
 
 	/// <summary>
-	///		Draws a rectangle.
+	///     Draws a texture.
 	/// </summary>
-	/// <param name="dst">Drawing destination.</param>
-	public void DrawRectangle(in Box2 dst) {
+	/// <param name="tex">Texture to draw.</param>
+	/// <param name="x">Dst x.</param>
+	/// <param name="y">Dst y.</param>
+	/// <param name="w">Dst width.</param>
+	/// <param name="h">Dst height.</param>
+	public void DrawTexture(Texture? tex, float x, float y, float w, float h) {
+		if (tex == null) {
+			return;
+		}
+		DrawTexture(tex, x, y, w, h, 0.0F, 0.0F, tex.Width, tex.Height);
+	}
+
+	/// <summary>
+	///     Draws a texture part.
+	/// </summary>
+	/// <param name="texPart">Texture part to draw.</param>
+	/// <param name="dst">Draw destination.</param>
+	public void DrawTexture(TexturePart texPart, in Box2 dst) {
+		DrawTexture(texPart.Src, dst, texPart.Region);
+	}
+
+	/// <summary>
+	///     Draws a texture part.
+	/// </summary>
+	/// <param name="texPart">Texture part to draw.</param>
+	/// <param name="dst">Draw destination.</param>
+	/// <param name="src">Texture part source.</param>
+	public void DrawTexture(TexturePart texPart, in Box2 dst, in Box2 src) {
+		DrawTexture(new TexturePart(texPart.Src, src), dst);
+	}
+	
+	/// <summary>
+	///     Draws a texture part.
+	/// </summary>
+	/// <param name="texPart">Texture part to draw.</param>
+	/// <param name="x">Dst x.</param>
+	/// <param name="y">Dst y.</param>
+	/// <param name="w">Dst width.</param>
+	/// <param name="h">Dst height.</param>
+	public void DrawTexture(TexturePart texPart, float x, float y, float w, float h) {
+		DrawTexture(texPart.Src, x, y, w, h, texPart.U, texPart.V, texPart.Width, texPart.Height);
+	}
+
+	/// <summary>
+	///     Draws a texture part.
+	/// </summary>
+	/// <param name="texPart">Texture part to draw.</param>
+	/// <param name="x">Dst x.</param>
+	/// <param name="y">Dst y.</param>
+	/// <param name="w">Dst width.</param>
+	/// <param name="h">Dst height.</param>
+	/// <param name="u">Src u.</param>
+	/// <param name="v">Src v.</param>
+	/// <param name="uw">Src width.</param>
+	/// <param name="vh">Src height.</param>
+	public void DrawTexture(TexturePart texPart, float x, float y, float w, float h, float u, float v, float uw, float vh) {
+		DrawTexture(texPart.Src, x, y, w, h, u + texPart.U, v + texPart.V, uw, vh);
+	}
+	
+	/// <summary>
+	///     Draws a drawable.
+	/// </summary>
+	/// <param name="t">Drawable object to draw.</param>
+	/// <param name="dst">Draw destination.</param>
+	public void Draw<T>(in T t, in Box2 dst) where T : Drawable {
+		t.Draw(this, dst.MinX, dst.MinY, dst.Width, dst.Height, 0.0F, 0.0F, 0.0F, 0.0F);
+	}
+
+	/// <summary>
+	///     Draws a drawable.
+	/// </summary>
+	/// <param name="t">Drawable object to draw.</param>
+	/// <param name="dst">Draw destination.</param>
+	/// <param name="src">Texture part source.</param>
+	public void Draw<T>(in T t, in Box2 dst, in Box2 src) where T : Drawable {
+		t.Draw(this, dst.MinX, dst.MinY, dst.Width, dst.Height, src.MinX, src.MinY, src.Width, src.Height);
+	}
+	
+	/// <summary>
+	///     Draws a drawable.
+	/// </summary>
+	/// <param name="t">Drawable object to draw.</param>
+	/// <param name="x">Dst x.</param>
+	/// <param name="y">Dst y.</param>
+	/// <param name="w">Dst width.</param>
+	/// <param name="h">Dst height.</param>
+	public void Draw<T>(in T t, float x, float y, float w, float h) where T : Drawable {
+		t.Draw(this, x, y, w, h, 0.0F, 0.0F, 0.0F, 0.0F);
+	}
+
+	/// <summary>
+	///     Draws a drawable.
+	/// </summary>
+	/// <param name="t">Drawable object to draw.</param>
+	/// <param name="x">Dst x.</param>
+	/// <param name="y">Dst y.</param>
+	/// <param name="w">Dst width.</param>
+	/// <param name="h">Dst height.</param>
+	/// <param name="u">Src u.</param>
+	/// <param name="v">Src v.</param>
+	/// <param name="uw">Src width.</param>
+	/// <param name="vh">Src height.</param>
+	public void Draw<T>(in T t, float x, float y, float w, float h, float u, float v, float uw, float vh) where T : Drawable {
+		t.Draw(this, x, y, w, h, u, v, uw, vh);
+	}
+
+	/// <summary>
+	///     Draws a rectangle.
+	/// </summary>
+	/// <param name="x">Dst x.</param>
+	/// <param name="y">Dst y.</param>
+	/// <param name="w">Dst width.</param>
+	/// <param name="h">Dst height.</param>
+	public void DrawRectangle(float x, float y, float w, float h) {
 		assert(BrushPrimitive.ColorSprite);
 
 		ByteBuffer vBuf = _target.VertexBuf;
 		ByteBuffer iBuf = _target.IndexBuf;
 
-		float x = dst.MinX;
-		float y = dst.MinY;
-		float w = dst.Width;
-		float h = dst.Height;
 		float x1 = x;
 		float y1 = y;
 		float x2 = x + w;
 		float y2 = y + h;
-
-		/* Vertex 0, 1, 2, 3 visualized.
-		 *
-		 * 0-----------1
-		 * | \	       |
-		 * |    \	   |
-		 * |	  \    |
-		 * |		 \ |
-		 * 3-----------2
-		 *
-		 * Ensure CCW sort for culling.
-		 */
 
 		// 0
 		vBuf.Write(new Vector3(x1, y1, Depth));
@@ -401,41 +504,134 @@ public unsafe class Brush : IDisposable {
 		_vertCnt += 4;
 		_indCnt += 6;
 	}
+
+	/// <summary>
+	///     Draws a rectangle.
+	/// </summary>
+	/// <param name="dst">Drawing destination.</param>
+	public void DrawRectangle(in Box2 dst) {
+		DrawRectangle(dst.MinX, dst.MinY, dst.Width, dst.Height);
+	}
 	
 	/// <summary>
-	///		Draws a line.
+	///     Draws a rectangle frame.
+	/// </summary>
+	/// <param name="x">Dst x.</param>
+	/// <param name="y">Dst y.</param>
+	/// <param name="w">Dst width.</param>
+	/// <param name="h">Dst height.</param>
+	public void DrawRectangleFrame(float x, float y, float w, float h) {
+		DrawLine(x, y, x + w, y);
+		DrawLine(x, y, x, y + h);
+		DrawLine(x + w, y, x + w, y + h);
+		DrawLine(x, y + h, x + w, y + h);
+	}
+	
+	/// <summary>
+	///     Draws a rectangle frame.
+	/// </summary>
+	/// <param name="dst">Drawing destination.</param>
+	public void DrawRectangleFrame(in Box2 dst) {
+		DrawRectangleFrame(dst.MinX, dst.MinY, dst.Width, dst.Height);
+	}
+
+	/// <summary>
+	///     Draws a line.
+	/// </summary>
+	/// <param name="x1">From x.</param>
+	/// <param name="y1">From y.</param>
+	/// <param name="x2">To x.</param>
+	/// <param name="y2">To y.</param>
+	public void DrawLine(float x1, float y1, float x2, float y2) {
+		assert(BrushPrimitive.ColorLine);
+
+		ByteBuffer vBuf = _target.VertexBuf;
+
+		vBuf.Write(new Vector3(x1, y1, Depth));
+		vBuf.Write(_color4[0].AsHalves());
+
+		vBuf.Write(new Vector3(x2, y2, Depth));
+		vBuf.Write(_color4[1].AsHalves());
+
+		_vertCnt += 4;
+	}
+
+	/// <summary>
+	///     Draws a line.
 	/// </summary>
 	/// <param name="from">From point.</param>
 	/// <param name="to">To point.</param>
 	public void DrawLine(in Vector2 from, in Vector2 to) {
-		assert(BrushPrimitive.ColorLine);
-
-		ByteBuffer vBuf = _target.VertexBuf;
-		
-		vBuf.Write(new Vector3(from.X, from.Y, Depth));
-		vBuf.Write(_color4[0].AsHalves());
-		
-		vBuf.Write(new Vector3(to.X, to.Y, Depth));
-		vBuf.Write(_color4[1].AsHalves());
-		
-		_vertCnt += 4;
+		DrawLine(from.X, from.Y, to.X, to.Y);
 	}
-	
+
 	/// <summary>
-	///		Draws a point.
+	///     Draws a point.
 	/// </summary>
-	/// <param name="at">Point position.</param>
-	public void DrawLine(in Vector2 at) {
+	/// <param name="x">Position x.</param>
+	/// <param name="y">Position y.</param>
+	public void DrawPoint(float x, float y) {
 		assert(BrushPrimitive.ColorPoint);
 
 		ByteBuffer vBuf = _target.VertexBuf;
-		
-		vBuf.Write(new Vector3(at.X, at.Y, Depth));
+
+		vBuf.Write(new Vector3(x, y, Depth));
 		vBuf.Write(_color4[0].AsHalves());
-		
+
 		_vertCnt += 4;
 	}
-	
+
+	/// <summary>
+	///     Draws a point.
+	/// </summary>
+	/// <param name="at">Point position.</param>
+	public void DrawPoint(in Vector2 at) {
+		DrawPoint(at.X, at.Y);
+	}
+
+	/// <summary>
+	///		Draws a text blob.
+	/// </summary>
+	/// <param name="blob">The blob to draw.</param>
+	/// <param name="x">Drawing offset x.</param>
+	/// <param name="y">Drawing offset y.</param>
+	/// <param name="alignment">Text alignment.</param>
+	public void DrawText(TextBlob blob, float x, float y, Alignment? alignment = null) {
+		alignment??= Alignment.Default;
+		
+		float w = blob.Width;
+		float h = blob.Height;
+		
+		switch (alignment.Value.Horizontal) {
+			case -1:
+				// Do nothing.
+				break;
+			case 0:
+				x -= w / 2.0F;
+				break;
+			case 1:
+				x -= w;
+				break;
+		}
+		
+		switch (alignment.Value.Vertical) {
+			case -1:
+				// Do nothing.
+				break;
+			case 0:
+				y -= h / 2.0F;
+				break;
+			case 1:
+				y -= h;
+				break;
+		}
+
+		for (int i = 0; i < blob.GlyphRunList.Count; i++) {
+			ref GlyphInstance gi = ref CollectionsMarshal.AsSpan(blob.GlyphRunList)[i];
+			DrawTexture(gi.Glyph.TexPart, gi.Bounds.Translate(x, y));
+		}
+	}
+
 	public void Dispose() {
 		if (_disposed) {
 			return;
@@ -449,7 +645,7 @@ public unsafe class Brush : IDisposable {
 		_encoder.Dispose();
 		GC.SuppressFinalize(this);
 	}
-	
+
 	private void initGfxResources() {
 		RenderTarget = RenderTarget.GetUltimate();
 		Sampler = new Sampler(new SamplerDesc());

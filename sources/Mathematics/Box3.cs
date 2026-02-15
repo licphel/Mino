@@ -233,7 +233,7 @@ public readonly struct Box3 : IEquatable<Box3> {
 	public Box3 Scale(float scalarX, float scalarY, float scalarZ) {
 		return Scale(new Vector3(scalarX, scalarY, scalarZ));
 	}
-	
+
 	/// <summary>
 	///     Scales the bounding box by the specified amounts.
 	/// </summary>

@@ -1,4 +1,6 @@
-﻿using Mino.Algorithm.Random;
+﻿#region
+using Mino.Algorithm.Random;
+#endregion
 
 namespace Mino.Algorithm.Noise;
 

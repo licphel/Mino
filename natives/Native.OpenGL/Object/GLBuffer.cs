@@ -1,7 +1,9 @@
-﻿using System.Runtime.CompilerServices;
+﻿#region
+using System.Runtime.CompilerServices;
 using Mino.Graphics.RHI.Desc;
 using Mino.Graphics.RHI.Enum;
 using Silk.NET.OpenGL;
+#endregion
 
 namespace Mino.Native.OpenGL.Object;
 

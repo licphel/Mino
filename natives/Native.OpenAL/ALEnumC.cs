@@ -1,5 +1,7 @@
-﻿using Mino.Audio.AHI.Enum;
+﻿#region
+using Mino.Audio.AHI.Enum;
 using Silk.NET.OpenAL;
+#endregion
 
 namespace Mino.Native.OpenAL;
 

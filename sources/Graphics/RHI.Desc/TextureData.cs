@@ -1,9 +1,11 @@
-﻿using Mino.Mathematics;
+﻿#region
+using Mino.Mathematics;
+#endregion
 
 namespace Mino.Graphics.RHI.Desc;
 
 /// <summary>
-///		A texture submission data.
+///     A texture submission data.
 /// </summary>
 public struct TextureSubmission {
 	public byte[]? Bytes;
@@ -13,7 +15,7 @@ public struct TextureSubmission {
 		Bytes = null;
 		Region = default;
 	}
-	
+
 	/// <summary>
 	///     Creates a submission by a 2D image.
 	/// </summary>
