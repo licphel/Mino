@@ -8,7 +8,7 @@ namespace Mino.Graphics.Text;
 ///     A baked text instance, used for rendering and testing.
 /// </summary>
 public class TextBlob {
-	internal TextBlob(string text, Font font, float lineH, float maxWidth, TextNextLine nextLine) {
+	internal TextBlob(Font font, string text, float maxWidth, float lineH, FontStyle style) {
 		float cursorX = 0;
 		float cursorY = 0;
 		int currentLine = 0;
@@ -19,24 +19,28 @@ public class TextBlob {
 		float lineGap = font.Info.LineGap * scale;
 
 		for (int i = 0; i < text.Length; i++) {
-			char c = text[i];
+			char ch = text[i];
 
 			// Invisible chars.
-			if (c is '\r' or '\t') {
+			if (ch is '\r' or '\t') {
 				continue;
 			}
 
-			if (c == '\n') {
+			if (ch == '\n') {
 				cursorX = 0;
 				cursorY += lineGap;
 				currentLine++;
 				lastSpaceIndex = -1;
 				continue;
 			}
+			
+			if (IsCJK(ch)) {
+				lastSpaceIndex = i;
+			}
 
-			Glyph glyph = font.GetGlyph(c).Scale(scale);
+			Glyph glyph = font.GetGlyph(ch, style).Scale(scale);
 
-			if (char.IsWhiteSpace(c) && !char.IsControl(c)) {
+			if (char.IsWhiteSpace(ch) && !char.IsControl(ch)) {
 				lastSpaceIndex = i;
 			}
 
@@ -73,10 +77,6 @@ public class TextBlob {
 
 			cursorX += glyph.Advance;
 			maxLineWidth = Math.Max(maxLineWidth, cursorX);
-
-			if (nextLine == TextNextLine.Other) {
-				lastSpaceIndex = i;
-			}
 		}
 
 		Width = maxLineWidth;
@@ -90,6 +90,13 @@ public class TextBlob {
 		}
 
 		Height = cursorY + Math.Max(0, -descender) + lineH;
+		
+		return;
+
+		static bool IsCJK(char ch) {
+			return ch >= 0x4E00 && ch <= 0x9FFF ||
+				ch >= 0x3400 && ch <= 0x4DBF;
+		}
 	}
 
 	/// <summary>

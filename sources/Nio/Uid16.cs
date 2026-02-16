@@ -1,5 +1,5 @@
 ﻿#region
-using Mino.Algorithm.Random;
+using Mino.Mathematics.Random;
 #endregion
 
 namespace Mino.Nio;

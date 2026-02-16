@@ -21,12 +21,12 @@ public unsafe class Font : IDisposable {
 	 * Basic line height.
 	 * To render, for example 32px text, we can calculate scaling based on this.
 	 */
-	public const float BasicLineHeight = 1.0F;
+	public const float BasicLineHeight = 16.0F;
 
 	private FT_FaceRec_* _ftFace;
 	private FT_LibraryRec_* _ftLib;
 	private TextureAtlas _atlas = new TextureAtlas();
-	private Dictionary<char, Glyph> _glyphs = new Dictionary<char, Glyph>();
+	private Dictionary<uint, Glyph> _glyphs = new Dictionary<uint, Glyph>();
 	private uint _resolution;
 	private bool _disposed;
 
@@ -54,14 +54,26 @@ public unsafe class Font : IDisposable {
 	///     Gets the glyph data of the given character.
 	/// </summary>
 	/// <param name="ch">The character.</param>
+	/// <param name="style">Style of the font.</param>
 	/// <returns>A glyph data.</returns>
-	public Glyph GetGlyph(char ch) {
-		if (_glyphs.TryGetValue(ch, out Glyph glyph)) {
+	public Glyph GetGlyph(char ch, FontStyle style) {
+		uint key = (uint) style << 16 | ch;
+		
+		if (_glyphs.TryGetValue(key, out Glyph glyph)) {
 			return glyph;
 		}
 
 		uint idx = FT_Get_Char_Index(_ftFace, ch);
 		FT_Load_Glyph(_ftFace, idx, FT_LOAD_DEFAULT);
+		
+		if ((style & FontStyle.Bold) != 0) {
+			FT_GlyphSlot_Embolden(_ftFace->glyph);
+			_ftFace->glyph->advance.x = (int) (_ftFace->glyph->advance.x * 1.08F);
+		}
+		if ((style & FontStyle.Italic) != 0) {
+			FT_GlyphSlot_Oblique(_ftFace->glyph);
+		}
+		
 		FT_Render_Glyph(_ftFace->glyph, FT_RENDER_MODE_NORMAL);
 		FT_Bitmap_ m0 = _ftFace->glyph->bitmap;
 
@@ -84,7 +96,7 @@ public unsafe class Font : IDisposable {
 		float scale = 1.0F / (_resolution / BasicLineHeight * 64.0F);
 
 		// Creates glyph data.
-		return _glyphs[ch] = new Glyph(
+		return _glyphs[key] = new Glyph(
 			texture,
 			metrics.width * scale,
 			metrics.height * scale,
@@ -109,12 +121,11 @@ public unsafe class Font : IDisposable {
 	/// </summary>
 	/// <param name="text">Target text.</param>
 	/// <param name="maxWidth">Max render width.</param>
-	/// <param name="nextLine">Next line strategy.</param>
 	/// <param name="lineH">Line height.</param>
+	/// <param name="style">Font style.</param>
 	/// <returns>A baked text blob.</returns>
-	public TextBlob Bake(string text, float maxWidth = int.MaxValue, TextNextLine nextLine = TextNextLine.Latin,
-		float lineH = BasicLineHeight) {
-		return new TextBlob(text, this, lineH, maxWidth, nextLine);
+	public TextBlob Bake(string text, float maxWidth = int.MaxValue, float lineH = BasicLineHeight, FontStyle style = FontStyle.Regular) {
+		return new TextBlob(this, text, maxWidth, lineH, style);
 	}
 
 	private void init() {
@@ -125,7 +136,11 @@ public unsafe class Font : IDisposable {
 		Info = new FontInfo(
 			_ftFace->ascender * scale,
 			_ftFace->descender * scale,
-			_ftFace->size->metrics.height * scale
+			_ftFace->size->metrics.height * scale,
+			_ftFace->underline_position * scale,
+			_ftFace->underline_thickness * scale,
+			_ftFace->ascender * scale / 2.0F,
+			_ftFace->underline_thickness * scale
 		);
 	}
 

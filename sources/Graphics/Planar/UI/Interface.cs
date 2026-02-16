@@ -1,5 +1,4 @@
 ﻿using Mino.Framework;
-using Mino.Mathematics;
 
 namespace Mino.Graphics.Planar.UI;
 
@@ -12,7 +11,7 @@ public class Interface {
 	private bool _init;
 	private Interface? _parent = null;
 	private TooltipContext? _tooltipContext = null;
-
+	
 	public virtual void Reflush() {
 		if (!_init) {
 			OnInit?.Invoke();
@@ -48,16 +47,18 @@ public class Interface {
 		OnUpdate?.Invoke(step);
 
 		if (_tooltipContext != null) {
+			_tooltipContext.Begin();
 			
+			//... TODO: collect tooltips.
+			
+			_tooltipContext.End();
 		}
 	}
 
 	public virtual void Draw(Brush brush) {
 		OnDraw?.Invoke(brush);
-		
-		if (_tooltipContext != null) {
-			
-		}
+
+		_tooltipContext?.Draw(brush);
 	}
 
 	public void SetTooltipContext(TooltipContext? ctx) {

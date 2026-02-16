@@ -1,8 +1,8 @@
 ﻿#region
-using Mino.Algorithm.Random;
+using Mino.Mathematics.Random;
 #endregion
 
-namespace Mino.Algorithm.Noise;
+namespace Mino.Mathematics.Noise;
 
 /// <summary>
 ///     Quick voronoi noise.

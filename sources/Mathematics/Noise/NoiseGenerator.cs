@@ -1,4 +1,4 @@
-﻿namespace Mino.Algorithm.Noise;
+﻿namespace Mino.Mathematics.Noise;
 
 /// <summary>
 ///     Represents a 3D random noise generator.

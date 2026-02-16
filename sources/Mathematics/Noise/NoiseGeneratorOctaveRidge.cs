@@ -1,4 +1,4 @@
-﻿namespace Mino.Algorithm.Noise;
+﻿namespace Mino.Mathematics.Noise;
 
 /// <summary>
 ///     Ridge octave noise - produces sharp, vein-like patterns.

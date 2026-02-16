@@ -4,6 +4,7 @@ using Mino.Graphics.RHI.Desc;
 using Mino.Graphics.RHI.Enum;
 using Mino.Graphics.Text;
 using Mino.Mathematics;
+using Mino.Mathematics.Planar;
 using Mino.Nio;
 #endregion
 
@@ -86,13 +87,6 @@ public unsafe class Brush : IDisposable {
 	private Texture? _ast_Tex = null;
 	private float _invWidth = 0;
 	private float _invHeight = 0;
-
-	private Color[] _color4 = [
-		Color.PureWhite,
-		Color.PureWhite,
-		Color.PureWhite,
-		Color.PureWhite
-	];
 	/*
 	 * STATIC DEFAULTS
 	 * These pipes and resource sets are:
@@ -112,6 +106,7 @@ public unsafe class Brush : IDisposable {
 	private Encoder _encoder = null!;
 	private BufferObject _ibo = null!;
 	private BufferObject _ubo = null!;
+	private CameraPlanar _camera = CameraPlanar.Normal(new CameraPlanar());
 	/*
 	 * Other variables
 	 */
@@ -122,6 +117,23 @@ public unsafe class Brush : IDisposable {
 	public Brush(BrushCache? target = null) {
 		_target = target ?? new BrushCache.Self();
 		initGfxResources();
+	}
+	
+	/// <summary>
+	///		Rendering color tint.
+	/// </summary>
+	public Color Color { get; set; } = Color.PureWhite;
+
+	/// <summary>
+	///     Current camera.
+	///     This operation will flush the brush.
+	/// </summary>
+	public CameraPlanar Camera {
+		get => _camera;
+		set {
+			SetViewProjection(value.ViewProjectionMatrix);
+			_camera = value;
+		}
 	}
 
 	/// <summary>
@@ -148,6 +160,11 @@ public unsafe class Brush : IDisposable {
 			_swapchain = new Swapchain(value);
 		}
 	}
+
+	/// <summary>
+	///		Current viewport.
+	/// </summary>
+	public Box2 CurrentViewport { get; private set; }
 
 	/// <summary>
 	///     Brush depth value. By default is 0.0F (near).
@@ -252,6 +269,7 @@ public unsafe class Brush : IDisposable {
 	public void SetViewport(in Box2 box) {
 		Flush();
 		_encoder.SetViewport((int) box.MinX, (int) box.MinY, (int) box.Width, (int) box.Height);
+		CurrentViewport = box;
 	}
 
 	/// <summary>
@@ -262,6 +280,14 @@ public unsafe class Brush : IDisposable {
 	public void SetScissor(in ScissorDesc desc) {
 		Flush();
 		_encoder.SetScissor(desc);
+	}
+
+	/// <summary>
+	///		Gets a canvas mapping context.
+	/// </summary>
+	/// <returns>The context.</returns>
+	public MappingContext CreateContext() {
+		return new MappingContext(Camera, CurrentViewport);
 	}
 
 	/// <summary>
@@ -317,19 +343,19 @@ public unsafe class Brush : IDisposable {
 
 		// 0
 		vBuf.Write(new Vector3(x1, y1, Depth));
-		vBuf.Write(_color4[0].AsHalves());
+		vBuf.Write(Color.AsHalves());
 		vBuf.Write(new Vector2(u, v));
 		// 1
 		vBuf.Write(new Vector3(x2, y1, Depth));
-		vBuf.Write(_color4[1].AsHalves());
+		vBuf.Write(Color.AsHalves());
 		vBuf.Write(new Vector2(u2, v));
 		// 2
 		vBuf.Write(new Vector3(x2, y2, Depth));
-		vBuf.Write(_color4[2].AsHalves());
+		vBuf.Write(Color.AsHalves());
 		vBuf.Write(new Vector2(u2, v2));
 		// 3
 		vBuf.Write(new Vector3(x1, y2, Depth));
-		vBuf.Write(_color4[3].AsHalves());
+		vBuf.Write(Color.AsHalves());
 		vBuf.Write(new Vector2(u, v2));
 
 		iBuf.Write(_vertCnt + 0);
@@ -482,16 +508,16 @@ public unsafe class Brush : IDisposable {
 
 		// 0
 		vBuf.Write(new Vector3(x1, y1, Depth));
-		vBuf.Write(_color4[0].AsHalves());
+		vBuf.Write(Color.AsHalves());
 		// 1
 		vBuf.Write(new Vector3(x2, y1, Depth));
-		vBuf.Write(_color4[1].AsHalves());
+		vBuf.Write(Color.AsHalves());
 		// 2
 		vBuf.Write(new Vector3(x2, y2, Depth));
-		vBuf.Write(_color4[2].AsHalves());
+		vBuf.Write(Color.AsHalves());
 		// 3
 		vBuf.Write(new Vector3(x1, y2, Depth));
-		vBuf.Write(_color4[3].AsHalves());
+		vBuf.Write(Color.AsHalves());
 
 		iBuf.Write(_vertCnt + 0);
 		iBuf.Write(_vertCnt + 2);
@@ -547,10 +573,10 @@ public unsafe class Brush : IDisposable {
 		ByteBuffer vBuf = _target.VertexBuf;
 
 		vBuf.Write(new Vector3(x1, y1, Depth));
-		vBuf.Write(_color4[0].AsHalves());
+		vBuf.Write(Color.AsHalves());
 
 		vBuf.Write(new Vector3(x2, y2, Depth));
-		vBuf.Write(_color4[1].AsHalves());
+		vBuf.Write(Color.AsHalves());
 
 		_vertCnt += 4;
 	}
@@ -575,7 +601,7 @@ public unsafe class Brush : IDisposable {
 		ByteBuffer vBuf = _target.VertexBuf;
 
 		vBuf.Write(new Vector3(x, y, Depth));
-		vBuf.Write(_color4[0].AsHalves());
+		vBuf.Write(Color.AsHalves());
 
 		_vertCnt += 4;
 	}

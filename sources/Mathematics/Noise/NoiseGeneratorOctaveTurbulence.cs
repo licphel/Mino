@@ -1,4 +1,4 @@
-﻿namespace Mino.Algorithm.Noise;
+﻿namespace Mino.Mathematics.Noise;
 
 /// <summary>
 ///     Generates fluid pattern like noise.
