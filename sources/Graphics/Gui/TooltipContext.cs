@@ -1,8 +1,9 @@
 ﻿using System.Text;
+using Mino.Graphics.Sprite;
 using Mino.Graphics.Text;
 using Mino.Mathematics;
 
-namespace Mino.Graphics.Sprite.UI;
+namespace Mino.Graphics.Gui;
 
 /// <summary>
 ///		A tooltip manager.

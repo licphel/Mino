@@ -1,23 +1,24 @@
 ﻿#region
 using Mino.Framework;
 using Mino.Graphics.Hardware;
+using Mino.Graphics.Sprite;
 using Mino.Input;
 using Mino.Mathematics;
 #endregion
 
-namespace Mino.Graphics.Sprite.UI;
+namespace Mino.Graphics.Gui;
 
 /// <summary>
 ///		Top user interface.
 /// </summary>
-public class Interface : Component {
-	public static readonly List<Interface> Presents = new List<Interface>();
+public class Face : Component {
+	public static readonly List<Face> Presents = new List<Face>();
 	
 	private TooltipContext? _tooltipCtx;
 	private bool _resolveNeeded = false;
 	private Vector2 _preWinSize;
 	
-	public Interface() {
+	public Face() {
 		IsInteractive = true;
 	}
 
@@ -51,9 +52,7 @@ public class Interface : Component {
 			return;
 		}
 
-		_tooltipCtx?.Begin();
 		base.Update(step);
-		_tooltipCtx?.End();
 
 		// Observe window resize
 		// and mark resolve.
@@ -62,6 +61,21 @@ public class Interface : Component {
 			_preWinSize = ws;
 			Resolve();
 		}
+		
+		Vector2 cursor = Mcontext.Cursor;
+		
+		// Update tooltip.
+		if (_tooltipCtx != null) {
+			_tooltipCtx.Begin();
+			foreach (Component comp in Children) {
+				if (comp.IsAccessible(cursor)) {
+					comp.AppendTooltip(_tooltipCtx);
+				}
+			}
+			_tooltipCtx.End();
+		}
+		
+		updateFocus(this, cursor);
 	}
 
 	public override void Draw(Brush brush) {
@@ -69,27 +83,24 @@ public class Interface : Component {
 			return;
 		}
 		
-		MappingContext mc = brush.CreateContext();
-
+		base.Draw(brush);
+		
 		// Handle pending resolve request.
 		if (_resolveNeeded) {
 			foreach (Component comp in Children) {
-				comp.OnRemap?.Invoke(comp, mc);
+				comp.OnResolve?.Invoke(comp, Mcontext);
 			}
 			_resolveNeeded = false;
 		}
-
-		base.Draw(brush);
-		_tooltipCtx?.Draw(brush);
 		
-		updateFocus(this, mc.Cursor);
+		_tooltipCtx?.Draw(brush);
 	}
 
 	/// <summary>
 	///		Sets the interface tooltip context.
 	/// </summary>
 	/// <param name="ctx">(Nullable) tooltip context.</param>
-	public void SetTooltipContext1(TooltipContext? ctx) {
+	public void SetTooltipContext(TooltipContext? ctx) {
 		_tooltipCtx = ctx;
 	}
 	

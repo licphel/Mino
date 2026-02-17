@@ -1,16 +1,17 @@
 ﻿#region
 using Mino.Framework;
-using Mino.Input;
+using Mino.Graphics.Sprite;
 using Mino.Mathematics;
 #endregion
 
-namespace Mino.Graphics.Sprite.UI;
+namespace Mino.Graphics.Gui;
 
 /// <summary>
 ///     User interface component base class.
 /// </summary>
 public abstract class Component {
 	private readonly List<Component> _children = new List<Component>();
+	protected MappingContext Mcontext;
 
 	/// <summary>
 	///     Name of the component.
@@ -51,7 +52,7 @@ public abstract class Component {
 
 	public Action<Component, TimeStep>? OnUpdate;
 	public Action<Component, Brush>? OnDraw;
-	public Action<Component, MappingContext>? OnRemap;
+	public Action<Component, MappingContext>? OnResolve;
 
 	public virtual bool Contains(in Vector2 point) {
 		return BoundingBox.Contains(point);
@@ -121,6 +122,16 @@ public abstract class Component {
 		foreach (Component child in _children) {
 			child.Draw(brush);
 		}
+
+		// Creates a mc cache.
+		Mcontext = brush.CreateContext();
+	}
+
+	/// <summary>
+	///		Called on tooltip appending.
+	/// </summary>
+	/// <param name="ctx">Tooltip context.</param>
+	public virtual void AppendTooltip(TooltipContext ctx) {
 	}
 
 	/// <summary>
@@ -134,9 +145,13 @@ public abstract class Component {
 	/// <param name="cursor">Cursor position.</param>
 	/// <returns>True is accessible, otherwise false.</returns>
 	public bool IsAccessible(in Vector2 cursor) {
+		if (!IsVisible || !IsInteractive) {
+			return false;
+		}
 		if (Parent == null) {
 			return Contains(cursor);
 		}
+		
 		Component? comp = Parent;
 		
 		// First layer: we check depth.
