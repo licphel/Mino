@@ -1,7 +1,7 @@
 ﻿#region
-using Mino.Graphics.RHI.Desc;
+using Mino.Graphics.Hardware.Desc;
 using Silk.NET.OpenGL;
-using ShaderType = Mino.Graphics.RHI.Enum.ShaderType;
+using ShaderType = Mino.Graphics.Hardware.Enum.ShaderType;
 #endregion
 
 namespace Mino.Native.OpenGL.Object;

@@ -1,7 +1,7 @@
 ﻿#region
-using Mino.Audio.AHI;
-using Mino.Audio.AHI.Desc;
-using Mino.Audio.AHI.Enum;
+using Mino.Audio.Hardware;
+using Mino.Audio.Hardware.Desc;
+using Mino.Audio.Hardware.Enum;
 using Mino.Framework;
 using Mino.Framework.BSP;
 using Mino.Native.OpenAL.Object;

@@ -1,6 +1,6 @@
 ﻿#region
-using Mino.Graphics.RHI;
-using Mino.Graphics.RHI.Enum;
+using Mino.Graphics.Hardware;
+using Mino.Graphics.Hardware.Enum;
 using Mino.Mathematics;
 #endregion
 

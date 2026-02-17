@@ -1,8 +1,8 @@
 ﻿#region
 using Mino.Desktop;
 using Mino.Framework;
-using Mino.Graphics.RHI;
-using Mino.Graphics.RHI.Desc;
+using Mino.Graphics.Hardware;
+using Mino.Graphics.Hardware.Desc;
 #endregion
 
 namespace Mino.Graphics;

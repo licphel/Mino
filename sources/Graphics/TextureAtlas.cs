@@ -1,7 +1,7 @@
 ﻿#region
 using System.Runtime.InteropServices;
-using Mino.Graphics.RHI.Desc;
-using Mino.Graphics.RHI.Enum;
+using Mino.Graphics.Hardware.Desc;
+using Mino.Graphics.Hardware.Enum;
 using Mino.Mathematics;
 using HandleRef = Mino.Framework.HandleRef;
 #endregion

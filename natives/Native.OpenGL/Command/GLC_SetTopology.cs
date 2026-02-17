@@ -1,5 +1,5 @@
 ﻿#region
-using Mino.Graphics.RHI.Enum;
+using Mino.Graphics.Hardware.Enum;
 #endregion
 
 namespace Mino.Native.OpenGL.Command;

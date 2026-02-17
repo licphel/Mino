@@ -1,4 +1,4 @@
-﻿using Mino.Graphics.RHI;
+﻿using Mino.Graphics.Hardware;
 
 namespace Mino.Mathematics.Planar;
 

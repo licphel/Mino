@@ -1,9 +1,9 @@
 ﻿#region
 using Mino.Desktop;
 using Mino.Framework.BSP;
-using Mino.Graphics.RHI;
-using Mino.Graphics.RHI.Desc;
-using Mino.Graphics.RHI.Enum;
+using Mino.Graphics.Hardware;
+using Mino.Graphics.Hardware.Desc;
+using Mino.Graphics.Hardware.Enum;
 using Mino.Native.OpenGL.Command;
 using Mino.Native.OpenGL.Object;
 using Silk.NET.OpenGL;

@@ -1,5 +1,5 @@
 ﻿#region
-using Mino.Audio.AHI.Desc;
+using Mino.Audio.Hardware.Desc;
 using Silk.NET.OpenAL;
 #endregion
 

@@ -1,7 +1,7 @@
 ﻿#region
 using System.Collections.Concurrent;
 using Mino.Desktop;
-using Mino.Graphics.RHI;
+using Mino.Graphics.Hardware;
 #endregion
 
 namespace Mino.Input;

@@ -1,5 +1,5 @@
 ﻿#region
-using Mino.Graphics.RHI.Desc;
+using Mino.Graphics.Hardware.Desc;
 using Mino.Native.OpenGL.Command;
 #endregion
 

@@ -1,5 +1,5 @@
 ﻿#region
-using Mino.Audio.AHI.Enum;
+using Mino.Audio.Hardware.Enum;
 #endregion
 
 namespace Mino.Audio;
