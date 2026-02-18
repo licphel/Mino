@@ -53,10 +53,20 @@ public abstract class Component {
 		get => _children;
 	}
 	
+	/// <summary>
+	///		Sets an attribute object.
+	/// </summary>
+	/// <param name="name">Attribute name.</param>
+	/// <param name="obj">Set object.</param>
 	public void SetAttribute(string name, object? obj) {
 		_attrMap[name] = obj;
 	}
 
+	/// <summary>
+	///		Gets an attribute object.
+	/// </summary>
+	/// <param name="name">Attribute name.</param>
+	/// <returns>An nullable attribute object.</returns>
 	public object? GetAttribute(string name) {
 		return _attrMap.GetValueOrDefault(name);
 	}
@@ -75,13 +85,14 @@ public abstract class Component {
 	/// </summary>
 	/// <param name="child">Child to add.</param>
 	/// <exception cref="Error">Thrown if the child is already another comp's child.</exception>
-	public virtual void AddChild(Component child) {
+	public void AddChild(Component child) {
 		if (child.Parent != null) {
 			throw new Error("multiple parent");
 		}
 
 		_children.Add(child);
 		child.Parent = this;
+		child.InitHooks();
 		
 		/*
 		 * We use this 'cascade' factory to implement deferred canvas injection.
@@ -98,16 +109,17 @@ public abstract class Component {
 	///     Removes a child.
 	/// </summary>
 	/// <param name="child">Child to remove</param>
-	public virtual void RemoveChild(Component child) {
+	public void RemoveChild(Component child) {
 		if (_children.Remove(child)) {
 			child.Parent = null;
+			child.FreeHooks();
 		}
 	}
 
 	/// <summary>
 	///     Clears all children.
 	/// </summary>
-	public virtual void ClearChildren() {
+	public void ClearChildren() {
 		foreach (Component child in _children) {
 			child.Parent = null;
 		}
@@ -156,34 +168,41 @@ public abstract class Component {
 	/// <param name="ctx">Tooltip context.</param>
 	public virtual void AppendTooltip(TooltipContext ctx) {
 	}
+
+	// Called when init.
+	protected internal virtual void InitHooks() {
+		foreach (Component child in Children) {
+			child.InitHooks();
+		}
+	}
+
+	// Called when disposed.
+	protected internal virtual void FreeHooks() {
+		foreach (Component child in Children) {
+			child.FreeHooks();
+		}
+	}
 	
 	/// <summary>
 	///		Checks if a component is accessible by the cursor.
 	/// </summary>
 	/// <param name="cursor">Cursor position.</param>
 	/// <returns>True is accessible, otherwise false.</returns>
-	public bool IsAccessible(in Vector2 cursor) {
-		if (Parent == null) {
-			return Contains(cursor);
+	public virtual bool IsAccessible(in Vector2 cursor) {
+		if (!Contains(cursor)) {
+			return false;
 		}
 		
-		Component? comp = Parent;
-		
-		// First layer: we check depth.
-		foreach (Component child in comp.Children) {
-			if (child != this && child.Depth < Depth && child.Contains(cursor)) {
+		if (Parent != null) {
+			if (!Parent.IsAccessible(cursor)) {
 				return false;
 			}
-		}
-		
-		// Other layers: depth is ignored.
-		while (comp != null) {
-			foreach (Component child in comp.Children) {
-				if (child.Contains(cursor)) {
+			
+			foreach (Component child in Parent.Children) {
+				if (child != this && child.Depth < Depth && child.Contains(cursor)) {
 					return false;
 				}
 			}
-			comp = comp.Parent;
 		}
 
 		return true;

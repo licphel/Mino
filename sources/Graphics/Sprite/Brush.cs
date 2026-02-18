@@ -276,10 +276,26 @@ public unsafe class Brush : IDisposable {
 	///     Sets scissor test.
 	///     This operation will flush the brush.
 	/// </summary>
-	/// <param name="desc">Scissor test desc.</param>
-	public void SetScissor(in ScissorDesc desc) {
+	/// <param name="box">Scissor region.</param>
+	public void SetScissor(in Box2 box) {
 		Flush();
-		_encoder.SetScissor(desc);
+		
+		Box2 newBox = Box2.CreateByPoints(
+			Camera.Project(box.Min, CurrentViewport), 
+			Camera.Project(box.Max, CurrentViewport)
+			);
+		_encoder.SetScissor(new ScissorDesc {
+			Enable = true,
+			X = (int) newBox.MinX,
+			Y = (int) newBox.MinY,
+			Width = (int) MathF.Ceiling(newBox.Width),
+			Height = (int) MathF.Ceiling(newBox.Height)
+		});
+	}
+
+	public void DisableScissor() {
+		Flush();
+		_encoder.SetScissor(ScissorDesc.Disabled);
 	}
 
 	/// <summary>

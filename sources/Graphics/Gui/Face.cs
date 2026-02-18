@@ -21,8 +21,6 @@ public class Face : Component {
 	}
 
 	public override void Update(CanvasContext ctx) {
-		base.Update(ctx);
-
 		// Observe window resize
 		// and mark resolve.
 		Vector2 ws = RenderSystem.GetWindow().Size;
@@ -41,11 +39,11 @@ public class Face : Component {
 			}
 			_tooltipCtx.End();
 		}
+		
+		base.Update(ctx);
 	}
 
 	public override void Draw(CanvasContext ctx) {
-		base.Draw(ctx);
-		
 		// Handle pending resolve request.
 		if (_resolveNeeded) {
 			foreach (Component comp in Children) {
@@ -53,6 +51,7 @@ public class Face : Component {
 			}
 			_resolveNeeded = false;
 		}
+		base.Draw(ctx);
 		
 		_tooltipCtx?.Draw(ctx);
 	}
@@ -63,5 +62,10 @@ public class Face : Component {
 	/// <param name="ctx">(Nullable) tooltip context.</param>
 	public void SetTooltipContext(TooltipContext? ctx) {
 		_tooltipCtx = ctx;
+	}
+
+	public override bool IsAccessible(in Vector2 cursor) {
+		// We just check if it is the top face.
+		return this == Canvas.Presents[^1];
 	}
 }

@@ -115,16 +115,16 @@ public abstract class Window : IDisposable {
 	///     Cursor position (Y-Down).
 	/// </summary>
 	public abstract Vector2 Cursor { get; set; }
+	
+	/// <summary>
+	///		Clipboard object.
+	/// </summary>
+	public abstract object Clipboard { get; set; }
 
 	/// <summary>
 	///     Whether to use relative cursor.
 	/// </summary>
 	public abstract bool CursorRelativeMode { get; set; }
-
-	/// <summary>
-	///     Cursor scroll delta, +Y is upward and +X is rightward.
-	/// </summary>
-	public abstract Vector2 CursorScroll { get; set; }
 
 	public abstract bool Closed { get; }
 

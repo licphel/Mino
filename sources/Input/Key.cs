@@ -20,9 +20,10 @@ public class Key {
 	private Window _window;
 
 	// Private ctor - we use key listeners for better performance.
-	private Key(uint code) {
+	private Key(uint code, uint mod) {
 		_window = RenderSystem.GetWindow();
 		Code = code;
+		Modifiers = mod;
 
 		if (!_isEventHooked) {
 			_window.KeyEvent += keyCallback;
@@ -34,41 +35,38 @@ public class Key {
 	///     Key code of the listener.
 	/// </summary>
 	public uint Code { get; }
+	
+	public uint Modifiers { get; }
 
 	/// <summary>
 	///     The key is just pressed.
 	/// </summary>
 	public bool Press {
-		get => isThisRollActivated() && Hold;
+		get => isThisRollActivated() && Hold && with(Modifiers);
 	}
 
 	/// <summary>
 	///     The key is being held.
 	/// </summary>
 	public bool Hold {
-		get => _window.GetStatus(Code) != KeyStatus.Release;
+		get => _window.GetStatus(Code) != KeyStatus.Release && with(Modifiers);
 	}
 
 	/// <summary>
 	///     The key is repeating.
 	/// </summary>
 	public bool Repeat {
-		get => _window.GetStatus(Code) == KeyStatus.Repeat;
+		get => _window.GetStatus(Code) == KeyStatus.Repeat && with(Modifiers);
 	}
 
 	/// <summary>
 	///     The key is just pressed or repeating.
 	/// </summary>
-	private bool React {
+	public bool React {
 		get => Press || Repeat;
 	}
-
-	/// <summary>
-	///     Returns if the key is pressed with given modifiers.
-	/// </summary>
-	/// <param name="mod">Modifiers, can be 'Any'.</param>
-	/// <returns>True if the modifier combination is applied.</returns>
-	public bool With(uint mod) {
+	
+	private bool with(uint mod) {
 		if (mod == ModAny) {
 			return true;
 		}
@@ -86,12 +84,13 @@ public class Key {
 	///     Gets a key listener instance.
 	/// </summary>
 	/// <param name="code">Key code.</param>
+	/// <param name="mod">Key modifier flags.</param>
 	/// <returns>A cached key listener.</returns>
-	public static Key Get(uint code) {
+	public static Key Get(uint code, uint mod = ModAny) {
 		if (_activeListeners.TryGetValue(code, out Key? value)) {
 			return value;
 		}
-		return _activeListeners[code] = new Key(code);
+		return _activeListeners[code] = new Key(code, mod);
 	}
 
 	/// <summary>

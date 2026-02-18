@@ -498,13 +498,15 @@ public unsafe class GLBackend : RenderBackend, ServiceProvider {
 	}
 
 	internal void executeViewport(int x, int y, int width, int height) {
-		_gl.Viewport(x, y, (uint) width, (uint) height);
+		int newMinY = -height - y + (int) _window.Size.Y;
+		_gl.Viewport(x, newMinY, (uint) width, (uint) height);
 	}
 
 	internal void executeScissor(ScissorDesc desc) {
 		if (desc.Enable) {
 			_gl.Enable(EnableCap.ScissorTest);
-			_gl.Scissor(desc.X, desc.Y, (uint) desc.Width, (uint) desc.Height);
+			int newMinY = -desc.Height - desc.Y + (int) _window.Size.Y;
+			_gl.Scissor(desc.X, newMinY, (uint) desc.Width, (uint) desc.Height);
 		} else {
 			_gl.Disable(EnableCap.ScissorTest);
 		}

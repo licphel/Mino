@@ -89,7 +89,6 @@ public class Button : Component {
 	}
 
 	public override void Update(CanvasContext ctx) {
-		base.Update(ctx);
 		_pressCD.Update(ctx.Step);
 
 		bool act1 = Keymap[0].Press;
@@ -123,15 +122,17 @@ public class Button : Component {
 				_state = 1 - _state;
 			}
 		}
+		
+		base.Update(ctx);
 	}
 
 	public override void Draw(CanvasContext ctx) {
 		Brush brush = ctx.Brush;
-		base.Draw(ctx);
-
 		Drawable? drawable = _asset_Drawables[_state];
 		if (drawable != null) {
 			brush.Draw(drawable, BoundingBox);
 		}
+		
+		base.Draw(ctx);
 	}
 }

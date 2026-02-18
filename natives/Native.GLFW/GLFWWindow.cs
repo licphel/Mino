@@ -106,6 +106,11 @@ public unsafe class GLFWWindow : Window, ServiceProvider {
 		set => _glfw.SetCursorPos(_handle, value.X, value.Y);
 	}
 
+	public override object Clipboard {
+		get => _glfw.GetClipboardString(_handle);
+		set => _glfw.SetClipboardString(_handle, (string) value);
+	}
+
 	public override bool CursorRelativeMode {
 		get => _cursorRelativeMode;
 		set {
@@ -115,9 +120,7 @@ public unsafe class GLFWWindow : Window, ServiceProvider {
 				value ? CursorModeValue.CursorDisabled : CursorModeValue.CursorNormal);
 		}
 	}
-
-	public override Vector2 CursorScroll { get; set; }
-
+	
 	public override bool Closed {
 		get => _closed;
 	}
@@ -257,10 +260,11 @@ public unsafe class GLFWWindow : Window, ServiceProvider {
 		_glfw.SetCursorPosCallback(
 			_handle, keepAlive<GlfwCallbacks.CursorPosCallback>((_, x, y) => {
 				_cursor = new Vector2((float) x, (float) y);
+				CursorMoveEvent?.Invoke(new Vector2((float) x, (float) y));
 			}));
 		_glfw.SetScrollCallback(
 			_handle, keepAlive<GlfwCallbacks.ScrollCallback>((_, x, y) => {
-				CursorScroll = new Vector2((float) x, (float) y);
+				CursorScrollEvent?.Invoke(new Vector2((float) x, (float) y));
 			}));
 		_glfw.SetWindowSizeCallback(
 			_handle, keepAlive<GlfwCallbacks.WindowSizeCallback>((_, width, height) => {

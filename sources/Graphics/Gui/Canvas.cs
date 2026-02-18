@@ -12,11 +12,11 @@ public class Canvas {
 	public static readonly Key[] Keymap = [
 		Key.Get(Key.MouseLeft) // Focus key
 	];
-	
+
 	/// <summary>
 	///     Currently focused component.
 	/// </summary>
-	public Component? Focused { get; internal set; }
+	public HashSet<Component?> Focused { get; } = new HashSet<Component?>();
 	
 	/// <summary>
 	///		Current gui system sound emitter.
@@ -51,6 +51,7 @@ public class Canvas {
 		}
 		face.SetAttribute("CanvasFactory", () => this);
 		face.RequestResolve();
+		face.InitHooks();
 	}
 
 	/// <summary>
@@ -60,6 +61,7 @@ public class Canvas {
 	public void Close(Face face) {
 		Presents.Remove(face);
 		face.Parent?.RemoveChild(face);
+		face.FreeHooks();
 	}
 
 	/// <summary>
@@ -73,7 +75,7 @@ public class Canvas {
 		
 		// Reflush focused component.
 		if (Keymap[0].Press) {
-			Focused = null;
+			Focused.Clear();
 			updateFocus(Presents, ctx.Cursor);
 		}
 	}
@@ -91,7 +93,7 @@ public class Canvas {
 	private void updateFocus(IReadOnlyList<Component> root, in Vector2 cursor) {
 		foreach (Component comp in root) {
 			if (comp.IsAccessible(cursor)) {
-				Focused = comp;
+				Focused.Add(comp);
 				if (comp.Children.Count > 0) {
 					updateFocus(comp.Children, cursor);
 				}

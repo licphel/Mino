@@ -17,4 +17,6 @@ public struct ScissorDesc {
 		Width = 0;
 		Height = 0;
 	}
+
+	public static readonly ScissorDesc Disabled = new ScissorDesc();
 }

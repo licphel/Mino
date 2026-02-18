@@ -8,6 +8,8 @@ namespace Mino.Graphics.Text;
 ///     A baked text instance, used for rendering and testing.
 /// </summary>
 public class TextBlob {
+	public readonly FontInfo Info;
+	
 	internal TextBlob(Font font, string text, float maxWidth, float lineH, FontStyle style) {
 		float cursorX = 0;
 		float cursorY = 0;
@@ -90,12 +92,26 @@ public class TextBlob {
 		}
 
 		Height = cursorY + Math.Max(0, -descender) + lineH;
+
+		Info = new FontInfo(
+			font.Info.Ascender * scale,
+			font.Info.Descender * scale,
+			font.Info.LineGap * scale,
+			font.Info.UnderlinePos * scale,
+			font.Info.UnderlineThickness * scale,
+			font.Info.StrikeoutPos * scale,
+			font.Info.StrikeoutThickness * scale
+		);
 		
 		return;
 
 		static bool IsCJK(char ch) {
+			// TODO: Add correct next line logic.
+			return true;
+			/*
 			return ch >= 0x4E00 && ch <= 0x9FFF ||
 				ch >= 0x3400 && ch <= 0x4DBF;
+			*/
 		}
 	}
 
