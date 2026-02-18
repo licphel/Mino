@@ -1,6 +1,4 @@
 ﻿#region
-using Mino.Framework;
-using Mino.Graphics.Sprite;
 using Mino.Mathematics;
 #endregion
 
@@ -11,7 +9,22 @@ namespace Mino.Graphics.Gui;
 /// </summary>
 public abstract class Component {
 	private readonly List<Component> _children = new List<Component>();
-	protected MappingContext Mcontext;
+	private Dictionary<string, object?> _attrMap = new Dictionary<string, object?>();
+	
+	public Action<Component, CanvasContext>? OnUpdate;
+	public Action<Component, CanvasContext>? OnDraw;
+	public Action<Component, CanvasContext>? OnResolve;
+
+	/// <summary>
+	///		Affiliated canvas.
+	///		Ensured nonnull after added into a face.
+	/// </summary>
+	public Canvas Canvas {
+		get {
+			Func<Canvas> fn = (Func<Canvas>) GetAttribute("CanvasFactory")!;
+			return fn.Invoke();
+		}
+	}
 
 	/// <summary>
 	///     Name of the component.
@@ -29,16 +42,6 @@ public abstract class Component {
 	public Box2 BoundingBox { get; set; }
 
 	/// <summary>
-	///     Whether the component will be rendered.
-	/// </summary>
-	public bool IsVisible { get; set; } = true;
-
-	/// <summary>
-	///     Whether the component will make effects.
-	/// </summary>
-	public bool IsInteractive { get; set; } = true;
-
-	/// <summary>
 	///		Depth of the component.
 	/// </summary>
 	public float Depth { get; set; } = 1.0F;
@@ -49,11 +52,20 @@ public abstract class Component {
 	public IReadOnlyList<Component> Children {
 		get => _children;
 	}
+	
+	public void SetAttribute(string name, object? obj) {
+		_attrMap[name] = obj;
+	}
 
-	public Action<Component, TimeStep>? OnUpdate;
-	public Action<Component, Brush>? OnDraw;
-	public Action<Component, MappingContext>? OnResolve;
+	public object? GetAttribute(string name) {
+		return _attrMap.GetValueOrDefault(name);
+	}
 
+	/// <summary>
+	///     Checks if a point is contained within the component's region.
+	/// </summary>
+	/// <param name="point">The point to test.</param>
+	/// <returns>True if the point is inside the box, otherwise false.</returns>
 	public virtual bool Contains(in Vector2 point) {
 		return BoundingBox.Contains(point);
 	}
@@ -70,6 +82,16 @@ public abstract class Component {
 
 		_children.Add(child);
 		child.Parent = this;
+		
+		/*
+		 * We use this 'cascade' factory to implement deferred canvas injection.
+		 *
+		 * Canvas0
+		 * |- Face: CanvasFactory1 = () => Canvas0
+		 *		|- Comp 1 CanvasFactory2 = () => CanvasFactory1.Invoke()
+		 *			|- ...
+		 */
+		child.SetAttribute("CanvasFactory", () => Canvas);
 	}
 
 	/// <summary>
@@ -95,36 +117,37 @@ public abstract class Component {
 	/// <summary>
 	///     Updates the component.
 	/// </summary>
-	/// <param name="step">Timestep.</param>
-	public virtual void Update(TimeStep step) {
-		if (!IsInteractive) {
-			return;
-		}
-
-		OnUpdate?.Invoke(this, step);
+	/// <param name="ctx">Current canvas context.</param>
+	public virtual void Update(CanvasContext ctx) {
+		OnUpdate?.Invoke(this, ctx);
 
 		foreach (Component child in _children) {
-			child.Update(step);
+			child.Update(ctx);
 		}
 	}
 
 	/// <summary>
 	///     Draws the component.
 	/// </summary>
-	/// <param name="brush">Drawing brush.</param>
-	public virtual void Draw(Brush brush) {
-		if (!IsVisible) {
-			return;
-		}
-
-		OnDraw?.Invoke(this, brush);
+	/// <param name="ctx">Current canvas context.</param>
+	public virtual void Draw(CanvasContext ctx) {
+		OnDraw?.Invoke(this, ctx);
 
 		foreach (Component child in _children) {
-			child.Draw(brush);
+			child.Draw(ctx);
 		}
+	}
 
-		// Creates a mc cache.
-		Mcontext = brush.CreateContext();
+	/// <summary>
+	///		Called on resolved.
+	/// </summary>
+	/// <param name="ctx">Current canvas context.</param>
+	public virtual void Resolve(CanvasContext ctx) {
+		OnResolve?.Invoke(this, ctx);
+		
+		foreach (Component child in _children) {
+			child.Resolve(ctx);
+		}
 	}
 
 	/// <summary>
@@ -133,11 +156,6 @@ public abstract class Component {
 	/// <param name="ctx">Tooltip context.</param>
 	public virtual void AppendTooltip(TooltipContext ctx) {
 	}
-
-	/// <summary>
-	///     Currently focused component.
-	/// </summary>
-	public static Component? Focused { get; internal set; }
 	
 	/// <summary>
 	///		Checks if a component is accessible by the cursor.
@@ -145,9 +163,6 @@ public abstract class Component {
 	/// <param name="cursor">Cursor position.</param>
 	/// <returns>True is accessible, otherwise false.</returns>
 	public bool IsAccessible(in Vector2 cursor) {
-		if (!IsVisible || !IsInteractive) {
-			return false;
-		}
 		if (Parent == null) {
 			return Contains(cursor);
 		}

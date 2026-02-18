@@ -41,7 +41,7 @@ public class TooltipContext {
 		_tooltips.Add(text);
 	}
 
-	public void Draw(Brush brush) {
+	public void Draw(CanvasContext ctx) {
 		if (_tooltips.Count <= 0) {
 			return;
 		}
@@ -49,10 +49,9 @@ public class TooltipContext {
 		const float Edge = 8.0F;
 		const float Lh = 12.0F;
 		const float Offset = 20.0F;
-
-		MappingContext mc = brush.CreateContext();
-		Vector2 size = mc.Size;
-		Vector2 cursor = mc.Cursor;
+		
+		Vector2 size = ctx.Size;
+		Vector2 cursor = ctx.Cursor;
 		TextBlob bakedBlob = _font.Bake(_collection, size.X * 0.5F, Lh);
 		
 		float w = bakedBlob.Width;
@@ -69,6 +68,7 @@ public class TooltipContext {
 			y = Math.Max(size.Y - Edge - h, 0.0F);
 		}
 
+		Brush brush = ctx.Brush;
 		if (_background != null) {
 			brush.Draw(_background, x - Edge, y - Edge, w + Edge * 2.0F, h + Edge * 2.0F);
 		}

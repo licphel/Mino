@@ -1,0 +1,101 @@
+﻿using Mino.Audio;
+using Mino.Audio.Hardware.Desc;
+using Mino.Input;
+using Mino.Mathematics;
+
+namespace Mino.Graphics.Gui;
+
+/// <summary>
+///		A GUI top canvas.
+/// </summary>
+public class Canvas {
+	public static readonly Key[] Keymap = [
+		Key.Get(Key.MouseLeft) // Focus key
+	];
+	
+	/// <summary>
+	///     Currently focused component.
+	/// </summary>
+	public Component? Focused { get; internal set; }
+	
+	/// <summary>
+	///		Current gui system sound emitter.
+	/// </summary>
+	public Emitter SoundEmitter { get; set; } = new Emitter("gui");
+	
+	/// <summary>
+	///		Present faces.
+	/// </summary>
+	public readonly List<Face> Presents = new List<Face>();
+	
+	/// <summary>
+	///		Plays a sound in GUI emitter.
+	/// </summary>
+	/// <param name="line">Source line.</param>
+	public void PlaySound(Line? line) {
+		if (line == null) {
+			return;
+		}
+		SoundEmitter.Play(new Clip(new ClipDesc {
+			Line = line
+		}));
+	}
+	
+	/// <summary>
+	///		Displays the face.
+	/// </summary>
+	/// <param name="face">Face to display.</param>
+	public void Display(Face face) {
+		if (!Presents.Contains(face)) {
+			Presents.Add(face);
+		}
+		face.SetAttribute("CanvasFactory", () => this);
+		face.RequestResolve();
+	}
+
+	/// <summary>
+	///		Closes the face.
+	/// </summary>
+	/// <param name="face">Face to close.</param>
+	public void Close(Face face) {
+		Presents.Remove(face);
+		face.Parent?.RemoveChild(face);
+	}
+
+	/// <summary>
+	///		Updates all present faces.
+	/// </summary>
+	/// <param name="ctx">Current canvas context.</param>
+	public void Update(CanvasContext ctx) {
+		foreach (Face face in Presents) {
+			face.Update(ctx);
+		}
+		
+		// Reflush focused component.
+		if (Keymap[0].Press) {
+			Focused = null;
+			updateFocus(Presents, ctx.Cursor);
+		}
+	}
+
+	/// <summary>
+	///		Draws all present faces.
+	/// </summary>
+	/// <param name="ctx">Current canvas context.</param>
+	public void Draw(CanvasContext ctx) {
+		foreach (Face face in Presents) {
+			face.Draw(ctx);
+		}
+	}
+	
+	private void updateFocus(IReadOnlyList<Component> root, in Vector2 cursor) {
+		foreach (Component comp in root) {
+			if (comp.IsAccessible(cursor)) {
+				Focused = comp;
+				if (comp.Children.Count > 0) {
+					updateFocus(comp.Children, cursor);
+				}
+			}
+		}
+	}
+}

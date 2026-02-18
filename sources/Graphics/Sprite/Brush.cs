@@ -113,7 +113,7 @@ public unsafe class Brush : IDisposable {
 	private int _vertCnt = 0;
 	private int _indCnt = 0;
 	private bool _disposed;
-
+	
 	public Brush(BrushCache? target = null) {
 		_target = target ?? new BrushCache.Self();
 		initGfxResources();
@@ -280,14 +280,6 @@ public unsafe class Brush : IDisposable {
 	public void SetScissor(in ScissorDesc desc) {
 		Flush();
 		_encoder.SetScissor(desc);
-	}
-
-	/// <summary>
-	///		Gets a canvas mapping context.
-	/// </summary>
-	/// <returns>The context.</returns>
-	public MappingContext CreateContext() {
-		return new MappingContext(Camera, CurrentViewport);
 	}
 
 	/// <summary>
