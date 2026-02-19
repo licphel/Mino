@@ -1,12 +1,14 @@
 ﻿#region
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
+using System.Text;
 using Mino.Desktop;
 using Mino.Framework.BSP;
 using Mino.Input;
 using Mino.Mathematics;
 using Mino.Nio;
 using Silk.NET.GLFW;
+using TextCopy;
 using GLFW_Image = Silk.NET.GLFW.Image;
 #endregion
 
@@ -106,9 +108,9 @@ public unsafe class GLFWWindow : Window, ServiceProvider {
 		set => _glfw.SetCursorPos(_handle, value.X, value.Y);
 	}
 
-	public override object Clipboard {
-		get => _glfw.GetClipboardString(_handle);
-		set => _glfw.SetClipboardString(_handle, (string) value);
+	public override string ClipboardText {
+		get => ClipboardService.GetText() ?? string.Empty;
+		set => ClipboardService.SetText(value);
 	}
 
 	public override bool CursorRelativeMode {

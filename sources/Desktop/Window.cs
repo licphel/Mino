@@ -119,7 +119,7 @@ public abstract class Window : IDisposable {
 	/// <summary>
 	///		Clipboard object.
 	/// </summary>
-	public abstract object Clipboard { get; set; }
+	public abstract string ClipboardText { get; set; }
 
 	/// <summary>
 	///     Whether to use relative cursor.

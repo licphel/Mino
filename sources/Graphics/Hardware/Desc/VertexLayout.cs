@@ -43,7 +43,7 @@ public class VertexLayout {
 			VertexAttributeType.Int32 => 4,
 			VertexAttributeType.Float16 => 2,
 			VertexAttributeType.Float32 => 4,
-			_ => throw new ArgumentOutOfRangeException()
+			_ => throw new Error(nameof(type))
 		};
 	}
 

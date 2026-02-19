@@ -19,14 +19,23 @@ public class TooltipContext {
 		_font = font;
 	}
 
+	/// <summary>
+	///		Begins a collecting roll.
+	/// </summary>
 	public void Begin() {
 		_tooltips.Clear();
 	}
 
+	/// <summary>
+	///		Ends a collecting roll.
+	/// </summary>
 	public void End() {
-		_tooltips.Reverse();
+		if (_tooltips.Count == 0) {
+			_collection = string.Empty;
+			return;
+		}
 		
-		// Collects to a single string.
+		// Collect to a single string.
 		StringBuilder sb = new StringBuilder();
 		foreach (string str in _tooltips) {
 			sb.Append(str);
@@ -37,6 +46,10 @@ public class TooltipContext {
 		_collection = sb.ToString();
 	}
 
+	/// <summary>
+	///		Appends a raw text.
+	/// </summary>
+	/// <param name="text">The text to append.</param>
 	public void Append(string text) {
 		_tooltips.Add(text);
 	}

@@ -49,7 +49,7 @@ public class ScrollBar : Component {
 	private float _vertical;
 	private float _f = DefaultFriction;
 	private Action<Vector2>? _hook;
-	private bool _hovering;
+	private bool _parentScrollable;
 	
 	public ScrollBar(Drawable?[] drawables) {
 		if (drawables.Length != 2) {
@@ -118,12 +118,24 @@ public class ScrollBar : Component {
 		_prevPos = _startPos;
 	}
 
+	/// <summary>
+	///		Sets if the scroll bar will also detect scroll in its parent's bounding box.
+	/// </summary>
+	/// <param name="value">True is enabled.</param>
+	public void SetParentScrollable(bool value) {
+		_parentScrollable = value;
+	}
+
 	protected internal override void InitHooks() {
 		base.InitHooks();
 		
 		Window window = RenderSystem.GetWindow();
 		_hook = scroll => {
-			if (_hovering && scroll != Vector2.Zero) {
+			bool canScroll = Hovering;
+			if (!canScroll && _parentScrollable && Parent != null) {
+				canScroll = Parent.Hovering;
+			}
+			if (canScroll && scroll != Vector2.Zero) {
 				_acceleration -= _speed * scroll.Y;
 			}
 		};
@@ -139,7 +151,6 @@ public class ScrollBar : Component {
 
 	public override void Update(CanvasContext ctx) {
 		Vector2 cursor = ctx.Cursor;
-		_hovering = Contains(cursor);
 		
 		float dt = (float) ctx.Step.Delta;
 		
@@ -179,6 +190,9 @@ public class ScrollBar : Component {
 		float th = BoundingBox.Height - _wrap * 2.0F;
 		float tw = BoundingBox.Width - _wrap * 2.0F;
 
+		// Avoid NaN.
+		_vertical = MathF.Max(0.01F, _vertical);
+		
 		float per = BoundingBox.Height / _vertical;
 		if (per > 1.0F) {
 			per = 1.0F;
@@ -199,11 +213,9 @@ public class ScrollBar : Component {
 			brush.Draw(drawable, BoundingBox);
 		}
 		
-		if (per < 1.0F) {
-			drawable = _asset_Drawables[0];
-			if (drawable != null) {
-				brush.Draw(drawable, _bx, _by, _bw, _bh);
-			}
+		drawable = _asset_Drawables[0];
+		if (drawable != null) {
+			brush.Draw(drawable, _bx, _by, _bw, _bh);
 		}
 		
 		base.Draw(ctx);

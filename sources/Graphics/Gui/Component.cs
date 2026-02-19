@@ -14,6 +14,11 @@ public abstract class Component {
 	public Action<Component, CanvasContext>? OnUpdate;
 	public Action<Component, CanvasContext>? OnDraw;
 	public Action<Component, CanvasContext>? OnResolve;
+	
+	/// <summary>
+	///		Whether the component is under the cursor.
+	/// </summary>
+	public bool Hovering { get; protected set; }
 
 	/// <summary>
 	///		Affiliated canvas.
@@ -136,6 +141,8 @@ public abstract class Component {
 		foreach (Component child in _children) {
 			child.Update(ctx);
 		}
+
+		Hovering = IsAccessible(ctx.Cursor);
 	}
 
 	/// <summary>
@@ -194,7 +201,7 @@ public abstract class Component {
 		}
 		
 		if (Parent != null) {
-			if (!Parent.IsAccessible(cursor)) {
+			if (Parent.Contains(cursor) && !Parent.IsAccessible(cursor)) {
 				return false;
 			}
 			

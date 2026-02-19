@@ -27,7 +27,8 @@ public class TextField : Component {
 		Key.Get(Key.Backspace), // Delete key
 		Key.Get(Key.Enter), // Next line key
 		Key.Get(Key.Left), // Move left key
-		Key.Get(Key.Right) // Move right key
+		Key.Get(Key.Right), // Move right key
+		Key.Get(Key.MouseLeft) // Click move key
 	];
 
 	/*
@@ -36,6 +37,9 @@ public class TextField : Component {
 	 * [2] - Clicked icon
 	 */
 	private Drawable?[] _asset_Drawables;
+	/*
+	 * [0] - Rendering font
+	 */
 	private Font _asset_Font;
 
 	private StringBuilder _sb = new StringBuilder();
@@ -60,14 +64,16 @@ public class TextField : Component {
 		_asset_Font = font;
 		_blob = font.Bake(string.Empty);
 		_blobHint = font.Bake(_hint);
-		_childBar = bar;
-		AddChild(bar);
 		_cd1 = new Countdown();
 		_cd2 = new Countdown();
-
+		
+		_childBar = bar;
+		bar.SetParentScrollable(true);
+		AddChild(bar);
+		
 		SetAttribute("HintColor", new Color(1.0F, 1.0F, 1.0F, 0.25F));
 		SetAttribute("TextColor", new Color(1.0F, 1.0F, 1.0F));
-		SetAttribute("SelectBackColor", new Color(0.2F, 0.85F, 1.0F, 0.75F));
+		SetAttribute("SelectBackColor", new Color(0.2F, 0.65F, 1.0F, 0.5F));
 		SetAttribute("SelectTextColor", new Color(1.0F, 1.0F, 1.0F));
 	}
 	
@@ -129,6 +135,14 @@ public class TextField : Component {
 		window.CharInputEvent -= _hook;
 	}
 
+	public override void Resolve(CanvasContext ctx) {
+		base.Resolve(ctx);
+		
+		// Rebake on resolved - max width changes.
+		rebake();
+		rebakeHint();
+	}
+
 	public override void Update(CanvasContext ctx) {
 		_focus = Canvas.Focused.Contains(this);
 		_cd1.Update(ctx.Step);
@@ -138,21 +152,21 @@ public class TextField : Component {
 			Window window = RenderSystem.GetWindow();
 			// Clipboard operation.
 			// CTRL+A
-			if (Keymap[0].Press) {
+			if (Keymap[0].React) {
 				_alls = !_alls;
 			}
 			// CTRL+C
-			if (Keymap[1].Press) {
-				window.Clipboard = Text;
+			if (Keymap[1].React) {
+				window.ClipboardText = Text;
 			}
 			// CTRL+V
-			if (Keymap[2].Press) {
-				insert(window.Clipboard.ToString() ?? string.Empty);
+			if (Keymap[2].React) {
+				insert(window.ClipboardText);
 				rebake();
 			}
 			// CTRL+X
-			if (Keymap[3].Press) {
-				window.Clipboard = Text;
+			if (Keymap[3].React) {
+				window.ClipboardText = Text;
 				_sb.Clear();
 				_ptr = 0;
 				_alls = false;
@@ -186,9 +200,20 @@ public class TextField : Component {
 			if (Keymap[7].React) {
 				_ptr = Math.Min(_sb.Length, _ptr + 1);
 			}
+			if (Keymap[8].Press) {
+				Vector2 ds = BoundingBox.Min + new Vector2(_wrap, _wrap);
+				if (_blob.GetGlyphInstance(ctx.Cursor - ds, out GlyphInstance gi)) {
+					_ptr = gi.Index + 1;
+				}
+			}
 		}
 		
 		base.Update(ctx);
+	}
+
+	public override void AppendTooltip(TooltipContext ctx) {
+		base.AppendTooltip(ctx);
+		ctx.Append("hello");
 	}
 
 	public override void Draw(CanvasContext ctx) {
@@ -205,20 +230,24 @@ public class TextField : Component {
 		}
 
 		if (_sb.Length == 0 && !string.IsNullOrEmpty(_hint)) {
-			drawGlyphs(ctx, _blobHint, (Color) GetAttribute("HintColor")!, null);
+			Color color1 = (Color) GetAttribute("HintColor")!;
+			Color color2 = (Color) GetAttribute("TextColor")!;
+			drawGlyphs(ctx, _blobHint, color1, color2);
 		} else {
 			if (_alls) {
-				drawGlyphs(
-					ctx, _blob, (Color) GetAttribute("SelectTextColor")!, (Color) GetAttribute("SelectBackColor")!);
+				Color color1 = (Color) GetAttribute("SelectTextColor")!;
+				Color color2 = (Color) GetAttribute("SelectBackColor")!;
+				drawGlyphs(ctx, _blob, color1, color2);
 			} else {
-				drawGlyphs(ctx, _blob, (Color) GetAttribute("TextColor")!, null);
+				Color color = (Color) GetAttribute("TextColor")!;
+				drawGlyphs(ctx, _blob, color, color);
 			}
 		}
 		
 		base.Draw(ctx);
 	}
 
-	private void drawGlyphs(CanvasContext ctx, TextBlob blob, Color color, Color? bgColor) {
+	private void drawGlyphs(CanvasContext ctx, TextBlob blob, Color color, Color bgColor) {
 		_childBar.SetSize(blob.Height + _wrap * 2);
 		float x = BoundingBox.MinX + _wrap;
 		float y = BoundingBox.MinY + _wrap - _childBar.GetPos(ctx);
@@ -226,15 +255,16 @@ public class TextField : Component {
 		Brush brush = ctx.Brush;
 		Color _oldColor = brush.Color;
 		brush.SetScissor(BoundingBox);
-		
-		if (bgColor != null) {
-			// Draw bg rects.
-			brush.Color = bgColor.Value;
+
+		// Draw bg rects.
+		if (_alls && _sb.Length > 0) {
+			brush.Color = bgColor;
 			for (int i = 0; i < blob.GlyphRunList.Count; i++) {
 				ref GlyphInstance gi = ref CollectionsMarshal.AsSpan(blob.GlyphRunList)[i];
-				brush.DrawRectangle(gi.Bounds.Translate(x, y));
+				brush.DrawRectangle(gi.AdjacentBounds.Translate(x, y));
 			}
 		}
+		
 		brush.Color = color;
 		brush.DrawText(blob, x, y);
 
@@ -243,9 +273,10 @@ public class TextField : Component {
 				if (_ptr != 0 && _ptr - 1 < blob.Length) {
 					GlyphInstance gi = blob.GlyphRunList[_ptr - 1];
 					//do not use emptyDisplay
-					x += gi.Bounds.MinX + gi.Glyph.Advance;
+					x += gi.Bounds.MinX + gi.Glyph.Advance - 1.0F;
 					y += gi.Line * _blob.Info.LineGap;
 				}
+				brush.Color = bgColor;
 				brush.DrawRectangle(x, y - _blob.Info.Descender, 1.0F, _lineH);
 				
 				_cd1.Push(TimeSpan.FromSeconds(DefaultShine));
@@ -260,11 +291,14 @@ public class TextField : Component {
 	}
 	
 	private void insert(string txt) {
+		if (_alls) {
+			_alls = false;
+			_sb.Clear();
+			_ptr = 0;
+		}
+		
 		_sb.Insert(_ptr, txt);
 		_ptr += txt.Length;
-
-		// Insertion will stop select-all state.
-		_alls = false;
 	}
 
 	private void rebake() {

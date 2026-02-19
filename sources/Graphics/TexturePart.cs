@@ -21,13 +21,13 @@ public readonly struct TexturePart : IEquatable<TexturePart> {
 	/// </summary>
 	/// <param name="part">A texture part.</param>
 	/// <param name="region">A region in the given part.</param>
-	/// <exception cref="InvalidOperationException">Thrown if the region is outside of the given part.</exception>
+	/// <exception cref="Error">Thrown if the region is outside of the given part.</exception>
 	public TexturePart(in TexturePart part, in Box3 region) {
 		Src = part.Src;
 		Region = region.Translate(part.Region.Min);
 
 		if (!part.Region.Contains(Region)) {
-			throw new InvalidOperationException("Region is outside of the parent part.");
+			throw new Error("Region is outside of the parent part.");
 		}
 	}
 

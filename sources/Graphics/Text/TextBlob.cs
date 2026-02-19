@@ -14,7 +14,7 @@ public class TextBlob {
 		float cursorX = 0;
 		float cursorY = 0;
 		int currentLine = 0;
-		int lastSpaceIndex = -1;
+		int lsi = -1;
 		float maxLineWidth = 0;
 		float scale = lineH / Font.BasicLineHeight;
 		float descender = font.Info.Descender * scale;
@@ -22,9 +22,10 @@ public class TextBlob {
 
 		for (int i = 0; i < text.Length; i++) {
 			char ch = text[i];
-
+			
 			// Invisible chars.
 			if (ch is '\r' or '\t') {
+				GlyphRunList.Add(GlyphInstance.Invisible(i, currentLine));
 				continue;
 			}
 
@@ -32,23 +33,20 @@ public class TextBlob {
 				cursorX = 0;
 				cursorY += lineGap;
 				currentLine++;
-				lastSpaceIndex = -1;
+				lsi = -1;
+				GlyphRunList.Add(GlyphInstance.Invisible(i, currentLine));
 				continue;
 			}
 			
-			if (IsCJK(ch)) {
-				lastSpaceIndex = i;
+			if (IsNextLineTolerant(ch)) {
+				lsi = i;
 			}
 
 			Glyph glyph = font.GetGlyph(ch, style).Scale(scale);
 
-			if (char.IsWhiteSpace(ch) && !char.IsControl(ch)) {
-				lastSpaceIndex = i;
-			}
-
 			if (cursorX + glyph.Advance > maxWidth && cursorX > 0) {
-				if (lastSpaceIndex != -1 && lastSpaceIndex > 0) {
-					int charsToRemove = i - lastSpaceIndex;
+				if (lsi != -1 && lsi > 0) {
+					int charsToRemove = i - lsi;
 					for (int j = 0; j < charsToRemove; j++) {
 						if (GlyphRunList.Count > 0) {
 							GlyphInstance lastGlyph = GlyphRunList[^1];
@@ -56,8 +54,8 @@ public class TextBlob {
 							GlyphRunList.RemoveAt(GlyphRunList.Count - 1);
 						}
 					}
-					i = lastSpaceIndex;
-					lastSpaceIndex = -1;
+					i = lsi;
+					lsi = -1;
 				}
 
 				cursorX = 0;
@@ -70,12 +68,12 @@ public class TextBlob {
 
 			float x = cursorX + glyph.BearingX;
 			float y = cursorY + lineH - glyph.BearingY;
-			
 			float bottom = y + glyph.Height;
 			float right = x + glyph.Width;
-
 			Box2 bounds = Box2.CreateByPoints(x, y, right, bottom);
-			GlyphRunList.Add(new GlyphInstance(glyph, bounds, i, currentLine));
+			Box2 adjBounds = Box2.CreateByPoints(x, y, x + glyph.Advance, bottom);
+			
+			GlyphRunList.Add(new GlyphInstance(glyph, bounds, adjBounds, i, currentLine));
 
 			cursorX += glyph.Advance;
 			maxLineWidth = Math.Max(maxLineWidth, cursorX);
@@ -105,7 +103,10 @@ public class TextBlob {
 		
 		return;
 
-		static bool IsCJK(char ch) {
+		static bool IsNextLineTolerant(char ch) {
+			if (char.IsWhiteSpace(ch) && !char.IsControl(ch)) {
+				return true;
+			}
 			// TODO: Add correct next line logic.
 			return true;
 			/*
@@ -145,7 +146,7 @@ public class TextBlob {
 	/// <returns>True if found, otherwise false.</returns>
 	public bool GetGlyphInstance(in Vector2 position, out GlyphInstance instance) {
 		for (int i = 0; i < GlyphRunList.Count; i++) {
-			if (GlyphRunList[i].Bounds.Contains(position)) {
+			if (GlyphRunList[i].AdjacentBounds.Contains(position)) {
 				instance = GlyphRunList[i];
 				return true;
 			}

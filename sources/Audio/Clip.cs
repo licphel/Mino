@@ -139,7 +139,7 @@ public class Clip : IDisposable {
 		get {
 			float pitch = Pitch;
 			if (pitch <= 0) {
-				throw new DivideByZeroException("Pitch is not positive.");
+				throw new Error("Pitch is not positive.");
 			}
 			if (Desc.Line != null) {
 				return Desc.Line.Duration / pitch;

@@ -37,6 +37,10 @@ public class Button : Component {
 	 * [1] - On icon
 	 */
 	private Drawable?[] _asset_Drawables;
+	/*
+	 * [0] - Action 1 sound line
+	 * [1] = Action 2 sound line
+	 */
 	private Line?[] _asset_Lines;
 
 	private Mode _mode;
@@ -93,22 +97,21 @@ public class Button : Component {
 
 		bool act1 = Keymap[0].Press;
 		bool act2 = Keymap[1].Press;
-		bool hover = Contains(ctx.Cursor);
-
+		
 		if (_mode == Mode.Clicking) {
 			if (_pressCD.Ready) {
-				if ((act1 || act2) && hover) {
+				if ((act1 || act2) && Hovering) {
 					_state = 2;
 					_pressCD.Push(_delay);
 				}
 
-				if (act1 && hover) {
+				if (act1 && Hovering) {
 					OnAct1?.Invoke();
 					Canvas.PlaySound(_asset_Lines[0]);
-				} else if (act2 && hover) {
+				} else if (act2 && Hovering) {
 					OnAct2?.Invoke();
 					Canvas.PlaySound(_asset_Lines[1]);
-				} else if (hover) {
+				} else if (Hovering) {
 					_state = 1;
 				} else {
 					_state = 0;
@@ -118,7 +121,7 @@ public class Button : Component {
 				_state = 2;
 			}
 		} else {
-			if ((act1 || act2) && hover) {
+			if ((act1 || act2) && Hovering) {
 				_state = 1 - _state;
 			}
 		}

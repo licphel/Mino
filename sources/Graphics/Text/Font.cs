@@ -29,6 +29,7 @@ public unsafe class Font : IDisposable {
 	private Dictionary<uint, Glyph> _glyphs = new Dictionary<uint, Glyph>();
 	private uint _resolution;
 	private bool _disposed;
+	private bool _pixel;
 
 	// Forbit everyone directly new a font.
 	private Font() {
@@ -64,37 +65,59 @@ public unsafe class Font : IDisposable {
 		}
 
 		uint idx = FT_Get_Char_Index(_ftFace, ch);
-		FT_Load_Glyph(_ftFace, idx, FT_LOAD_DEFAULT);
+		FT_Load_Glyph(_ftFace, idx, _pixel ? (FT_LOAD) FT_LOAD_TARGET_MONO : FT_LOAD_DEFAULT);
 		
 		if ((style & FontStyle.Bold) != 0) {
 			FT_GlyphSlot_Embolden(_ftFace->glyph);
-			_ftFace->glyph->advance.x = (int) (_ftFace->glyph->advance.x * 1.08F);
+			_ftFace->glyph->advance.x = (int) (_ftFace->glyph->advance.x * 1.1F);
 		}
 		if ((style & FontStyle.Italic) != 0) {
 			FT_GlyphSlot_Oblique(_ftFace->glyph);
 		}
 		
-		FT_Render_Glyph(_ftFace->glyph, FT_RENDER_MODE_NORMAL);
+		FT_Render_Glyph(_ftFace->glyph, _pixel ? FT_RENDER_MODE_MONO : FT_RENDER_MODE_NORMAL);
 		FT_Bitmap_ m0 = _ftFace->glyph->bitmap;
-
-		int len = (int) (m0.width * m0.rows * 4);
-		byte[] imgData = new byte[len];
-		for (int i = 0; i < len; i += 4) {
-			byte grey = m0.buffer[i / 4];
-			imgData[i + 0] = 255;
-			imgData[i + 1] = 255;
-			imgData[i + 2] = 255;
-			imgData[i + 3] = grey;
+		
+		int width = (int)m0.width;
+		int height = (int)m0.rows;
+		int datL = width * height * 4;
+		byte[] dat = new byte[datL];
+		
+		if (_pixel) {
+			for (int y = 0; y < height; y++) {
+				for (int x = 0; x < width; x++) {
+					int bytePos = (y * ((width + 7) / 8)) + (x / 8);
+					int bitPos = 7 - x % 8;
+            
+					byte bits = m0.buffer[bytePos];
+					byte pixel = (byte) (bits >> bitPos & 1);
+            
+					int datPos = (y * width + x) * 4;
+					dat[datPos + 0] = 255;
+					dat[datPos + 1] = 255;
+					dat[datPos + 2] = 255;
+					dat[datPos + 3] = pixel == 1 ? (byte)255 : (byte)0;
+				}
+			}
+		} else
+		{
+			for (int i = 0; i < datL; i += 4) {
+				byte grey = m0.buffer[i / 4];
+				dat[i + 0] = 255;
+				dat[i + 1] = 255;
+				dat[i + 2] = 255;
+				dat[i + 3] = grey;
+			}
 		}
 
 		FT_GlyphSlotRec_* ftGlyph = _ftFace->glyph;
 		FT_Glyph_Metrics_ metrics = ftGlyph->metrics;
 
 		TexturePart texture =
-			_atlas.Accept(Image.Create((int) ftGlyph->bitmap.width, (int) ftGlyph->bitmap.rows, imgData));
+			_atlas.Accept(Image.Create((int) ftGlyph->bitmap.width, (int) ftGlyph->bitmap.rows, dat));
 
 		float scale = 1.0F / (_resolution / BasicLineHeight * 64.0F);
-
+		
 		// Creates glyph data.
 		return _glyphs[key] = new Glyph(
 			texture,
@@ -130,9 +153,27 @@ public unsafe class Font : IDisposable {
 
 	private void init() {
 		_atlas.Init();
+		SetResolution((int) BasicLineHeight);
+	}
 
+	/// <summary>
+	///		Sets the font to pixel mode.
+	/// </summary>
+	public void SetPixel() {
+		_pixel = true;
+	}
+
+	/// <summary>
+	///		Sets font source resolution.
+	/// </summary>
+	/// <param name="res">Font source resolution.</param>
+	public void SetResolution(int res) {
+		_resolution = (uint) res;
+		FT_Set_Pixel_Sizes(_ftFace, 0, (uint) res);
+		
 		float scale = 1.0F / (_resolution / BasicLineHeight * 64.0F);
 		// Init info.
+		
 		Info = new FontInfo(
 			_ftFace->ascender * scale,
 			_ftFace->descender * scale,
@@ -143,30 +184,23 @@ public unsafe class Font : IDisposable {
 			_ftFace->underline_thickness * scale
 		);
 	}
-
+	
 	/// <summary>
 	///     Loads a font.
 	/// </summary>
 	/// <param name="url">Font path locally.</param>
-	/// <param name="quality">Quality of font rendering.</param>
 	/// <returns>A new font.</returns>
-	public static Font Load(Url url, FontQuality quality = FontQuality.Medium) {
+	public static Font Load(Url url) {
 		FT_LibraryRec_* lib;
 		FT_FaceRec_* face;
 		FT_Init_FreeType(&lib);
 		FT_New_Face(lib, (byte*) Marshal.StringToHGlobalAnsi(url.ToFilePath()), 0, &face);
 		FT_Select_Charmap(face, FT_Encoding_.FT_ENCODING_UNICODE);
-
-		// Handle resolutions.
-		uint res = quality switch {
-			FontQuality.Low => 32U,
-			FontQuality.Medium => 64U,
-			FontQuality.High => 128U,
-			_ => throw new Error("invalid arg: " + nameof(quality))
-		};
-		FT_Set_Pixel_Sizes(face, 0, res);
 		
-		Font font = new Font { _ftLib = lib, _ftFace = face, _resolution = res };
+		Font font = new Font {
+			_ftLib = lib, 
+			_ftFace = face
+		};
 		font.init();
 		return font;
 	}

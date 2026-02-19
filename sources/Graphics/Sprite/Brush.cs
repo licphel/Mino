@@ -586,7 +586,7 @@ public unsafe class Brush : IDisposable {
 		vBuf.Write(new Vector3(x2, y2, Depth));
 		vBuf.Write(Color.AsHalves());
 
-		_vertCnt += 4;
+		_vertCnt += 2;
 	}
 
 	/// <summary>
@@ -611,7 +611,7 @@ public unsafe class Brush : IDisposable {
 		vBuf.Write(new Vector3(x, y, Depth));
 		vBuf.Write(Color.AsHalves());
 
-		_vertCnt += 4;
+		_vertCnt += 1;
 	}
 
 	/// <summary>
@@ -661,7 +661,9 @@ public unsafe class Brush : IDisposable {
 
 		for (int i = 0; i < blob.GlyphRunList.Count; i++) {
 			ref GlyphInstance gi = ref CollectionsMarshal.AsSpan(blob.GlyphRunList)[i];
-			DrawTexture(gi.Glyph.TexPart, gi.Bounds.Translate(x, y));
+			if (gi.Visible) {
+				DrawTexture(gi.Glyph.TexPart, gi.Bounds.Translate(x, y));
+			}
 		}
 	}
 

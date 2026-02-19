@@ -63,5 +63,6 @@ Mino leverages several excellent open-source libraries to deliver its functional
 - **[FreeTypeSharp](https://github.com/ryancheung/FreeTypeSharp)**
 - **[Silk.NET](https://github.com/dotnet/Silk.NET)**
 - **[NAudio](https://github.com/naudio/NAudio)**
+- **[TextCopy](https://github.com/CopyText/TextCopy)**
 
 These dependencies are handled via NuGet package manager and are automatically restored when you build the project.
