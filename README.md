@@ -1,5 +1,7 @@
 ﻿# Mino
 
+### Minimalism, Integrated, Native and Optimal.
+
 ![Static Badge](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 ![Static Badge](https://img.shields.io/badge/.NET-9.0%2B-green?style=flat-square)
 
@@ -15,12 +17,12 @@ used features including audio, rendering, networking, serialization, and resourc
 - **Easy to Learn**: All APIs are well-documented and thoroughly commented for a smooth learning curve.
 - **MIT Licensed**: Free to use for any purpose, with attribution to the original authors.
 
-## Modules
+## Functions
 
-- **Audio System**
-- **2D and 3D Graphics**
+- **Cross-thread Audio System**
+- **Cross-thread Graphics System**
 - **2D Batching and GUI System**
-- **Networking**
+- **Networking (Bases on packets)**
 - **Resource Management**
 - **Lifecycle Control**
 

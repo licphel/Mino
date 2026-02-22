@@ -20,7 +20,8 @@ public abstract unsafe class AbstractThreadContext : ThreadContext {
 	protected AbstractThreadContext() {
 		CtxThread = new Thread(loop) {
 			Name = GetType().Name,
-			IsBackground = true
+			IsBackground = true,
+			Priority = ThreadPriority.AboveNormal
 		};
 	}
 
@@ -36,8 +37,9 @@ public abstract unsafe class AbstractThreadContext : ThreadContext {
 	}
 
 	public virtual void PollEvents() { }
-	
+
 	public void Present() {
+
 	}
 
 	public void Pend(in NoAllocCommand cmd) {
@@ -70,13 +72,26 @@ public abstract unsafe class AbstractThreadContext : ThreadContext {
 	private void loop() {
 		try {
 			OnContextStart();
-			
+
+			var localBatch = new List<NoAllocCommand>(1024);
+
 			while (!_cts.Token.IsCancellationRequested) {
+				localBatch.Clear();
+
 				while (_commandQueue.TryDequeue(out NoAllocCommand cmd)) {
-					cmd.Execute(this);
+					localBatch.Add(cmd);
+					if (localBatch.Count >= 1024) {
+						break;
+					}
 				}
-				
-				Thread.Yield();
+
+				if (localBatch.Count > 0) {
+					foreach (NoAllocCommand cmd in localBatch) {
+						cmd.Execute(this);
+					}
+				} else {
+					Thread.SpinWait(100);
+				}
 			}
 		} finally {
 			OnContextStop();

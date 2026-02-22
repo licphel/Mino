@@ -24,6 +24,7 @@ public class TextureAtlas : IDisposable {
 	private int _size;
 	private bool _disposed;
 	private TextureRef _refTex = null!;
+	private List<IDisposable> _toDispose = new List<IDisposable>();
 
 	public void Init() {
 		if (_init) {
@@ -66,8 +67,9 @@ public class TextureAtlas : IDisposable {
 			// Pend this switching op.
 			ctx.Pend(() => {
 				_refTex.Set(newTex);
-				oldTex.Dispose();
 			});
+			
+			_toDispose.Add(oldTex);
 		}
 		
 		_texture = newTex;
@@ -236,6 +238,10 @@ public class TextureAtlas : IDisposable {
 		GC.SuppressFinalize(this);
 
 		_texture?.Dispose();
+		
+		foreach (IDisposable d in _toDispose) {
+			d.Dispose();
+		}
 	}
 
 	private struct RectI {
