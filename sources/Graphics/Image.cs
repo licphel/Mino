@@ -140,13 +140,13 @@ public interface Image : IDisposable {
 	/// <summary>
 	///     STB image result.
 	/// </summary>
-	private class LiteralImage : Image {
+	private sealed class LiteralImage : Image {
 		public byte[]? Bytes { get; set; }
 		public int Height { get; internal init; }
 		public int Width { get; internal init; }
 
 		public void Dispose() {
-			GC.SuppressFinalize(this);
+			// Nothing to do.
 		}
 	}
 }

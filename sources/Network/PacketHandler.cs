@@ -20,12 +20,12 @@ public class PacketHandler : IDisposable {
 	private byte[] _compressionBuffer = new byte[Net.CompressionBufferSize];
 	private volatile bool _connected;
 	private byte[] _decompressionBuffer = new byte[Net.DecompressionBufferSize];
-	private volatile bool _disposed;
 	private DateTime _lastHeartbeat = DateTime.UtcNow;
 	private ByteBuffer _rcvBuf = new ByteBuffer(Net.BufferSize, Endianness.Big);
 	private volatile bool _rcvSt;
 	private volatile bool _sendSt;
 	private Socket? _socket;
+	private bool _disposed;
 
 	/// <summary>
 	///     The connection type to the server.
@@ -41,21 +41,7 @@ public class PacketHandler : IDisposable {
 	///     Whether the client is connected.
 	/// </summary>
 	public bool IsConnected {
-		get => _connected && !_disposed;
-	}
-
-	public void Dispose() {
-		if (_disposed) {
-			return;
-		}
-
-		_disposed = true;
-		Disconnect();
-		_disposeCts.Dispose();
-		_rcvBuf = null!;
-		_compressionBuffer = null!;
-		_decompressionBuffer = null!;
-		GC.SuppressFinalize(this);
+		get => _connected;
 	}
 
 	/// <summary>
@@ -67,10 +53,6 @@ public class PacketHandler : IDisposable {
 	/// <exception cref="Error">Thrown if already connected or disposed.</exception>
 	/// <exception cref="Error">Thrown if LAN mode is used but endpoint is null.</exception>
 	public bool Search(NetConnectionType connectionType, IPEndPoint? endpoint = null) {
-		if (_disposed) {
-			throw new Error("disposed");
-		}
-
 		lock (_connectionLock) {
 			if (_connected) {
 				throw new Error("already connected");
@@ -143,7 +125,7 @@ public class PacketHandler : IDisposable {
 	/// <param name="packet">A server-bound packet.</param>
 	/// <exception cref="Error">Thrown if not connected.</exception>
 	public void Send(Packet packet) {
-		if (!_connected || _disposed) {
+		if (!_connected) {
 			throw new Error("not connected");
 		}
 
@@ -158,7 +140,7 @@ public class PacketHandler : IDisposable {
 	///     Disconnects from the server.
 	/// </summary>
 	public void Disconnect() {
-		if (_disposed || !_connected) {
+		if (!_connected) {
 			return;
 		}
 
@@ -189,10 +171,6 @@ public class PacketHandler : IDisposable {
 	///     Calls to process deserialized packets.
 	/// </summary>
 	public void Process() {
-		if (_disposed) {
-			return;
-		}
-
 		while (!_consumption.IsEmpty) {
 			if (_consumption.TryDequeue(out Packet? packet)) {
 				try {
@@ -404,5 +382,19 @@ public class PacketHandler : IDisposable {
 				_rcvBuf.Compact();
 			}
 		}
+	}
+
+	public void Dispose() {
+		if (_disposed) {
+			return;
+		}
+		_disposed = true;
+		GC.SuppressFinalize(this);
+
+		Disconnect();
+		_disposeCts.Dispose();
+		_rcvBuf = null!;
+		_compressionBuffer = null!;
+		_decompressionBuffer = null!;
 	}
 }

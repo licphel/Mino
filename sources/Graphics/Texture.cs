@@ -1,7 +1,7 @@
 ﻿#region
-using Mino.Framework;
-using Mino.Graphics.Hardware;
-using Mino.Graphics.Hardware.Desc;
+using Mino.Framework.Resource;
+using Mino.Graphics.Desc;
+using Mino.Graphics.Enum;
 #endregion
 
 namespace Mino.Graphics;
@@ -9,83 +9,52 @@ namespace Mino.Graphics;
 /// <summary>
 ///     Gpu-side texture.
 /// </summary>
-public class Texture : IDisposable {
-	private RenderBackend _backend;
-	public readonly HandleRef _handle;
-	private bool _disposed;
-
-	public Texture(in TextureDesc desc) {
-		// Do not validate the description,
-		// since users may create an empty texture.
-		Desc = desc;
-
-		_backend = RenderSystem.GetBackend();
-		_handle = new HandleRef(_backend.TextureGen());
-
-		// Validation.
-		if (desc.Width < 0 || desc.Height < 0 || desc.Depth < 0) {
-			throw new Error("invalid size");
-		}
-
-		// Set userdata.
-		Desc = desc;
-		_backend.TextureData(_handle, desc);
-	}
-
+public interface Texture : FragileTexture, ThreadContextHolder, IDisposable {
 	/// <summary>
 	///     The texture desc.
 	/// </summary>
-	public TextureDesc Desc { get; set; }
+	TextureDesc Desc { get; }
 
 	/// <summary>
 	///     Size on x-axis.
 	/// </summary>
-	public int Width {
+	new int Width {
 		get => Desc.Width;
 	}
 
 	/// <summary>
 	///     Size on y-axis.
 	/// </summary>
-	public int Height {
+	new int Height {
 		get => Desc.Height;
 	}
 
 	/// <summary>
 	///     Size on z-axis.
 	/// </summary>
-	public int Depth {
+	new int Depth {
 		get => Desc.Depth;
-	}
-
-	public void Dispose() {
-		if (_disposed) {
-			return;
-		}
-		_disposed = true;
-
-		_backend.TextureDelete(_handle);
-		GC.SuppressFinalize(this);
 	}
 
 	/// <summary>
 	///     Submits texture data to gpu.
 	/// </summary>
 	/// <param name="submission">Texture submission data.</param>
-	public void Submit(in TextureSubmission submission) {
-		if (_disposed) {
-			throw new Error("disposed");
-		}
-		// Validation.
-		if (submission.Region.Width < 0 || submission.Region.Height < 0 || submission.Region.Depth < 0) {
-			throw new Error("invalid size");
-		}
+	void Submit(in TextureSubmission submission);
 
-		_backend.TextureSubmit(_handle, submission);
-	}
-
-	// Implicit cast to native handle.
-	public static implicit operator uint(Texture obj) {
-		return obj._handle;
-	}
+	/// <summary>
+	///     Blits the texture.
+	/// </summary>
+	/// <param name="to">Dst texture.</param>
+	/// <param name="x">Dst x.</param>
+	/// <param name="y">Dst y.</param>
+	/// <param name="w">Dst width.</param>
+	/// <param name="h">Dst height.</param>
+	/// <param name="srcX">Src x.</param>
+	/// <param name="srcY">Src y.</param>
+	/// <param name="srcW">Src width.</param>
+	/// <param name="srcH">Src height.</param>
+	/// <param name="filter">Blit filter.</param>
+	void Blit(Texture to, int x, int y, int w, int h, int srcX, int srcY, int srcW, int srcH,
+		TextureFilter filter = TextureFilter.Nearest);
 }

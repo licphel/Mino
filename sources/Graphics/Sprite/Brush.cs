@@ -1,7 +1,7 @@
 ﻿#region
 using System.Runtime.InteropServices;
-using Mino.Graphics.Hardware.Desc;
-using Mino.Graphics.Hardware.Enum;
+using Mino.Graphics.Desc;
+using Mino.Graphics.Enum;
 using Mino.Graphics.Text;
 using Mino.Mathematics;
 using Mino.Mathematics.Planar;
@@ -16,66 +16,66 @@ namespace Mino.Graphics.Sprite;
 /// </summary>
 public unsafe class Brush : IDisposable {
 	private const string VertShaderTex = """
-										   #version 330 core
+										 #version 330 core
 
-										   layout(location = 0) in vec3 i_position;
-										   layout(location = 1) in vec4 i_color;
-										   layout(location = 2) in vec2 i_texCoord;
+										 layout(location = 0) in vec3 i_position;
+										 layout(location = 1) in vec4 i_color;
+										 layout(location = 2) in vec2 i_texCoord;
 
-										   out vec4 o_color;
-										   out vec2 o_texCoord;
+										 out vec4 o_color;
+										 out vec2 o_texCoord;
 
-										   layout(std140) uniform u_transform {
-										       mat4 u_viewProjection;
-										   };
+										 layout(std140) uniform u_transform {
+										     mat4 u_viewProjection;
+										 };
 
-										   void main(){
-										       o_color = i_color;
-										       o_texCoord = i_texCoord;
+										 void main(){
+										     o_color = i_color;
+										     o_texCoord = i_texCoord;
 
-										       gl_Position =  u_viewProjection * vec4(i_position, 1.0);
-										   }
-										   """;
+										     gl_Position =  u_viewProjection * vec4(i_position, 1.0);
+										 }
+										 """;
 	private const string FragShaderTex = """
-										   #version 330 core
+										 #version 330 core
 
-										   in vec4 o_color;
-										   in vec2 o_texCoord;
+										 in vec4 o_color;
+										 in vec2 o_texCoord;
 
-										   uniform sampler2D u_texture;
+										 uniform sampler2D u_texture;
 
-										   void main() {
-										       vec4 col = texture(u_texture, o_texCoord);
-										       gl_FragColor = o_color * col;
-										   }
-										   """;
+										 void main() {
+										     vec4 col = texture(u_texture, o_texCoord);
+										     gl_FragColor = o_color * col;
+										 }
+										 """;
 	private const string VertShaderCol = """
-										   #version 330 core
+										 #version 330 core
 
-										   layout(location = 0) in vec3 i_position;
-										   layout(location = 1) in vec4 i_color;
+										 layout(location = 0) in vec3 i_position;
+										 layout(location = 1) in vec4 i_color;
 
-										   out vec4 o_color;
+										 out vec4 o_color;
 
-										   layout(std140) uniform u_transform {
-										       mat4 u_viewProjection;
-										   };
+										 layout(std140) uniform u_transform {
+										     mat4 u_viewProjection;
+										 };
 
-										   void main(){
-										       o_color = i_color;
+										 void main(){
+										     o_color = i_color;
 
-										       gl_Position =  u_viewProjection * vec4(i_position, 1.0);
-										   }
-										   """;
+										     gl_Position =  u_viewProjection * vec4(i_position, 1.0);
+										 }
+										 """;
 	private const string FragShaderCol = """
-										   #version 330 core
+										 #version 330 core
 
-										   in vec4 o_color;
+										 in vec4 o_color;
 
-										   void main() {
-										       gl_FragColor = o_color;
-										   }
-										   """;
+										 void main() {
+										     gl_FragColor = o_color;
+										 }
+										 """;
 
 	/*
 	 * STATE SWITCHING INFO
@@ -100,7 +100,6 @@ public unsafe class Brush : IDisposable {
 	 */
 	private RenderTarget _renderTarget = null!;
 	private Sampler _sampler = null!;
-	private Swapchain _swapchain = null!;
 	private BrushCache _target;
 	private BufferObject _vbo = null!;
 	private Encoder _encoder = null!;
@@ -113,14 +112,15 @@ public unsafe class Brush : IDisposable {
 	private int _vertCnt = 0;
 	private int _indCnt = 0;
 	private bool _disposed;
-	
+	public int _Drawcalls = 0;
+
 	public Brush(BrushCache? target = null) {
 		_target = target ?? new BrushCache.Self();
 		initGfxResources();
 	}
-	
+
 	/// <summary>
-	///		Rendering color tint.
+	///     Rendering color tint.
 	/// </summary>
 	public Color Color { get; set; } = Color.PureWhite;
 
@@ -157,12 +157,11 @@ public unsafe class Brush : IDisposable {
 		set {
 			Flush();
 			_renderTarget = value;
-			_swapchain = new Swapchain(value);
 		}
 	}
 
 	/// <summary>
-	///		Current viewport.
+	///     Current viewport.
 	/// </summary>
 	public Box2 CurrentViewport { get; private set; }
 
@@ -181,7 +180,7 @@ public unsafe class Brush : IDisposable {
 	///     This operation will flush the brush.
 	/// </summary>
 	public void Begin(in RenderPassDesc? desc = null) {
-		_swapchain.Acquire(desc);
+		_renderTarget.Acquire(desc);
 	}
 
 	/// <summary>
@@ -190,7 +189,7 @@ public unsafe class Brush : IDisposable {
 	/// </summary>
 	public void End() {
 		Flush();
-		_swapchain.Present();
+		_renderTarget.Present();
 	}
 
 	/// <summary>
@@ -203,11 +202,18 @@ public unsafe class Brush : IDisposable {
 		if (_vertCnt <= 0) {
 			return;
 		}
+		_Drawcalls++;
 
 		ByteBuffer vBuf = _target.VertexBuf;
 		ByteBuffer iBuf = _target.IndexBuf;
 
 		_encoder.SetRenderPipe(_ast_Pipe);
+		_encoder.SetViewport(
+			(int) CurrentViewport.MinX, 
+			(int) CurrentViewport.MinY, 
+			(int) CurrentViewport.Width, 
+			(int) CurrentViewport.Height
+		);
 
 		_vbo.Submit<byte>(vBuf.AsSpan());
 		_encoder.SetBuffer(_vbo);
@@ -268,7 +274,6 @@ public unsafe class Brush : IDisposable {
 	/// <param name="box">Viewport box.</param>
 	public void SetViewport(in Box2 box) {
 		Flush();
-		_encoder.SetViewport((int) box.MinX, (int) box.MinY, (int) box.Width, (int) box.Height);
 		CurrentViewport = box;
 	}
 
@@ -279,18 +284,19 @@ public unsafe class Brush : IDisposable {
 	/// <param name="box">Scissor region.</param>
 	public void SetScissor(in Box2 box) {
 		Flush();
-		
+
 		Box2 newBox = Box2.CreateByPoints(
-			Camera.Project(box.Min, CurrentViewport), 
+			Camera.Project(box.Min, CurrentViewport),
 			Camera.Project(box.Max, CurrentViewport)
-			);
-		_encoder.SetScissor(new ScissorDesc {
-			Enable = true,
-			X = (int) newBox.MinX,
-			Y = (int) newBox.MinY,
-			Width = (int) MathF.Ceiling(newBox.Width),
-			Height = (int) MathF.Ceiling(newBox.Height)
-		});
+		);
+		_encoder.SetScissor(
+			new ScissorDesc {
+				Enable = true,
+				X = (int) newBox.MinX,
+				Y = (int) newBox.MinY,
+				Width = (int) MathF.Ceiling(newBox.Width),
+				Height = (int) MathF.Ceiling(newBox.Height)
+			});
 	}
 
 	public void DisableScissor() {
@@ -310,13 +316,13 @@ public unsafe class Brush : IDisposable {
 	/// <param name="v">Src v.</param>
 	/// <param name="uw">Src width.</param>
 	/// <param name="vh">Src height.</param>
-	public void DrawTexture(Texture? tex, float x, float y, float w, float h, float u, float v, float uw, float vh) {
+	public void DrawTexture(FragileTexture? tex, float x, float y, float w, float h, float u, float v, float uw, float vh) {
 		if (tex == null) {
 			return;
 		}
 		assert(BrushPrimitive.TextureSprite);
-		assert(tex);
-
+		assert(tex.Pin());
+		
 		ByteBuffer vBuf = _target.VertexBuf;
 		ByteBuffer iBuf = _target.IndexBuf;
 
@@ -383,8 +389,20 @@ public unsafe class Brush : IDisposable {
 	/// <param name="tex">Texture to draw.</param>
 	/// <param name="dst">Draw destination.</param>
 	/// <param name="src">Texture source.</param>
-	public void DrawTexture(Texture? tex, in Box2 dst, in Box2 src) {
+	public void DrawTexture(FragileTexture? tex, in Box2 dst, in Box2 src) {
 		DrawTexture(tex, dst.MinX, dst.MinY, dst.Width, dst.Height, src.MinX, src.MinY, src.Width, src.Height);
+	}
+	
+	/// <summary>
+	///     Draws a texture.
+	/// </summary>
+	/// <param name="tex">Texture to draw.</param>
+	/// <param name="dst">Draw destination.</param>
+	public void DrawTexture(FragileTexture? tex, in Box2 dst) {
+		if (tex == null) {
+			return;
+		}
+		DrawTexture(new TexturePart(tex), dst);
 	}
 
 	/// <summary>
@@ -395,7 +413,7 @@ public unsafe class Brush : IDisposable {
 	/// <param name="y">Dst y.</param>
 	/// <param name="w">Dst width.</param>
 	/// <param name="h">Dst height.</param>
-	public void DrawTexture(Texture? tex, float x, float y, float w, float h) {
+	public void DrawTexture(FragileTexture? tex, float x, float y, float w, float h) {
 		if (tex == null) {
 			return;
 		}
@@ -408,7 +426,7 @@ public unsafe class Brush : IDisposable {
 	/// <param name="texPart">Texture part to draw.</param>
 	/// <param name="dst">Draw destination.</param>
 	public void DrawTexture(TexturePart texPart, in Box2 dst) {
-		DrawTexture(texPart.Src, dst, texPart.Region);
+		DrawTexture(texPart.Src.Pin(), dst, texPart.Region);
 	}
 
 	/// <summary>
@@ -418,9 +436,9 @@ public unsafe class Brush : IDisposable {
 	/// <param name="dst">Draw destination.</param>
 	/// <param name="src">Texture part source.</param>
 	public void DrawTexture(TexturePart texPart, in Box2 dst, in Box2 src) {
-		DrawTexture(new TexturePart(texPart.Src, src), dst);
+		DrawTexture(new TexturePart(texPart.Src.Pin(), src), dst);
 	}
-	
+
 	/// <summary>
 	///     Draws a texture part.
 	/// </summary>
@@ -445,10 +463,11 @@ public unsafe class Brush : IDisposable {
 	/// <param name="v">Src v.</param>
 	/// <param name="uw">Src width.</param>
 	/// <param name="vh">Src height.</param>
-	public void DrawTexture(TexturePart texPart, float x, float y, float w, float h, float u, float v, float uw, float vh) {
+	public void DrawTexture(TexturePart texPart, float x, float y, float w, float h, float u, float v, float uw,
+		float vh) {
 		DrawTexture(texPart.Src, x, y, w, h, u + texPart.U, v + texPart.V, uw, vh);
 	}
-	
+
 	/// <summary>
 	///     Draws a drawable.
 	/// </summary>
@@ -467,7 +486,7 @@ public unsafe class Brush : IDisposable {
 	public void Draw<T>(in T t, in Box2 dst, in Box2 src) where T : Drawable {
 		t.Draw(this, dst.MinX, dst.MinY, dst.Width, dst.Height, src.MinX, src.MinY, src.Width, src.Height);
 	}
-	
+
 	/// <summary>
 	///     Draws a drawable.
 	/// </summary>
@@ -492,7 +511,8 @@ public unsafe class Brush : IDisposable {
 	/// <param name="v">Src v.</param>
 	/// <param name="uw">Src width.</param>
 	/// <param name="vh">Src height.</param>
-	public void Draw<T>(in T t, float x, float y, float w, float h, float u, float v, float uw, float vh) where T : Drawable {
+	public void Draw<T>(in T t, float x, float y, float w, float h, float u, float v, float uw, float vh)
+		where T : Drawable {
 		t.Draw(this, x, y, w, h, u, v, uw, vh);
 	}
 
@@ -545,7 +565,7 @@ public unsafe class Brush : IDisposable {
 	public void DrawRectangle(in Box2 dst) {
 		DrawRectangle(dst.MinX, dst.MinY, dst.Width, dst.Height);
 	}
-	
+
 	/// <summary>
 	///     Draws a rectangle frame.
 	/// </summary>
@@ -559,7 +579,7 @@ public unsafe class Brush : IDisposable {
 		DrawLine(x + w, y, x + w, y + h);
 		DrawLine(x, y + h, x + w, y + h);
 	}
-	
+
 	/// <summary>
 	///     Draws a rectangle frame.
 	/// </summary>
@@ -623,18 +643,18 @@ public unsafe class Brush : IDisposable {
 	}
 
 	/// <summary>
-	///		Draws a text blob.
+	///     Draws a text blob.
 	/// </summary>
 	/// <param name="blob">The blob to draw.</param>
 	/// <param name="x">Drawing offset x.</param>
 	/// <param name="y">Drawing offset y.</param>
 	/// <param name="alignment">Text alignment.</param>
 	public void DrawText(TextBlob blob, float x, float y, Alignment? alignment = null) {
-		alignment??= Alignment.LeftUp;
-		
+		alignment ??= Alignment.LeftUp;
+
 		float w = blob.Width;
 		float h = blob.Height;
-		
+
 		switch (alignment.Value.Horizontal) {
 			case -1:
 				// Do nothing.
@@ -646,7 +666,7 @@ public unsafe class Brush : IDisposable {
 				x -= w;
 				break;
 		}
-		
+
 		switch (alignment.Value.Vertical) {
 			case -1:
 				// Do nothing.
@@ -668,7 +688,7 @@ public unsafe class Brush : IDisposable {
 	}
 
 	/// <summary>
-	///		Draws a text blob.
+	///     Draws a text blob.
 	/// </summary>
 	/// <param name="blob">The blob to draw.</param>
 	/// <param name="pos">Drawing offset.</param>
@@ -677,43 +697,29 @@ public unsafe class Brush : IDisposable {
 		DrawText(blob, pos.X, pos.Y, alignment);
 	}
 
-	public void Dispose() {
-		if (_disposed) {
-			return;
-		}
-		_disposed = true;
-
-		_swapchain.Dispose();
-		_vbo.Dispose();
-		_ibo.Dispose();
-		_sampler.Dispose();
-		_encoder.Dispose();
-		GC.SuppressFinalize(this);
-	}
-
 	private void initGfxResources() {
 		RenderTarget = RenderTarget.GetUltimate();
-		Sampler = new Sampler(new SamplerDesc());
+		Sampler = RenderSystem.Create<Sampler>(new SamplerDesc());
 
-		_vbo = new BufferObject(
-			new BufferDesc {
+		_vbo = RenderSystem.Create<BufferObject>(
+			new BufferObjectDesc {
 				Frequency = BufferFrequency.Stream,
 				Type = BufferType.Vertex,
 				Usage = BufferUsage.GpuRead | BufferUsage.CpuWrite
 			});
-		_ibo = new BufferObject(
-			new BufferDesc {
+		_ibo = RenderSystem.Create<BufferObject>(
+			new BufferObjectDesc {
 				Frequency = BufferFrequency.Stream,
 				Type = BufferType.Index,
 				Usage = BufferUsage.GpuRead | BufferUsage.CpuWrite
 			});
-		_ubo = new BufferObject(
-			new BufferDesc {
+		_ubo = RenderSystem.Create<BufferObject>(
+			new BufferObjectDesc {
 				Frequency = BufferFrequency.Stream,
 				Type = BufferType.Uniform,
 				Usage = BufferUsage.GpuRead | BufferUsage.CpuWrite
 			});
-		_encoder = new Encoder(
+		_encoder = RenderSystem.Create<Encoder>(
 			new EncoderDesc {
 				Usage = EncoderUsage.Render
 			});
@@ -723,8 +729,8 @@ public unsafe class Brush : IDisposable {
 		 * 0 - colored
 		 * 1 - textured
 		 */
-		ShaderProgram program_0 = ShaderProgram.FragVert(VertShaderCol, FragShaderCol);
-		ShaderProgram program_1 = ShaderProgram.FragVert(VertShaderTex, FragShaderTex);
+		ShaderProgram program_0 = ShaderProgram.CreateRender(VertShaderCol, FragShaderCol);
+		ShaderProgram program_1 = ShaderProgram.CreateRender(VertShaderTex, FragShaderTex);
 		ResourceSetLayout layout_0 = ResourceSetLayout.Bake(
 			new ResourceSetLayout.Slot {
 				Count = 1,
@@ -745,7 +751,7 @@ public unsafe class Brush : IDisposable {
 				Type = ResourceType.Texture
 			});
 		// Colored pipe.
-		_pipes[0] = new RenderPipe(
+		_pipes[0] = RenderSystem.Create<RenderPipe>(
 			new RenderPipeDesc {
 				Blend = BlendDesc.AlphaMix,
 				Depth = DepthDesc.Leq,
@@ -766,7 +772,7 @@ public unsafe class Brush : IDisposable {
 					})
 			});
 		// Textured pipe.
-		_pipes[1] = new RenderPipe(
+		_pipes[1] = RenderSystem.Create<RenderPipe>(
 			new RenderPipeDesc {
 				Blend = BlendDesc.AlphaMix,
 				Depth = DepthDesc.Leq,
@@ -790,8 +796,8 @@ public unsafe class Brush : IDisposable {
 						Type = VertexAttributeType.Float32
 					})
 			});
-		_sets[0] = new ResourceSet(layout_0);
-		_sets[1] = new ResourceSet(layout_1);
+		_sets[0] = RenderSystem.Create<ResourceSet>(layout_0);
+		_sets[1] = RenderSystem.Create<ResourceSet>(layout_1);
 	}
 
 	private void assert(BrushPrimitive primitive) {
@@ -825,5 +831,18 @@ public unsafe class Brush : IDisposable {
 			_invWidth = 1.0F / tex.Width;
 			_invHeight = 1.0F / tex.Height;
 		}
+	}
+
+	public void Dispose() {
+		if (_disposed) {
+			return;
+		}
+		_disposed = true;
+		GC.SuppressFinalize(this);
+
+		_vbo.Dispose();
+		_ibo.Dispose();
+		_sampler.Dispose();
+		_encoder.Dispose();
 	}
 }

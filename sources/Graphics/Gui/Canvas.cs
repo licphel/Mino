@@ -1,12 +1,14 @@
-﻿using Mino.Audio;
-using Mino.Audio.Hardware.Desc;
+﻿#region
+using Mino.Audio;
+using Mino.Audio.Desc;
 using Mino.Input;
 using Mino.Mathematics;
+#endregion
 
 namespace Mino.Graphics.Gui;
 
 /// <summary>
-///		A GUI top canvas.
+///     A GUI top canvas.
 /// </summary>
 public class Canvas {
 	public static readonly Key[] Keymap = [
@@ -17,32 +19,32 @@ public class Canvas {
 	///     Currently focused component.
 	/// </summary>
 	public HashSet<Component?> Focused { get; } = new HashSet<Component?>();
-	
+
 	/// <summary>
-	///		Current gui system sound emitter.
-	/// </summary>
-	public Emitter SoundEmitter { get; set; } = new Emitter("gui");
-	
-	/// <summary>
-	///		Present faces.
+	///     Present faces.
 	/// </summary>
 	public readonly List<Face> Presents = new List<Face>();
-	
+
 	/// <summary>
-	///		Plays a sound in GUI emitter.
+	///     Current gui system sound emitter.
+	/// </summary>
+	public Emitter SoundEmitter { get; set; } = new Emitter("gui");
+
+	/// <summary>
+	///     Plays a sound in GUI emitter.
 	/// </summary>
 	/// <param name="line">Source line.</param>
-	public void PlaySound(Line? line) {
+	public void PlaySound(DataLine? line) {
 		if (line == null) {
 			return;
 		}
-		SoundEmitter.Play(new Clip(new ClipDesc {
-			Line = line
-		}));
+		ClipDesc cDesc = ClipDesc.FromDataLine(line);
+		Clip clip = AudioSystem.Create<Clip>(cDesc);
+		SoundEmitter.Play(clip);
 	}
-	
+
 	/// <summary>
-	///		Displays the face.
+	///     Displays the face.
 	/// </summary>
 	/// <param name="face">Face to display.</param>
 	public void Display(Face face) {
@@ -55,7 +57,7 @@ public class Canvas {
 	}
 
 	/// <summary>
-	///		Closes the face.
+	///     Closes the face.
 	/// </summary>
 	/// <param name="face">Face to close.</param>
 	public void Close(Face face) {
@@ -65,14 +67,14 @@ public class Canvas {
 	}
 
 	/// <summary>
-	///		Updates all present faces.
+	///     Updates all present faces.
 	/// </summary>
 	/// <param name="ctx">Current canvas context.</param>
 	public void Update(CanvasContext ctx) {
 		foreach (Face face in Presents) {
 			face.Update(ctx);
 		}
-		
+
 		// Reflush focused component.
 		if (Keymap[0].Press) {
 			Focused.Clear();
@@ -81,7 +83,7 @@ public class Canvas {
 	}
 
 	/// <summary>
-	///		Draws all present faces.
+	///     Draws all present faces.
 	/// </summary>
 	/// <param name="ctx">Current canvas context.</param>
 	public void Draw(CanvasContext ctx) {
@@ -89,7 +91,7 @@ public class Canvas {
 			face.Draw(ctx);
 		}
 	}
-	
+
 	private void updateFocus(IReadOnlyList<Component> root, in Vector2 cursor) {
 		foreach (Component comp in root) {
 			if (comp.IsAccessible(cursor)) {

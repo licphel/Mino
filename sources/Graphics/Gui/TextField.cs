@@ -2,12 +2,11 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using Mino.Desktop;
-using Mino.Framework;
-using Mino.Graphics.Hardware;
 using Mino.Graphics.Sprite;
 using Mino.Graphics.Text;
 using Mino.Input;
 using Mino.Mathematics;
+using Mino.Utility;
 #endregion
 
 namespace Mino.Graphics.Gui;
@@ -18,7 +17,7 @@ namespace Mino.Graphics.Gui;
 public class TextField : Component {
 	public const float DefaultWrap = 4.0F;
 	public const float DefaultShine = 0.5F;
-	
+
 	public static readonly Key[] Keymap = [
 		Key.Get(Key.A, Key.ModControl), // Select all key
 		Key.Get(Key.C, Key.ModControl), // Copy key
@@ -66,17 +65,17 @@ public class TextField : Component {
 		_blobHint = font.Bake(_hint);
 		_cd1 = new Countdown();
 		_cd2 = new Countdown();
-		
+
 		_childBar = bar;
 		bar.SetParentScrollable(true);
 		AddChild(bar);
-		
+
 		SetAttribute("HintColor", new Color(1.0F, 1.0F, 1.0F, 0.25F));
 		SetAttribute("TextColor", new Color(1.0F, 1.0F, 1.0F));
 		SetAttribute("SelectBackColor", new Color(0.2F, 0.65F, 1.0F, 0.5F));
 		SetAttribute("SelectTextColor", new Color(1.0F, 1.0F, 1.0F));
 	}
-	
+
 	/// <summary>
 	///     Text in the field.
 	/// </summary>
@@ -90,16 +89,16 @@ public class TextField : Component {
 	}
 
 	/// <summary>
-	///		Sets input hint of the field.
+	///     Sets input hint of the field.
 	/// </summary>
 	/// <param name="hint">The text to display when the field is empty.</param>
 	public void SetHint(string hint) {
 		_hint = hint;
 		rebakeHint();
 	}
-	
+
 	/// <summary>
-	///		Sets wrapping border of the bar.
+	///     Sets wrapping border of the bar.
 	/// </summary>
 	/// <param name="wrap">Wrap width.</param>
 	public void SetWrap(float wrap) {
@@ -107,7 +106,7 @@ public class TextField : Component {
 	}
 
 	/// <summary>
-	///		Sets text size.
+	///     Sets text size.
 	/// </summary>
 	/// <param name="lh">Font line height.</param>
 	public void SetLineHeight(float lh) {
@@ -137,7 +136,7 @@ public class TextField : Component {
 
 	public override void Resolve(CanvasContext ctx) {
 		base.Resolve(ctx);
-		
+
 		// Rebake on resolved - max width changes.
 		rebake();
 		rebakeHint();
@@ -147,7 +146,7 @@ public class TextField : Component {
 		_focus = Canvas.Focused.Contains(this);
 		_cd1.Update(ctx.Step);
 		_cd2.Update(ctx.Step);
-		
+
 		if (_focus) {
 			Window window = RenderSystem.GetWindow();
 			// Clipboard operation.
@@ -184,7 +183,7 @@ public class TextField : Component {
 					_sb.Clear();
 					_alls = false;
 				}
-				
+
 				rebake();
 			}
 			// ENTER
@@ -207,7 +206,7 @@ public class TextField : Component {
 				}
 			}
 		}
-		
+
 		base.Update(ctx);
 	}
 
@@ -243,7 +242,7 @@ public class TextField : Component {
 				drawGlyphs(ctx, _blob, color, color);
 			}
 		}
-		
+
 		base.Draw(ctx);
 	}
 
@@ -251,7 +250,7 @@ public class TextField : Component {
 		_childBar.SetSize(blob.Height + _wrap * 2);
 		float x = BoundingBox.MinX + _wrap;
 		float y = BoundingBox.MinY + _wrap - _childBar.GetPos(ctx);
-		
+
 		Brush brush = ctx.Brush;
 		Color _oldColor = brush.Color;
 		brush.SetScissor(BoundingBox);
@@ -264,7 +263,7 @@ public class TextField : Component {
 				brush.DrawRectangle(gi.AdjacentBounds.Translate(x, y));
 			}
 		}
-		
+
 		brush.Color = color;
 		brush.DrawText(blob, x, y);
 
@@ -278,7 +277,7 @@ public class TextField : Component {
 				}
 				brush.Color = bgColor;
 				brush.DrawRectangle(x, y - _blob.Info.Descender, 1.0F, _lineH);
-				
+
 				_cd1.Push(TimeSpan.FromSeconds(DefaultShine));
 			}
 			if (_cd1.Ready) {
@@ -289,14 +288,14 @@ public class TextField : Component {
 		brush.Color = _oldColor;
 		brush.DisableScissor();
 	}
-	
+
 	private void insert(string txt) {
 		if (_alls) {
 			_alls = false;
 			_sb.Clear();
 			_ptr = 0;
 		}
-		
+
 		_sb.Insert(_ptr, txt);
 		_ptr += txt.Length;
 	}
@@ -305,7 +304,7 @@ public class TextField : Component {
 		// Update blob.
 		_blob = _asset_Font.Bake(Text, BoundingBox.Width - _wrap * 2, _lineH);
 	}
-	
+
 	private void rebakeHint() {
 		// Update blob.
 		_blobHint = _asset_Font.Bake(_hint, BoundingBox.Width - _wrap * 2, _lineH);

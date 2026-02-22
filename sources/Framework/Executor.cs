@@ -27,7 +27,7 @@ public abstract class Executor {
 	///     Rendering partial tick used to lerp.
 	/// </summary>
 	public float Partial { get; protected set; }
-	
+
 	/// <summary>
 	///     Current time step.
 	/// </summary>

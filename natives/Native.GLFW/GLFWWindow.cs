@@ -1,9 +1,7 @@
 ﻿#region
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
-using System.Text;
 using Mino.Desktop;
-using Mino.Framework.BSP;
 using Mino.Input;
 using Mino.Mathematics;
 using Mino.Nio;
@@ -14,19 +12,22 @@ using GLFW_Image = Silk.NET.GLFW.Image;
 
 namespace Mino.Native.GLFW;
 
-public unsafe class GLFWWindow : Window, ServiceProvider {
-	private Glfw _glfw = Glfw.GetApi();
-	private WindowHandle* _handle;
-	internal ConcurrentDictionary<int, int> _keyModMap = new ConcurrentDictionary<int, int>();
-	internal ConcurrentDictionary<int, byte> _keyStatusMap = new ConcurrentDictionary<int, byte>();
-	private Vector2 _cursor;
-	private string _title = string.Empty;
-	private bool _vsync;
-	private bool _closed;
-	private bool _cursorRelativeMode = false;
-	private bool _debug;
+public unsafe sealed class GLFWWindow : Window {
+	public Glfw _glfw = Glfw.GetApi();
+	public WindowHandle* _handle;
+	public ConcurrentDictionary<int, int> _keyModMap = new ConcurrentDictionary<int, int>();
+	public ConcurrentDictionary<int, byte> _keyStatusMap = new ConcurrentDictionary<int, byte>();
+	public Vector2 _cursor;
+	public string _title = string.Empty;
+	public bool _vsync;
+	public bool _closed;
+	public bool _cursorRelativeMode = false;
+	public bool _debug;
+	public bool _disposed;
 
-	public override bool Debug { get => _debug; }
+	public override bool Debug {
+		get => _debug;
+	}
 
 	public override Vector2 Size {
 		get {
@@ -170,14 +171,17 @@ public unsafe class GLFWWindow : Window, ServiceProvider {
 		}
 
 		hookGLFWCallbacks();
-
-		_glfw.MakeContextCurrent(_handle);
+		
 		_glfw.SwapInterval(hints.Vsync ? 1 : 0);
 
 		// Finally show the window to hide the setting process.
 		if (hints.Visible) {
 			_glfw.ShowWindow(_handle);
 		}
+	}
+	
+	public override void MakeContextCurrent() {
+		_glfw.MakeContextCurrent(_handle);
 	}
 
 	private bool tryCreateCtx(in WindowHints hints, int major) {
@@ -223,12 +227,6 @@ public unsafe class GLFWWindow : Window, ServiceProvider {
 
 	public override uint GetModifiers(uint code) {
 		return (uint) _keyModMap.GetValueOrDefault((int) code, (int) Key.ModNone);
-	}
-
-	public override void Dispose() {
-		_glfw.SetWindowShouldClose(_handle, true);
-		_glfw.Terminate();
-		GC.SuppressFinalize(this);
 	}
 
 	private static T keepAlive<T>(T v) where T : class {
@@ -304,5 +302,15 @@ public unsafe class GLFWWindow : Window, ServiceProvider {
 				}
 				CursorDropEvent?.Invoke(urls.ToArray());
 			}));
+	}
+	
+	public override void Dispose() {
+		if (_disposed) {
+			return;
+		}
+		_disposed = true;
+		
+		_glfw.SetWindowShouldClose(_handle, true);
+		_glfw.Terminate();
 	}
 }

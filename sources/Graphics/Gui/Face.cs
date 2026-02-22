@@ -1,20 +1,19 @@
 ﻿#region
-using Mino.Graphics.Hardware;
 using Mino.Mathematics;
 #endregion
 
 namespace Mino.Graphics.Gui;
 
 /// <summary>
-///		Top user interface.
+///     Top user interface.
 /// </summary>
 public class Face : Component {
 	private TooltipContext? _tooltipCtx;
 	private bool _resolveNeeded = false;
 	private Vector2 _preWinSize;
-	
+
 	/// <summary>
-	///		Marks the children needs to resolve.
+	///     Marks the children needs to resolve.
 	/// </summary>
 	public void RequestResolve() {
 		_resolveNeeded = true;
@@ -28,7 +27,7 @@ public class Face : Component {
 			_preWinSize = ws;
 			RequestResolve();
 		}
-		
+
 		// Update tooltip.
 		if (_tooltipCtx != null) {
 			_tooltipCtx.Begin();
@@ -39,7 +38,7 @@ public class Face : Component {
 			}
 			_tooltipCtx.End();
 		}
-		
+
 		base.Update(ctx);
 	}
 
@@ -52,12 +51,12 @@ public class Face : Component {
 			_resolveNeeded = false;
 		}
 		base.Draw(ctx);
-		
+
 		_tooltipCtx?.Draw(ctx);
 	}
 
 	/// <summary>
-	///		Sets the interface tooltip context.
+	///     Sets the interface tooltip context.
 	/// </summary>
 	/// <param name="ctx">(Nullable) tooltip context.</param>
 	public void SetTooltipContext(TooltipContext? ctx) {

@@ -16,8 +16,8 @@ public class LoggerAsync : Logger {
 	private readonly Task _processor;
 	private readonly ConcurrentBag<StreamWriter> _writers = new ConcurrentBag<StreamWriter>();
 	private bool _debugEnabled;
-	private bool _disposed;
 	private bool _rethrow;
+	private bool _disposed;
 
 	public LoggerAsync() {
 		_processor = Task.Run(processAsync);
@@ -43,21 +43,6 @@ public class LoggerAsync : Logger {
 		foreach (StreamWriter? writer in _writers) {
 			writer?.Flush();
 		}
-	}
-
-	public void Dispose() {
-		if (_disposed) {
-			return;
-		}
-		_disposed = true;
-
-		_channel.Writer.Complete();
-		_processor.Wait(100);
-		foreach (StreamWriter? writer in _writers) {
-			writer?.Dispose();
-		}
-		_cts.Dispose();
-		GC.SuppressFinalize(this);
 	}
 
 	public void Log(Logger.Level level, string msg, Exception? ex) {
@@ -88,5 +73,20 @@ public class LoggerAsync : Logger {
 				await Task.Delay(100);
 			}
 		}
+	}
+
+	public void Dispose() {
+		if (_disposed) {
+			return;
+		}
+		_disposed = true;
+		GC.SuppressFinalize(this);
+
+		_channel.Writer.Complete();
+		_processor.Wait(100);
+		foreach (StreamWriter? writer in _writers) {
+			writer?.Dispose();
+		}
+		_cts.Dispose();
 	}
 }

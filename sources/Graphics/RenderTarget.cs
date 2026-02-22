@@ -1,8 +1,7 @@
 ﻿#region
-using Mino.Desktop;
-using Mino.Framework;
-using Mino.Graphics.Hardware;
-using Mino.Graphics.Hardware.Desc;
+using Mino.Framework.Resource;
+using Mino.Graphics.Desc;
+using Mino.Graphics.Enum;
 #endregion
 
 namespace Mino.Graphics;
@@ -10,86 +9,61 @@ namespace Mino.Graphics;
 /// <summary>
 ///     Represents a render target (a series of textures).
 /// </summary>
-public class RenderTarget : IDisposable {
-	private static RenderTarget? _ultRT;
+public interface RenderTarget : ThreadContextHolder, IDisposable {
+	private static RenderTarget? _ultimate;
 	private static Lock _lock = new Lock();
 
 	/// <summary>
 	///     Gets the ultimate render target.
 	/// </summary>
 	/// <returns>A render target representing the window.</returns>
-	public static RenderTarget GetUltimate() {
-		if (_ultRT == null) {
+	static RenderTarget GetUltimate() {
+		if (_ultimate == null) {
 			lock (_lock) {
-				_ultRT ??= new RenderTarget();
+				RenderTargetDesc rtDesc = new RenderTargetDesc {
+					IsUltimate = true
+				};
+				_ultimate ??= RenderSystem.Create<RenderTarget>(rtDesc);
 			}
 		}
-		return _ultRT;
-	}
-
-	private RenderBackend _backend;
-	public readonly HandleRef _handle;
-	private RenderTargetDesc _desc;
-	private bool _disposed;
-
-	public RenderTarget(in RenderTargetDesc desc) {
-		// Set userdata.
-		_desc = desc;
-
-		// Custom RT.
-		_backend = RenderSystem.GetBackend();
-		_handle = new HandleRef(_backend.RenderTargetGen());
-		_backend.RenderTargetData(_handle, desc);
-	}
-
-	private RenderTarget() {
-		_backend = RenderSystem.GetBackend();
-		// Ult RT.
-		_handle = new HandleRef(_backend.GetUltimateRenderTarget());
+		return _ultimate;
 	}
 
 	/// <summary>
 	///     The render target desc.
 	/// </summary>
-	public RenderTargetDesc Desc {
-		get {
-			if (IsUltimate) {
-				Window win = RenderSystem.GetWindow();
-
-				return new RenderTargetDesc {
-					Width = (int) win.Size.X,
-					Height = (int) win.Size.Y
-					// Other data is lost
-					// TODO
-				};
-			}
-			return _desc;
-		}
-	}
+	RenderTargetDesc Desc { get; }
 
 	/// <summary>
 	///     Checks if this is the ultimate render target.
 	/// </summary>
-	public bool IsUltimate {
-		get => this == _ultRT;
+	bool IsUltimate {
+		get => this == _ultimate;
 	}
 
-	public void Dispose() {
-		// Cannot delete ult RT.
-		if (IsUltimate) {
-			return;
-		}
-		if (_disposed) {
-			return;
-		}
-		_disposed = true;
+	/// <summary>
+	///     Acquires next frame.
+	/// </summary>
+	void Acquire(in RenderPassDesc? desc = null);
 
-		_backend.RenderTargetDelete(_handle);
-		GC.SuppressFinalize(this);
-	}
+	/// <summary>
+	///     Presents the rendered content.
+	/// </summary>
+	void Present();
 
-	// Implicit cast to native handle.
-	public static implicit operator uint(RenderTarget obj) {
-		return obj._handle;
-	}
+	/// <summary>
+	///     Blits the render target.
+	/// </summary>
+	/// <param name="to">Dst render target.</param>
+	/// <param name="x">Dst x.</param>
+	/// <param name="y">Dst y.</param>
+	/// <param name="w">Dst width.</param>
+	/// <param name="h">Dst height.</param>
+	/// <param name="srcX">Src x.</param>
+	/// <param name="srcY">Src y.</param>
+	/// <param name="srcW">Src width.</param>
+	/// <param name="srcH">Src height.</param>
+	/// <param name="filter">Blit filter.</param>
+	void Blit(RenderTarget to, int x, int y, int w, int h, int srcX, int srcY, int srcW, int srcH,
+		TextureFilter filter = TextureFilter.Nearest);
 }

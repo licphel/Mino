@@ -1,7 +1,7 @@
 ﻿namespace Mino.Graphics.Text;
 
 /// <summary>
-///		Optional font styles.
+///     Optional font styles.
 /// </summary>
 [Flags]
 public enum FontStyle {

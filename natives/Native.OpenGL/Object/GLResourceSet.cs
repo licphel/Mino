@@ -1,26 +1,26 @@
-﻿#region
-using Mino.Graphics.Hardware.Desc;
-using Mino.Graphics.Hardware.Enum;
+﻿using Mino.Framework.Resource;
+using Mino.Graphics;
+using Mino.Graphics.Enum;
 using Silk.NET.OpenGL;
-#endregion
+using Sampler = Mino.Graphics.Sampler;
+using Texture = Mino.Graphics.Texture;
 
 namespace Mino.Native.OpenGL.Object;
 
-public class GLResourceSet {
-	public GL _gl;
+public sealed class GLResourceSet : ResourceSet {
+	public GL _gl = null!;
+	public GLContext _ctx = null!;
+	public bool _disposed;
+	
+	public ResourceSetLayout _layout;
 	// Bug fixed: resource set List<Bound> behaves wrongly.
 	// Use array instead.
-	public Bound[] _bounds = [];
-	public ResourceSetLayout _layout = ResourceSetLayout.Bake();
-
-	public GLResourceSet(GL gl) {
-		_gl = gl;
-	}
-
-	public void OnResourceSetLayout(in ResourceSetLayout layout) {
-		// Set userdata.
+	public Bound[] _bounds;
+	
+	[ResourceCreation]
+	public GLResourceSet(in ResourceSetLayout layout) {
 		_layout = layout;
-		// In gl, we do nothing but validate the layout.
+		
 		foreach (ResourceSetLayout.Slot slot in layout.Slots) {
 			if (string.IsNullOrEmpty(slot.Name)) {
 				throw new Error($"null name at slot {slot.Binding}");
@@ -30,29 +30,46 @@ public class GLResourceSet {
 		_bounds = new Bound[layout.Slots.Length];
 	}
 
-	public void Apply(GLBackend backend, GLRenderPipe pipe) {
-		uint program = pipe._desc.ShaderProgram;
-		uint nHandle = backend._programHeap.GetData(program)._handle;
+	public ResourceSetLayout Layout {
+		get => _layout;
+	}
+
+	public void BindTexture(int slot, Texture texture, Sampler sampler) {
+		_ctx.Pend(() => {
+			_bounds[slot] = new Bound(ResourceType.Texture, slot, [texture, sampler]);
+		});
+	}
+	
+	public void BindUniform(int slot, BufferObject buffer, int size, int offset = 0) {
+		_ctx.Pend(() => {
+			_bounds[slot] = new Bound(ResourceType.UniformBuffer, slot, [buffer], offset, size);
+		});
+	}
+	
+	public void ApplyDx(GLRenderPipe pipe) {
+		if (pipe._desc.ShaderProgram is not GLShaderProgram sp) {
+			return;
+		}
+		uint program = sp._handle;
 
 		foreach (Bound b in _bounds) {
 			switch (b.Type) {
 				case ResourceType.UniformBuffer:
-					ref GLBuffer _b = ref backend._bufferHeap.GetData(b.Resources[0]);
-
-					uint uniformIndex = getUniformBlock(nHandle, b);
-					_gl.UniformBlockBinding(nHandle, uniformIndex, b._glUnits);
-					_gl.BindBufferRange(GLEnum.UniformBuffer, b._glUnits, _b._handle, b.Offset, (uint) b.Size);
+					uint uniformIndex = getUniformBlock(program, b);
+					_gl.UniformBlockBinding(program, uniformIndex, b._glUnits);
+					GLBufferObject buf = (GLBufferObject) b.Resources[0];
+					_gl.BindBufferRange(GLEnum.UniformBuffer, b._glUnits, buf._handle, b.Offset, (uint) b.Size);
 					break;
 				case ResourceType.Texture:
 					_gl.ActiveTexture((TextureUnit) ((int) TextureUnit.Texture0 + b._glUnits));
-					ref GLTexture _t = ref backend._textureHeap.GetData(b.Resources[0]);
-					_gl.BindTexture(_t._target, _t._handle);
-					ref GLSampler _s = ref backend._samplerHeap.GetData(b.Resources[1]);
-					_gl.BindSampler(b._glUnits, _s._handle);
+					GLTexture tex = (GLTexture) b.Resources[0];
+					_gl.BindTexture(tex._target, tex._handle);
+					GLSampler samp = (GLSampler) b.Resources[1];
+					_gl.BindSampler(b._glUnits, samp._handle);
 
 					// Bug fixed: use gl handle.
-					int uniformLocation = getUniform(nHandle, b);
-					_gl.OnUniformData(uniformLocation, (int) b._glUnits);
+					int uniformLocation = getUniform(program, b);
+					_gl.Uniform1(uniformLocation, (int) b._glUnits);
 					break;
 				default:
 					throw new Error("invalid arg: " + nameof(b));
@@ -61,11 +78,11 @@ public class GLResourceSet {
 		}
 	}
 
-	public void Rearrange(GLBackend backend) {
+	public void RearrangeDx(GLExecutionContext ctx) {
 		foreach (Bound b in _bounds) {
 			b._glUnits = b.Type switch {
-				ResourceType.UniformBuffer => backend._ubId++,
-				ResourceType.Texture => backend._texId++,
+				ResourceType.UniformBuffer => ctx._ubId++,
+				ResourceType.Texture => ctx._texId++,
 				_ => throw new Error("invalid arg: " + nameof(b))
 			};
 		}
@@ -78,16 +95,33 @@ public class GLResourceSet {
 	private uint getUniformBlock(uint programNative, in Bound b) {
 		return _gl.GetUniformBlockIndex(programNative, _layout.Slots[b.Slot].Name);
 	}
-
+	
+	public bool TryGetThreadContext(out ThreadContext ctx) {
+		ctx = _ctx;
+		return true;
+	}
+	
+	public void Listen(ThreadContext ctx) {
+		_ctx = (GLContext) ctx;
+		_gl = _ctx._gl;
+	}
+	
+	public void Dispose() {
+		if (_disposed) {
+			return;
+		}
+		_disposed = true;
+	}
+	
 	public class Bound {
 		public readonly int Offset;
-		public readonly uint[] Resources;
+		public readonly object[] Resources;
 		public readonly int Size;
 		public readonly int Slot;
 		public readonly ResourceType Type;
 		public uint _glUnits;
 
-		public Bound(ResourceType type, int slot, uint[] resources, int offset = 0, int size = 0) {
+		public Bound(ResourceType type, int slot, object[] resources, int offset = 0, int size = 0) {
 			Type = type;
 			Slot = slot;
 			Resources = resources;

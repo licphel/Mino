@@ -8,10 +8,13 @@ namespace Mino.Graphics;
 ///     Represents a part of a texture.
 /// </summary>
 public readonly struct TexturePart : IEquatable<TexturePart> {
-	public readonly Texture Src;
+	public readonly FragileTexture Src;
 	public readonly Box3 Region;
 
-	public TexturePart(Texture src, in Box3 region) {
+	public TexturePart(FragileTexture tex) : this(tex, Box3.Create(0.0F, 0.0F, 0.0F, tex.Width, tex.Height, tex.Depth)) {
+	}
+
+	public TexturePart(FragileTexture src, in Box3 region) {
 		Src = src;
 		Region = region;
 	}
@@ -65,8 +68,9 @@ public readonly struct TexturePart : IEquatable<TexturePart> {
 	/// <param name="a">Negative-side U-V.</param>
 	/// <param name="b">Positive-side U-V.</param>
 	public void GetCoordinates2D(out Vector2 a, out Vector2 b) {
-		a = new Vector2(Region.MinX / Src.Width, Region.MinY / Src.Height);
-		b = new Vector2(Region.MaxX / Src.Width, Region.MaxY / Src.Height);
+		Texture src = Src.Pin();
+		a = new Vector2(Region.MinX / src.Width, Region.MinY / src.Height);
+		b = new Vector2(Region.MaxX / src.Width, Region.MaxY / src.Height);
 	}
 
 	/// <summary>
@@ -75,13 +79,9 @@ public readonly struct TexturePart : IEquatable<TexturePart> {
 	/// <param name="a">Negative-side U-V-W.</param>
 	/// <param name="b">Positive-side U-V-W.</param>
 	public void GetCoordinates3D(out Vector3 a, out Vector3 b) {
-		a = new Vector3(Region.MinX / Src.Width, Region.MinY / Src.Height, Region.MinZ / Src.Depth);
-		b = new Vector3(Region.MaxX / Src.Width, Region.MaxY / Src.Height, Region.MaxZ / Src.Depth);
-	}
-
-	// Implicit cast Texture -> TexturePart.
-	public static implicit operator TexturePart(Texture texture) {
-		return new TexturePart(texture, Box3.Create(0.0F, 0.0F, 0.0F, texture.Width, texture.Height, texture.Depth));
+		Texture src = Src.Pin();
+		a = new Vector3(Region.MinX / src.Width, Region.MinY / src.Height, Region.MinZ / src.Depth);
+		b = new Vector3(Region.MaxX / src.Width, Region.MaxY / src.Height, Region.MaxZ / src.Depth);
 	}
 
 	public bool Equals(TexturePart other) {

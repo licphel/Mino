@@ -1,13 +1,14 @@
-﻿using Mino.Framework;
-using Mino.Graphics.Hardware;
+﻿#region
+using Mino.Framework;
 using Mino.Graphics.Sprite;
 using Mino.Mathematics;
 using Mino.Mathematics.Planar;
+#endregion
 
 namespace Mino.Graphics.Gui;
 
 /// <summary>
-///		Brush canvas context.
+///     Brush canvas context.
 /// </summary>
 public class CanvasContext {
 	public readonly Brush Brush;
@@ -19,35 +20,35 @@ public class CanvasContext {
 		Partial = partial;
 		Step = step;
 	}
-	
+
 	/// <summary>
-	///		Canvas camera.
+	///     Canvas camera.
 	/// </summary>
 	public virtual CameraPlanar Camera {
 		get => Brush.Camera;
 	}
 
 	/// <summary>
-	///		Canvas viewport.
+	///     Canvas viewport.
 	/// </summary>
 	public virtual Box2 Viewport {
 		get => Brush.CurrentViewport;
 	}
 
 	/// <summary>
-	///		Resolved size.
+	///     Resolved size.
 	/// </summary>
 	public Vector2 Size {
 		get => new Vector2(Camera.Width, Camera.Height);
 	}
 
 	/// <summary>
-	///		Cursor pos in the resolved canvas.
+	///     Cursor pos in the resolved canvas.
 	/// </summary>
 	public Vector2 Cursor {
 		get {
 			Vector2 rawCursor = RenderSystem.GetWindow().Cursor;
 			return Camera.Unproject(rawCursor, Viewport);
-		} 
+		}
 	}
 }

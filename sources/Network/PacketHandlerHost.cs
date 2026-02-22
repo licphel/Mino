@@ -21,14 +21,14 @@ public class PacketHandlerHost : IDisposable {
 	private Thread? _acceptThread;
 	private volatile bool _active;
 	private Thread? _broadcastThread;
-	private volatile bool _disposed;
 	private Socket? _socketLs;
+	private bool _disposed;
 
 	/// <summary>
 	///     Whether the server is active.
 	/// </summary>
 	public bool IsActive {
-		get => _active && !_disposed;
+		get => _active;
 	}
 
 	/// <summary>
@@ -60,33 +60,12 @@ public class PacketHandlerHost : IDisposable {
 	}
 
 	/// <summary>
-	///     Disposes the server and releases all resources.
-	/// </summary>
-	public void Dispose() {
-		if (_disposed) {
-			return;
-		}
-
-		_disposed = true;
-		Stop();
-
-		_lock.Dispose();
-		_disposeCts.Dispose();
-
-		GC.SuppressFinalize(this);
-	}
-
-	/// <summary>
 	///     Starts the server.
 	/// </summary>
 	/// <exception cref="ObjectDisposedException">Thrown if server is disposed.</exception>
 	/// <exception cref="Error">Thrown if server is already started.</exception>
 	/// <exception cref="SocketException">Thrown if socket initialization fails.</exception>
 	public void Start() {
-		if (_disposed) {
-			throw new Error("disposed");
-		}
-
 		if (_active) {
 			throw new Error("already started");
 		}
@@ -220,7 +199,7 @@ public class PacketHandlerHost : IDisposable {
 	///     Processes received packets and performs maintenance.
 	/// </summary>
 	public void Process() {
-		if (_disposed || !_active) {
+		if (!_active) {
 			return;
 		}
 
@@ -482,6 +461,18 @@ public class PacketHandlerHost : IDisposable {
 		}
 	}
 
+	public void Dispose() {
+		if (_disposed) {
+			return;
+		}
+		_disposed = true;
+		GC.SuppressFinalize(this);
+
+		Stop();
+		_lock.Dispose();
+		_disposeCts.Dispose();
+	}
+
 	/// <summary>
 	///     Packet handler host channel.
 	/// </summary>
@@ -492,12 +483,12 @@ public class PacketHandlerHost : IDisposable {
 		internal readonly BlockingCollection<Packet> _packets = new BlockingCollection<Packet>();
 		private readonly Socket _socket;
 		private volatile bool _connected = true;
-		private volatile bool _disposed;
 		private DateTime _lastPoll = DateTime.UtcNow;
 		internal bool _pollError;
 		private ByteBuffer _rcvBuf = new ByteBuffer(Net.BufferSize, Endianness.Big);
 		private Thread? _receiveThread;
 		private Thread? _sendThread;
+		private bool _disposed;
 
 		internal Channel(Socket socket, PacketHandlerHost server) {
 			_socket = socket;
@@ -540,29 +531,13 @@ public class PacketHandlerHost : IDisposable {
 		/// </summary>
 		public PacketHandlerHost Server { get; }
 
-		public void Dispose() {
-			if (_disposed) {
-				return;
-			}
-
-			_disposed = true;
-			Disconnect();
-
-			_channelCts.Dispose();
-			_packets.Dispose();
-			_rcvBuf = null!;
-
-			GC.SuppressFinalize(this);
-		}
-
 		/// <summary>
 		///     Disconnects the channel.
 		/// </summary>
 		public void Disconnect() {
-			if (!_connected || _disposed) {
+			if (!_connected) {
 				return;
 			}
-
 			_connected = false;
 			_channelCts.Cancel();
 
@@ -600,7 +575,7 @@ public class PacketHandlerHost : IDisposable {
 		}
 
 		internal void poll() {
-			if (!_connected || _disposed) {
+			if (!_connected) {
 				return;
 			}
 
@@ -741,6 +716,20 @@ public class PacketHandlerHost : IDisposable {
 					_rcvBuf.Compact();
 				}
 			}
+		}
+
+		public void Dispose() {
+			if (_disposed) {
+				return;
+			}
+			_disposed = true;
+			GC.SuppressFinalize(this);
+
+			Disconnect();
+
+			_channelCts.Dispose();
+			_packets.Dispose();
+			_rcvBuf = null!;
 		}
 	}
 }

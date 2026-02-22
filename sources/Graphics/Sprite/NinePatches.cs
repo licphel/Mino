@@ -21,24 +21,27 @@ public class NinePatches : Drawable {
 	private readonly float _th;
 	private readonly float _tw;
 
-	public NinePatches(TexturePart tex, float scale = 1.0F) {
+	public NinePatches(FragileTexture tex, float scale = 1.0F) : this(new TexturePart(tex), scale) {
+	}
+
+	public NinePatches(TexturePart texPart, float scale = 1.0F) {
 		_scale = scale;
 
 		const float p13 = 1.0F / 3;
 		const float p23 = 2.0F / 3;
 
-		_tw = p13 * tex.Width;
-		_th = p13 * tex.Height;
+		_tw = p13 * texPart.Width;
+		_th = p13 * texPart.Height;
 
-		_bottomLeft = Slice(tex, 0, p23, p13, p13);
-		_bottom = Slice(tex, p13, p23, p13, p13);
-		_bottomRight = Slice(tex, p23, p23, p13, p13);
-		_left = Slice(tex, 0, p13, p13, p13);
-		_central = Slice(tex, p13, p13, p13, p13);
-		_right = Slice(tex, p23, p13, p13, p13);
-		_topLeft = Slice(tex, 0, 0, p13, p13);
-		_top = Slice(tex, p13, 0, p13, p13);
-		_topRight = Slice(tex, p23, 0, p13, p13);
+		_bottomLeft = Slice(texPart, 0, p23, p13, p13);
+		_bottom = Slice(texPart, p13, p23, p13, p13);
+		_bottomRight = Slice(texPart, p23, p23, p13, p13);
+		_left = Slice(texPart, 0, p13, p13, p13);
+		_central = Slice(texPart, p13, p13, p13, p13);
+		_right = Slice(texPart, p23, p13, p13, p13);
+		_topLeft = Slice(texPart, 0, 0, p13, p13);
+		_top = Slice(texPart, p13, 0, p13, p13);
+		_topRight = Slice(texPart, p23, 0, p13, p13);
 
 		return;
 
@@ -113,7 +116,7 @@ public class NinePatches : Drawable {
 			rx = Math.Min(rx, x + w - atw);
 			by = Math.Min(by, y + h - ath);
 			*/
-			
+
 			// Central.
 			for (int j = 1; j < nh - 1; j++) {
 				for (int i = 1; i < nw - 1; i++) {

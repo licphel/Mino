@@ -1,6 +1,5 @@
 ﻿#region
-using Mino.Graphics.Hardware;
-using Mino.Graphics.Hardware.Enum;
+using Mino.Graphics.Enum;
 using Mino.Mathematics;
 #endregion
 
@@ -31,15 +30,13 @@ public static unsafe class Blitter {
 	/// <param name="filter">Filter of drawing.</param>
 	/// <exception cref="Error">Thrown if there's no data to draw or draw to.</exception>
 	public static void Blit(in TexturePart from, in TexturePart to, TextureFilter filter = TextureFilter.Nearest) {
-		RenderBackend backend = RenderSystem.GetBackend();
 		Box2 src = from.Region;
 		Box2 dst = to.Region;
 
 		// Call backend blitter.
-		backend.TextureBlit(
-			from.Src, (int) src.MinX, (int) src.MinY, (int) src.Width, (int) src.Height,
-			to.Src, (int) dst.MinX,
-			(int) dst.MinY, (int) dst.Width, (int) dst.Height, filter);
+		from.Src.Pin().Blit(
+			to.Src.Pin(), (int) src.MinX, (int) src.MinY, (int) src.Width, (int) src.Height,
+			(int) dst.MinX, (int) dst.MinY, (int) dst.Width, (int) dst.Height, filter);
 	}
 
 	/// <summary>
@@ -52,13 +49,10 @@ public static unsafe class Blitter {
 	/// <param name="filter">Filter of drawing.</param>
 	public static void Blit(RenderTarget from, RenderTarget to, in Box2 dst, in Box2 src,
 		TextureFilter filter = TextureFilter.Nearest) {
-		RenderBackend backend = RenderSystem.GetBackend();
-
 		// Call backend blitter.
-		backend.RenderTargetBlit(
-			from, (int) src.MinX, (int) src.MinY, (int) src.Width, (int) src.Height,
-			to, (int) dst.MinX,
-			(int) dst.MinY, (int) dst.Width, (int) dst.Height, filter);
+		from.Blit(
+			to, (int) src.MinX, (int) src.MinY, (int) src.Width, (int) src.Height,
+			(int) dst.MinX, (int) dst.MinY, (int) dst.Width, (int) dst.Height, filter);
 	}
 
 	/// <summary>

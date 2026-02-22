@@ -1,8 +1,8 @@
 ﻿#region
 using Mino.Audio;
-using Mino.Framework;
 using Mino.Graphics.Sprite;
 using Mino.Input;
+using Mino.Utility;
 #endregion
 
 namespace Mino.Graphics.Gui;
@@ -12,7 +12,7 @@ namespace Mino.Graphics.Gui;
 /// </summary>
 public class Button : Component {
 	public const float DefaultDelay = 0.05F;
-	
+
 	public static readonly Key[] Keymap = [
 		Key.Get(Key.MouseLeft), // Action 1 key
 		Key.Get(Key.MouseRight) // Action 2 key
@@ -41,14 +41,14 @@ public class Button : Component {
 	 * [0] - Action 1 sound line
 	 * [1] = Action 2 sound line
 	 */
-	private Line?[] _asset_Lines;
+	private DataLine?[] _asset_Lines;
 
 	private Mode _mode;
 	private int _state;
 	private Countdown _pressCD;
 	private TimeSpan _delay = TimeSpan.FromSeconds(DefaultDelay);
 
-	public Button(Drawable?[] drawables, Line?[] lines, Mode mode = Mode.Clicking) {
+	public Button(Drawable?[] drawables, DataLine?[] lines, Mode mode = Mode.Clicking) {
 		if (drawables.Length != (mode == Mode.Clicking ? 3 : 2)) {
 			throw new Error("asset confirmation failed");
 		}
@@ -97,7 +97,7 @@ public class Button : Component {
 
 		bool act1 = Keymap[0].Press;
 		bool act2 = Keymap[1].Press;
-		
+
 		if (_mode == Mode.Clicking) {
 			if (_pressCD.Ready) {
 				if ((act1 || act2) && Hovering) {
@@ -125,7 +125,7 @@ public class Button : Component {
 				_state = 1 - _state;
 			}
 		}
-		
+
 		base.Update(ctx);
 	}
 
@@ -135,7 +135,7 @@ public class Button : Component {
 		if (drawable != null) {
 			brush.Draw(drawable, BoundingBox);
 		}
-		
+
 		base.Draw(ctx);
 	}
 }

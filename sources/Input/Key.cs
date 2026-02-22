@@ -1,7 +1,7 @@
 ﻿#region
 using System.Collections.Concurrent;
 using Mino.Desktop;
-using Mino.Graphics.Hardware;
+using Mino.Graphics;
 #endregion
 
 namespace Mino.Input;
@@ -35,7 +35,7 @@ public class Key {
 	///     Key code of the listener.
 	/// </summary>
 	public uint Code { get; }
-	
+
 	public uint Modifiers { get; }
 
 	/// <summary>
@@ -65,7 +65,7 @@ public class Key {
 	public bool React {
 		get => Press || Repeat;
 	}
-	
+
 	private bool with(uint mod) {
 		if (mod == ModAny) {
 			return true;
@@ -255,7 +255,7 @@ public class Key {
 	public const uint Mouse8 = 7 + MouseLeft;
 	#endregion
 
-	#region KEYMODIFIERS
+	#region KEY_MODIFIERS
 	public const uint ModNone = 0x0000;
 	public const uint ModShift = 0x0001;
 	public const uint ModControl = 0x0002;

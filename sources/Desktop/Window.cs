@@ -115,9 +115,9 @@ public abstract class Window : IDisposable {
 	///     Cursor position (Y-Down).
 	/// </summary>
 	public abstract Vector2 Cursor { get; set; }
-	
+
 	/// <summary>
-	///		Clipboard object.
+	///     Clipboard object.
 	/// </summary>
 	public abstract string ClipboardText { get; set; }
 
@@ -128,12 +128,16 @@ public abstract class Window : IDisposable {
 
 	public abstract bool Closed { get; }
 
-	public abstract void Dispose();
 	/// <summary>
 	///     Initializes the window with the given hints.
 	/// </summary>
 	/// <param name="hints">the preferred settings</param>
 	public abstract void Init(WindowHints hints);
+
+	/// <summary>
+	///     Makes current thread hold the context.
+	/// </summary>
+	public abstract void MakeContextCurrent();
 
 	/// <summary>
 	///     Gets an opaque context of this window for graphics apis.
@@ -164,4 +168,6 @@ public abstract class Window : IDisposable {
 	/// <param name="code">Code of the key.</param>
 	/// <returns>Combined modifiers of the key.</returns>
 	public abstract uint GetModifiers(uint code);
+
+	public abstract void Dispose();
 }

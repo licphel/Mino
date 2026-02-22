@@ -10,23 +10,23 @@ namespace Mino.Graphics.Gui;
 public abstract class Component {
 	private readonly List<Component> _children = new List<Component>();
 	private Dictionary<string, object?> _attrMap = new Dictionary<string, object?>();
-	
+
 	public Action<Component, CanvasContext>? OnUpdate;
 	public Action<Component, CanvasContext>? OnDraw;
 	public Action<Component, CanvasContext>? OnResolve;
-	
+
 	/// <summary>
-	///		Whether the component is under the cursor.
+	///     Whether the component is under the cursor.
 	/// </summary>
 	public bool Hovering { get; protected set; }
 
 	/// <summary>
-	///		Affiliated canvas.
-	///		Ensured nonnull after added into a face.
+	///     Affiliated canvas.
+	///     Ensured nonnull after added into a face.
 	/// </summary>
 	public Canvas Canvas {
 		get {
-			Func<Canvas> fn = (Func<Canvas>) GetAttribute("CanvasFactory")!;
+			var fn = (Func<Canvas>) GetAttribute("CanvasFactory")!;
 			return fn.Invoke();
 		}
 	}
@@ -47,7 +47,7 @@ public abstract class Component {
 	public Box2 BoundingBox { get; set; }
 
 	/// <summary>
-	///		Depth of the component.
+	///     Depth of the component.
 	/// </summary>
 	public float Depth { get; set; } = 1.0F;
 
@@ -57,9 +57,9 @@ public abstract class Component {
 	public IReadOnlyList<Component> Children {
 		get => _children;
 	}
-	
+
 	/// <summary>
-	///		Sets an attribute object.
+	///     Sets an attribute object.
 	/// </summary>
 	/// <param name="name">Attribute name.</param>
 	/// <param name="obj">Set object.</param>
@@ -68,7 +68,7 @@ public abstract class Component {
 	}
 
 	/// <summary>
-	///		Gets an attribute object.
+	///     Gets an attribute object.
 	/// </summary>
 	/// <param name="name">Attribute name.</param>
 	/// <returns>An nullable attribute object.</returns>
@@ -98,7 +98,7 @@ public abstract class Component {
 		_children.Add(child);
 		child.Parent = this;
 		child.InitHooks();
-		
+
 		/*
 		 * We use this 'cascade' factory to implement deferred canvas injection.
 		 *
@@ -158,19 +158,19 @@ public abstract class Component {
 	}
 
 	/// <summary>
-	///		Called on resolved.
+	///     Called on resolved.
 	/// </summary>
 	/// <param name="ctx">Current canvas context.</param>
 	public virtual void Resolve(CanvasContext ctx) {
 		OnResolve?.Invoke(this, ctx);
-		
+
 		foreach (Component child in _children) {
 			child.Resolve(ctx);
 		}
 	}
 
 	/// <summary>
-	///		Called on tooltip appending.
+	///     Called on tooltip appending.
 	/// </summary>
 	/// <param name="ctx">Tooltip context.</param>
 	public virtual void AppendTooltip(TooltipContext ctx) {
@@ -189,9 +189,9 @@ public abstract class Component {
 			child.FreeHooks();
 		}
 	}
-	
+
 	/// <summary>
-	///		Checks if a component is accessible by the cursor.
+	///     Checks if a component is accessible by the cursor.
 	/// </summary>
 	/// <param name="cursor">Cursor position.</param>
 	/// <returns>True is accessible, otherwise false.</returns>
@@ -199,12 +199,12 @@ public abstract class Component {
 		if (!Contains(cursor)) {
 			return false;
 		}
-		
+
 		if (Parent != null) {
 			if (Parent.Contains(cursor) && !Parent.IsAccessible(cursor)) {
 				return false;
 			}
-			
+
 			foreach (Component child in Parent.Children) {
 				if (child != this && child.Depth < Depth && child.Contains(cursor)) {
 					return false;

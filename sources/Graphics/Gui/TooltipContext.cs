@@ -1,40 +1,42 @@
-﻿using System.Text;
+﻿#region
+using System.Text;
 using Mino.Graphics.Sprite;
 using Mino.Graphics.Text;
 using Mino.Mathematics;
+#endregion
 
 namespace Mino.Graphics.Gui;
 
 /// <summary>
-///		A tooltip manager.
+///     A tooltip manager.
 /// </summary>
 public class TooltipContext {
 	private Drawable? _background;
 	private Font _font;
 	private List<string> _tooltips = new List<string>();
 	private string _collection = string.Empty;
-	
+
 	public TooltipContext(Drawable? background, Font font) {
 		_background = background;
 		_font = font;
 	}
 
 	/// <summary>
-	///		Begins a collecting roll.
+	///     Begins a collecting roll.
 	/// </summary>
 	public void Begin() {
 		_tooltips.Clear();
 	}
 
 	/// <summary>
-	///		Ends a collecting roll.
+	///     Ends a collecting roll.
 	/// </summary>
 	public void End() {
 		if (_tooltips.Count == 0) {
 			_collection = string.Empty;
 			return;
 		}
-		
+
 		// Collect to a single string.
 		StringBuilder sb = new StringBuilder();
 		foreach (string str in _tooltips) {
@@ -47,7 +49,7 @@ public class TooltipContext {
 	}
 
 	/// <summary>
-	///		Appends a raw text.
+	///     Appends a raw text.
 	/// </summary>
 	/// <param name="text">The text to append.</param>
 	public void Append(string text) {
@@ -62,18 +64,18 @@ public class TooltipContext {
 		const float Edge = 8.0F;
 		const float Lh = 12.0F;
 		const float Offset = 20.0F;
-		
+
 		Vector2 size = ctx.Size;
 		Vector2 cursor = ctx.Cursor;
 		TextBlob bakedBlob = _font.Bake(_collection, size.X * 0.5F, Lh);
-		
+
 		float w = bakedBlob.Width;
 		float h = bakedBlob.Height;
 
 		// Limit to sight.
 		float x = cursor.X + Offset;
 		float y = cursor.Y + Offset;
-		
+
 		if (x + Edge + w >= size.X) {
 			x = Math.Max(size.X - Edge - w, 0.0F);
 		}

@@ -1,6 +1,5 @@
 ﻿#region
 using Mino.Desktop;
-using Mino.Graphics.Hardware;
 using Mino.Graphics.Sprite;
 using Mino.Input;
 using Mino.Mathematics;
@@ -9,16 +8,15 @@ using Mino.Mathematics;
 namespace Mino.Graphics.Gui;
 
 /// <summary>
-///		Scroll bar component.
-///
-///		Bounding Box
-///		--------------- X
-///		|    w r a p	|
-///		| w |-------|	|
-///		| r |		|	|
-///		| a |		|	|
-///		| p |		|	|
-///		Y
+///     Scroll bar component.
+///     Bounding Box
+///     --------------- X
+///     |    w r a p	|
+///     | w |-------|	|
+///     | r |		|	|
+///     | a |		|	|
+///     | p |		|	|
+///     Y
 /// </summary>
 public class ScrollBar : Component {
 	public const float DefaultSpeed = 250.0F;
@@ -27,13 +25,13 @@ public class ScrollBar : Component {
 	public static readonly Key[] Keymap = [
 		Key.Get(Key.MouseLeft) // Drag key
 	];
-	
+
 	/*
 	 * [0] - bar icon
 	 * [1] - background icon
 	 */
 	public Drawable?[] _asset_Drawables;
-	
+
 	private float _acceleration;
 	private float _bx;
 	private float _by;
@@ -50,7 +48,7 @@ public class ScrollBar : Component {
 	private float _f = DefaultFriction;
 	private Action<Vector2>? _hook;
 	private bool _parentScrollable;
-	
+
 	public ScrollBar(Drawable?[] drawables) {
 		if (drawables.Length != 2) {
 			throw new Error("asset confirmation failed");
@@ -59,7 +57,7 @@ public class ScrollBar : Component {
 	}
 
 	/// <summary>
-	///		Sets wrapping border of the bar.
+	///     Sets wrapping border of the bar.
 	/// </summary>
 	/// <param name="wrap">Wrap width.</param>
 	public void SetWrap(float wrap) {
@@ -68,15 +66,15 @@ public class ScrollBar : Component {
 	}
 
 	/// <summary>
-	///		Sets scrolling speed of the bar.
+	///     Sets scrolling speed of the bar.
 	/// </summary>
 	/// <param name="speed">Scrolling speed.</param>
 	public void SetSpeed(float speed) {
 		_speed = speed;
 	}
-	
+
 	/// <summary>
-	///		Sets scrolling friction of the bar.
+	///     Sets scrolling friction of the bar.
 	/// </summary>
 	/// <param name="f">Scrolling friction.</param>
 	public void SetFriction(float f) {
@@ -84,7 +82,7 @@ public class ScrollBar : Component {
 	}
 
 	/// <summary>
-	///		Sets the vertical size of the elements.
+	///     Sets the vertical size of the elements.
 	/// </summary>
 	/// <param name="size">Element size.</param>
 	public void SetSize(float size) {
@@ -92,7 +90,7 @@ public class ScrollBar : Component {
 	}
 
 	/// <summary>
-	///		Gets the lerped position.
+	///     Gets the lerped position.
 	/// </summary>
 	/// <param name="ctx">Current canvas context.</param>
 	/// <returns>A lerped scroll position.</returns>
@@ -101,7 +99,7 @@ public class ScrollBar : Component {
 	}
 
 	/// <summary>
-	///		Sets the bar to the top.
+	///     Sets the bar to the top.
 	/// </summary>
 	public void SetTopped() {
 		_startPos = -_wrap;
@@ -110,7 +108,7 @@ public class ScrollBar : Component {
 	}
 
 	/// <summary>
-	///		Sets the bar to the ground.
+	///     Sets the bar to the ground.
 	/// </summary>
 	public void SetGrounded() {
 		_startPos = _vertical - BoundingBox.Height + _wrap * 2;
@@ -119,7 +117,7 @@ public class ScrollBar : Component {
 	}
 
 	/// <summary>
-	///		Sets if the scroll bar will also detect scroll in its parent's bounding box.
+	///     Sets if the scroll bar will also detect scroll in its parent's bounding box.
 	/// </summary>
 	/// <param name="value">True is enabled.</param>
 	public void SetParentScrollable(bool value) {
@@ -128,7 +126,7 @@ public class ScrollBar : Component {
 
 	protected internal override void InitHooks() {
 		base.InitHooks();
-		
+
 		Window window = RenderSystem.GetWindow();
 		_hook = scroll => {
 			bool canScroll = Hovering;
@@ -144,16 +142,16 @@ public class ScrollBar : Component {
 
 	protected internal override void FreeHooks() {
 		base.FreeHooks();
-		
+
 		Window window = RenderSystem.GetWindow();
 		window.CursorScrollEvent -= _hook;
 	}
 
 	public override void Update(CanvasContext ctx) {
 		Vector2 cursor = ctx.Cursor;
-		
+
 		float dt = (float) ctx.Step.Delta;
-		
+
 		_prevPos = _startPos;
 		_startPos += _acceleration * dt;
 		if (_acceleration > 0) {
@@ -182,7 +180,7 @@ public class ScrollBar : Component {
 			_startPos = _sp0 + (cursor.Y - _lcy) / BoundingBox.Height * _vertical;
 			clamp();
 		}
-		
+
 		base.Update(ctx);
 	}
 
@@ -192,7 +190,7 @@ public class ScrollBar : Component {
 
 		// Avoid NaN.
 		_vertical = MathF.Max(0.01F, _vertical);
-		
+
 		float per = BoundingBox.Height / _vertical;
 		if (per > 1.0F) {
 			per = 1.0F;
@@ -206,21 +204,21 @@ public class ScrollBar : Component {
 		_bh = h;
 		_bx = BoundingBox.MinX + _wrap;
 		_by = BoundingBox.MinY + _wrap + oh;
-		
+
 		Brush brush = ctx.Brush;
 		Drawable? drawable = _asset_Drawables[1];
 		if (drawable != null) {
 			brush.Draw(drawable, BoundingBox);
 		}
-		
+
 		drawable = _asset_Drawables[0];
 		if (drawable != null) {
 			brush.Draw(drawable, _bx, _by, _bw, _bh);
 		}
-		
+
 		base.Draw(ctx);
 	}
-	
+
 	private void clamp() {
 		if (_startPos <= 0) {
 			_startPos = 0;

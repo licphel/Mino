@@ -1,7 +1,7 @@
 ﻿namespace Mino.Graphics.Sprite;
 
 /// <summary>
-///		Drawing alignment.
+///     Drawing alignment.
 /// </summary>
 public struct Alignment {
 	/*
@@ -21,17 +21,17 @@ public struct Alignment {
 		Horizontal = -1,
 		Vertical = -1
 	};
-	
+
 	public static readonly Alignment RightUp = new Alignment {
 		Horizontal = 1,
 		Vertical = -1
 	};
-	
+
 	public static readonly Alignment CentralUp = new Alignment {
 		Horizontal = 0,
 		Vertical = -1
 	};
-	
+
 	public static readonly Alignment Central = new Alignment {
 		Horizontal = 0,
 		Vertical = 0

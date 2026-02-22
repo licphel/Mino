@@ -1,9 +1,9 @@
 ﻿#region
 using System.Runtime.InteropServices;
-using Mino.Graphics.Hardware.Desc;
-using Mino.Graphics.Hardware.Enum;
+using Mino.Framework.Resource;
+using Mino.Graphics.Desc;
+using Mino.Graphics.Enum;
 using Mino.Mathematics;
-using HandleRef = Mino.Framework.HandleRef;
 #endregion
 
 namespace Mino.Graphics;
@@ -23,6 +23,7 @@ public class TextureAtlas : IDisposable {
 	private bool _init;
 	private int _size;
 	private bool _disposed;
+	private TextureRef _refTex = null!;
 
 	public void Init() {
 		if (_init) {
@@ -34,7 +35,7 @@ public class TextureAtlas : IDisposable {
 		_freeRects.Add(new RectI(0, 0, _size, _size));
 
 		// Upload a null texture.
-		_texture = new Texture(
+		_texture = RenderSystem.Create<Texture>(
 			new TextureDesc {
 				InitialBytes = null,
 				Format = TextureFormat.RedGreenBlueAlpha8,
@@ -42,6 +43,7 @@ public class TextureAtlas : IDisposable {
 				Height = _size,
 				Type = TextureType.Texture2D
 			});
+		_refTex = new TextureRef(_texture);
 	}
 
 	private void expand() {
@@ -49,7 +51,7 @@ public class TextureAtlas : IDisposable {
 		_size *= 2;
 
 		// Generate new image and transfer data.
-		Texture newTex = new Texture(
+		Texture newTex = RenderSystem.Create<Texture>(
 			new TextureDesc {
 				Width = _size,
 				Height = _size
@@ -57,16 +59,18 @@ public class TextureAtlas : IDisposable {
 		Box2 cpyRegion = Box2.Create(0.0F, 0.0F, oldSize, oldSize);
 		Blitter.Blit(_texture!, newTex, cpyRegion, cpyRegion);
 
-		/*
-		 * We swap these two handles to let
-		 * the old texture get a new handle and new size,
-		 * and the old handle can dispose with the new texture.
-		 */
-		{
-			HandleRef.Swap(newTex._handle, _texture!._handle);
-			_texture.Desc = newTex.Desc; // Update desc.
-			newTex.Dispose();
+		// Bug fixed: avoid ref to uninitialized or disposed texture.
+		if (_texture!.TryGetThreadContext(out ThreadContext ctx)) {
+			Texture oldTex = _texture!;
+			
+			// Pend this switching op.
+			ctx.Pend(() => {
+				_refTex.Set(newTex);
+				oldTex.Dispose();
+			});
 		}
+		
+		_texture = newTex;
 
 		// Add new free places.
 		_freeRects.Add(new RectI(oldSize, 0, oldSize, oldSize));
@@ -81,7 +85,7 @@ public class TextureAtlas : IDisposable {
 	/// <returns>A texture part, not ready for usage.</returns>
 	/// <exception cref="Error">Thrown if not initialized or ended.</exception>
 	public TexturePart Accept(Image image) {
-		if (!_init || _disposed) {
+		if (!_init) {
 			throw new Error("cannot accept");
 		}
 		// Expand till enough.
@@ -97,20 +101,9 @@ public class TextureAtlas : IDisposable {
 				Region = (Box2) dstRect
 			});
 
-		return new TexturePart(_texture!, (Box2) dstRect);
+		return new TexturePart(_refTex, (Box2) dstRect);
 	}
 
-	public void Dispose() {
-		if (_disposed) {
-			return;
-		}
-		_disposed = true;
-
-		// Texture itself has safeguarded dupe disposing.
-		_texture?.Dispose();
-		GC.SuppressFinalize(this);
-	}
-	
 	private bool find(int width, int height, out RectI result, int padding = 1) {
 		int best = -1;
 		int bestScore = int.MaxValue;
@@ -235,6 +228,16 @@ public class TextureAtlas : IDisposable {
 		} while (merged);
 	}
 
+	public void Dispose() {
+		if (_disposed) {
+			return;
+		}
+		_disposed = true;
+		GC.SuppressFinalize(this);
+
+		_texture?.Dispose();
+	}
+
 	private struct RectI {
 		public int X;
 		public int Y;
@@ -250,6 +253,22 @@ public class TextureAtlas : IDisposable {
 
 		public static implicit operator Box2(in RectI rect) {
 			return Box2.Create(rect.X, rect.Y, rect.Width, rect.Height);
+		}
+	}
+
+	private class TextureRef : FragileTexture {
+		private Texture _tex;
+		
+		public TextureRef(Texture tex) {
+			_tex = tex;
+		}
+
+		public void Set(Texture tex) {
+			_tex = tex;
+		}
+
+		public Texture Pin() {
+			return _tex;
 		}
 	}
 }

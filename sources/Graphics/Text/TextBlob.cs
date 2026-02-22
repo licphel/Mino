@@ -9,7 +9,7 @@ namespace Mino.Graphics.Text;
 /// </summary>
 public class TextBlob {
 	public readonly FontInfo Info;
-	
+
 	internal TextBlob(Font font, string text, float maxWidth, float lineH, FontStyle style) {
 		float cursorX = 0;
 		float cursorY = 0;
@@ -22,7 +22,7 @@ public class TextBlob {
 
 		for (int i = 0; i < text.Length; i++) {
 			char ch = text[i];
-			
+
 			// Invisible chars.
 			if (ch is '\r' or '\t') {
 				GlyphRunList.Add(GlyphInstance.Invisible(i, currentLine));
@@ -37,7 +37,7 @@ public class TextBlob {
 				GlyphRunList.Add(GlyphInstance.Invisible(i, currentLine));
 				continue;
 			}
-			
+
 			if (IsNextLineTolerant(ch)) {
 				lsi = i;
 			}
@@ -72,7 +72,7 @@ public class TextBlob {
 			float right = x + glyph.Width;
 			Box2 bounds = Box2.CreateByPoints(x, y, right, bottom);
 			Box2 adjBounds = Box2.CreateByPoints(x, y, x + glyph.Advance, bottom);
-			
+
 			GlyphRunList.Add(new GlyphInstance(glyph, bounds, adjBounds, i, currentLine));
 
 			cursorX += glyph.Advance;
@@ -100,7 +100,7 @@ public class TextBlob {
 			font.Info.StrikeoutPos * scale,
 			font.Info.StrikeoutThickness * scale
 		);
-		
+
 		return;
 
 		static bool IsNextLineTolerant(char ch) {

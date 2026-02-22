@@ -1,4 +1,4 @@
-﻿namespace Mino.Framework.BSP;
+﻿namespace Mino.Framework.Dependency;
 
 /// <summary>
 ///     Identifies current os platform.
@@ -13,7 +13,7 @@ public static class Platform {
 	public const uint MacOS = 1 << 2;
 	// public const uint Android = 1 << 3;
 	// public const uint IOS = 1 << 4;
-	
+
 	public const uint Desktop = Windows | Linux | MacOS;
 	// public const uint Mobile = Android | IOS;
 	// public const uint All = Desktop | Mobile;

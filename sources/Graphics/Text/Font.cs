@@ -28,8 +28,8 @@ public unsafe class Font : IDisposable {
 	private TextureAtlas _atlas = new TextureAtlas();
 	private Dictionary<uint, Glyph> _glyphs = new Dictionary<uint, Glyph>();
 	private uint _resolution;
-	private bool _disposed;
 	private bool _pixel;
+	private bool _disposed;
 
 	// Forbit everyone directly new a font.
 	private Font() {
@@ -40,17 +40,6 @@ public unsafe class Font : IDisposable {
 	/// </summary>
 	public FontInfo Info { get; set; }
 
-	public void Dispose() {
-		if (_disposed) {
-			return;
-		}
-		_disposed = true;
-
-		FT_Done_Face(_ftFace);
-		FT_Done_Library(_ftLib);
-		GC.SuppressFinalize(this);
-	}
-
 	/// <summary>
 	///     Gets the glyph data of the given character.
 	/// </summary>
@@ -59,14 +48,14 @@ public unsafe class Font : IDisposable {
 	/// <returns>A glyph data.</returns>
 	public Glyph GetGlyph(char ch, FontStyle style) {
 		uint key = (uint) style << 16 | ch;
-		
+
 		if (_glyphs.TryGetValue(key, out Glyph glyph)) {
 			return glyph;
 		}
 
 		uint idx = FT_Get_Char_Index(_ftFace, ch);
 		FT_Load_Glyph(_ftFace, idx, _pixel ? (FT_LOAD) FT_LOAD_TARGET_MONO : FT_LOAD_DEFAULT);
-		
+
 		if ((style & FontStyle.Bold) != 0) {
 			FT_GlyphSlot_Embolden(_ftFace->glyph);
 			_ftFace->glyph->advance.x = (int) (_ftFace->glyph->advance.x * 1.1F);
@@ -74,33 +63,32 @@ public unsafe class Font : IDisposable {
 		if ((style & FontStyle.Italic) != 0) {
 			FT_GlyphSlot_Oblique(_ftFace->glyph);
 		}
-		
+
 		FT_Render_Glyph(_ftFace->glyph, _pixel ? FT_RENDER_MODE_MONO : FT_RENDER_MODE_NORMAL);
 		FT_Bitmap_ m0 = _ftFace->glyph->bitmap;
-		
-		int width = (int)m0.width;
-		int height = (int)m0.rows;
+
+		int width = (int) m0.width;
+		int height = (int) m0.rows;
 		int datL = width * height * 4;
 		byte[] dat = new byte[datL];
-		
+
 		if (_pixel) {
 			for (int y = 0; y < height; y++) {
 				for (int x = 0; x < width; x++) {
-					int bytePos = (y * ((width + 7) / 8)) + (x / 8);
+					int bytePos = y * ((width + 7) / 8) + x / 8;
 					int bitPos = 7 - x % 8;
-            
+
 					byte bits = m0.buffer[bytePos];
 					byte pixel = (byte) (bits >> bitPos & 1);
-            
+
 					int datPos = (y * width + x) * 4;
 					dat[datPos + 0] = 255;
 					dat[datPos + 1] = 255;
 					dat[datPos + 2] = 255;
-					dat[datPos + 3] = pixel == 1 ? (byte)255 : (byte)0;
+					dat[datPos + 3] = pixel == 1 ? (byte) 255 : (byte) 0;
 				}
 			}
-		} else
-		{
+		} else {
 			for (int i = 0; i < datL; i += 4) {
 				byte grey = m0.buffer[i / 4];
 				dat[i + 0] = 255;
@@ -117,7 +105,7 @@ public unsafe class Font : IDisposable {
 			_atlas.Accept(Image.Create((int) ftGlyph->bitmap.width, (int) ftGlyph->bitmap.rows, dat));
 
 		float scale = 1.0F / (_resolution / BasicLineHeight * 64.0F);
-		
+
 		// Creates glyph data.
 		return _glyphs[key] = new Glyph(
 			texture,
@@ -147,7 +135,8 @@ public unsafe class Font : IDisposable {
 	/// <param name="lineH">Line height.</param>
 	/// <param name="style">Font style.</param>
 	/// <returns>A baked text blob.</returns>
-	public TextBlob Bake(string text, float maxWidth = int.MaxValue, float lineH = BasicLineHeight, FontStyle style = FontStyle.Regular) {
+	public TextBlob Bake(string text, float maxWidth = int.MaxValue, float lineH = BasicLineHeight,
+		FontStyle style = FontStyle.Regular) {
 		return new TextBlob(this, text, maxWidth, lineH, style);
 	}
 
@@ -157,23 +146,23 @@ public unsafe class Font : IDisposable {
 	}
 
 	/// <summary>
-	///		Sets the font to pixel mode.
+	///     Sets the font to pixel mode.
 	/// </summary>
 	public void SetPixel() {
 		_pixel = true;
 	}
 
 	/// <summary>
-	///		Sets font source resolution.
+	///     Sets font source resolution.
 	/// </summary>
 	/// <param name="res">Font source resolution.</param>
 	public void SetResolution(int res) {
 		_resolution = (uint) res;
 		FT_Set_Pixel_Sizes(_ftFace, 0, (uint) res);
-		
+
 		float scale = 1.0F / (_resolution / BasicLineHeight * 64.0F);
 		// Init info.
-		
+
 		Info = new FontInfo(
 			_ftFace->ascender * scale,
 			_ftFace->descender * scale,
@@ -184,7 +173,18 @@ public unsafe class Font : IDisposable {
 			_ftFace->underline_thickness * scale
 		);
 	}
-	
+
+	public void Dispose() {
+		if (_disposed) {
+			return;
+		}
+		_disposed = true;
+		GC.SuppressFinalize(this);
+
+		FT_Done_Face(_ftFace);
+		FT_Done_Library(_ftLib);
+	}
+
 	/// <summary>
 	///     Loads a font.
 	/// </summary>
@@ -196,9 +196,9 @@ public unsafe class Font : IDisposable {
 		FT_Init_FreeType(&lib);
 		FT_New_Face(lib, (byte*) Marshal.StringToHGlobalAnsi(url.ToFilePath()), 0, &face);
 		FT_Select_Charmap(face, FT_Encoding_.FT_ENCODING_UNICODE);
-		
+
 		Font font = new Font {
-			_ftLib = lib, 
+			_ftLib = lib,
 			_ftFace = face
 		};
 		font.init();

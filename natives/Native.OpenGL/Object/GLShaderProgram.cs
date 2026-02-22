@@ -1,59 +1,83 @@
-﻿#region
-using Mino.Graphics.Hardware.Desc;
+﻿using Mino.Framework.Resource;
+using Mino.Graphics;
+using Mino.Graphics.Desc;
 using Silk.NET.OpenGL;
-using ShaderType = Mino.Graphics.Hardware.Enum.ShaderType;
-#endregion
+using ShaderType = Mino.Graphics.Enum.ShaderType;
 
 namespace Mino.Native.OpenGL.Object;
 
-public class GLShaderProgram {
-	public GL _gl;
+public sealed class GLShaderProgram : ShaderProgram {
+	public GL _gl = null!;
+	public GLContext _ctx = null!;
 	public uint _handle;
+	public bool _disposed;
+	
 	public ShaderProgramDesc _desc;
-
-	public GLShaderProgram(GL gl, uint handle) {
-		_gl = gl;
-		_handle = handle;
+	
+	[ResourceCreation]
+	public GLShaderProgram(in ShaderProgramDesc desc) {
+		_desc = desc;
 	}
 
-	public void OnShaderProgramLink(in ShaderProgramDesc desc, GLBackend backend) {
-		// Set userdata.
-		_desc = desc;
-		uint[] modules = desc.Modules;
+	public ShaderProgramDesc Desc {
+		get => _desc;
+	}
+	
+	public bool TryGetThreadContext(out ThreadContext ctx) {
+		ctx = _ctx;
+		return true;
+	}
+	
+	public void Listen(ThreadContext ctx) {
+		_ctx = (GLContext) ctx;
+		_gl = _ctx._gl;
 
-		foreach (uint m in modules) {
-			// Convert to gl handle.
-			ref GLShaderModule mi = ref backend._moduleHeap.GetData(m);
+		_ctx.Pend(() => {
+			_handle = _gl.CreateProgram();
+			
+			ShaderModule[] modules = _desc.Modules;
 
-			_gl.AttachShader(_handle, mi._handle);
+			foreach (ShaderModule rsm in modules) {
+				GLShaderModule sm = (GLShaderModule) rsm;
+				_gl.AttachShader(_handle, sm._handle);
 
-			// Only frag shader has MRT.
-			if (mi._desc.Type == ShaderType.Fragment) {
-				for (int i = 0; i < mi._desc.Targets.Length; i++) {
-					_gl.BindFragDataLocation(_handle, (uint) i, mi._desc.Targets[i]);
+				// Only frag shader has MRT.
+				if (sm._desc.Type == ShaderType.Fragment) {
+					for (int i = 0; i < sm._desc.Targets.Length; i++) {
+						_gl.BindFragDataLocation(_handle, (uint) i, sm._desc.Targets[i]);
+					}
 				}
 			}
+
+			_gl.LinkProgram(_handle);
+			_gl.GetProgram(_handle, ProgramPropertyARB.LinkStatus, out int linkStatus);
+			if (linkStatus == 0) {
+				_gl.GetProgramInfoLog(_handle, out string linkLog);
+				throw new Error($"shader linking failed '{linkLog}'");
+			}
+
+			foreach (ShaderModule rsm in modules) {
+				GLShaderModule sm = (GLShaderModule) rsm;
+				_gl.DetachShader(_handle, sm._handle);
+			}
+
+			_gl.ValidateProgram(_handle);
+			_gl.GetProgramInfoLog(_handle, out string validateLog);
+
+			if (!string.IsNullOrEmpty(validateLog)) {
+				throw new Error($"shader validation failed '{validateLog}'");
+			}
+		});
+	}
+	
+	public void Dispose() {
+		if (_disposed) {
+			return;
 		}
-
-		_gl.LinkProgram(_handle);
-		_gl.GetProgram(_handle, ProgramPropertyARB.LinkStatus, out int linkStatus);
-		if (linkStatus == 0) {
-			_gl.GetProgramInfoLog(_handle, out string linkLog);
-			throw new Error($"shader linking failed '{linkLog}'");
-		}
-
-		foreach (uint m in modules) {
-			// Convert to gl handle.
-			ref GLShaderModule mi = ref backend._moduleHeap.GetData(m);
-
-			_gl.DetachShader(_handle, mi._handle);
-		}
-
-		_gl.ValidateProgram(_handle);
-		_gl.GetProgramInfoLog(_handle, out string validateLog);
-
-		if (!string.IsNullOrEmpty(validateLog)) {
-			throw new Error($"shader validation failed '{validateLog}'");
-		}
+		_disposed = true;
+		
+		_ctx.Pend(() => {
+			_gl.DeleteProgram(_handle);
+		});
 	}
 }

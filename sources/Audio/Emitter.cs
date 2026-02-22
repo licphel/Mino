@@ -1,5 +1,5 @@
 ﻿#region
-using Mino.Audio.Hardware.Enum;
+using Mino.Audio.Enum;
 #endregion
 
 namespace Mino.Audio;
@@ -8,12 +8,30 @@ namespace Mino.Audio;
 ///     Sound emitter, manages audios' lifecycle and volume.
 /// </summary>
 public class Emitter : IDisposable {
+	/// <summary>
+	///     Guard strategy when an emitter reaches its capacity.
+	/// </summary>
+	public enum GuardStrategy {
+		/// <summary>
+		///     Stop the oldest clip and let the joining one in.
+		/// </summary>
+		StopOld,
+		/// <summary>
+		///     Stop the newest clip and let the joining one in.
+		/// </summary>
+		StopNew,
+		/// <summary>
+		///     Stop the joining clip.
+		/// </summary>
+		StopJoin
+	}
+
 	private readonly LinkedList<Clip> _activeClips = new LinkedList<Clip>();
 	private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
 	private List<Emitter> _children = new List<Emitter>();
-	private bool _disposed;
 	private float _extendedFactor = 1.0F;
 	private float _volume = 1.0F;
+	private bool _disposed;
 
 	public Emitter(string name) {
 		Name = name;
@@ -29,14 +47,13 @@ public class Emitter : IDisposable {
 	/// <summary>
 	///     The guard strategy of the emitter.
 	/// </summary>
-	public EmitterGuard Strategy { get; set; } = EmitterGuard.StopNew;
+	public GuardStrategy Strategy { get; set; } = GuardStrategy.StopNew;
 
 	/// <summary>
 	///     Volume of this emitter.
 	/// </summary>
 	public float Volume {
 		set {
-			assert();
 			// Set every clip's gain in the emitter.
 			_lock.EnterReadLock();
 			spreadDown(value);
@@ -46,29 +63,10 @@ public class Emitter : IDisposable {
 		get => _volume;
 	}
 
-	public void Dispose() {
-		if (_disposed) {
-			return;
-		}
-		_disposed = true;
-
-		HardGc();
-		foreach (Emitter child in _children) {
-			child.Dispose();
-		}
-		GC.SuppressFinalize(this);
-	}
-
-	// Finalizer in case.
-	~Emitter() {
-		Dispose();
-	}
-
 	/// <summary>
 	///     Stops and dispose all clips.
 	/// </summary>
 	public void HardGc() {
-		assert();
 		_lock.EnterWriteLock();
 		while (_activeClips.Count > 0) {
 			gc(_activeClips.First);
@@ -80,7 +78,6 @@ public class Emitter : IDisposable {
 	///     Tries to dispose ended clips.
 	/// </summary>
 	public void Gc() {
-		assert();
 		bool hasLocked = !_lock.IsWriteLockHeld;
 		if (hasLocked) {
 			_lock.EnterWriteLock();
@@ -120,7 +117,6 @@ public class Emitter : IDisposable {
 	/// <param name="name">Sub emitter name.</param>
 	/// <returns>A sub emitter.</returns>
 	public Emitter Derive(string name) {
-		assert();
 		Emitter emitter = new Emitter(name);
 		emitter._extendedFactor = _volume * _extendedFactor;
 		_children.Add(emitter);
@@ -128,7 +124,6 @@ public class Emitter : IDisposable {
 	}
 
 	private void spreadDown(float volume) {
-		assert();
 		foreach (Clip clip in _activeClips) {
 			clip.Volume = volume * _extendedFactor;
 		}
@@ -139,7 +134,6 @@ public class Emitter : IDisposable {
 	}
 
 	private void gc(LinkedListNode<Clip>? node) {
-		assert();
 		Clip? clip = node?.Value;
 		if (clip != null) {
 			clip.Stop();
@@ -152,14 +146,13 @@ public class Emitter : IDisposable {
 
 	// Reminds the 'gc' of the given clip.
 	private void join(Clip clip) {
-		assert();
 		_lock.EnterWriteLock();
 		Gc();
 
 		if (_activeClips.Count >= Capacity) {
-			if (Strategy == EmitterGuard.StopNew) {
+			if (Strategy == GuardStrategy.StopNew) {
 				gc(_activeClips.Last);
-			} else if (Strategy == EmitterGuard.StopOld) {
+			} else if (Strategy == GuardStrategy.StopOld) {
 				gc(_activeClips.First);
 			} else {
 				// Discard to-play clip.
@@ -171,9 +164,15 @@ public class Emitter : IDisposable {
 		_lock.ExitWriteLock();
 	}
 
-	private void assert() {
+	public void Dispose() {
 		if (_disposed) {
-			throw new Error("disposed");
+			return;
+		}
+		_disposed = true;
+
+		HardGc();
+		foreach (Emitter child in _children) {
+			child.Dispose();
 		}
 	}
 }

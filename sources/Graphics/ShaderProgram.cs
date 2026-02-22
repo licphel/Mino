@@ -1,8 +1,7 @@
 ﻿#region
-using Mino.Framework;
-using Mino.Graphics.Hardware;
-using Mino.Graphics.Hardware.Desc;
-using Mino.Graphics.Hardware.Enum;
+using Mino.Framework.Resource;
+using Mino.Graphics.Desc;
+using Mino.Graphics.Enum;
 #endregion
 
 namespace Mino.Graphics;
@@ -10,40 +9,11 @@ namespace Mino.Graphics;
 /// <summary>
 ///     Represents a compiled shader program.
 /// </summary>
-public class ShaderProgram : IDisposable {
-	private RenderBackend _backend;
-	public readonly HandleRef _handle;
-	private bool _disposed;
-
-	public ShaderProgram(in ShaderProgramDesc desc) {
-		// Set userdata.
-		Desc = desc;
-
-		_backend = RenderSystem.GetBackend();
-		_handle = new HandleRef(_backend.ShaderProgramGen());
-		// Compile the module.
-		_backend.ShaderProgramLink(_handle, desc);
-	}
-
+public interface ShaderProgram : ThreadContextHolder, IDisposable {
 	/// <summary>
 	///     The shader program desc.
 	/// </summary>
-	public ShaderProgramDesc Desc { get; set; }
-
-	public void Dispose() {
-		if (_disposed) {
-			return;
-		}
-		_disposed = true;
-
-		_backend.ShaderProgramDelete(_handle);
-		GC.SuppressFinalize(this);
-	}
-
-	// Implicit cast to native handle.
-	public static implicit operator uint(ShaderProgram obj) {
-		return obj._handle;
-	}
+	ShaderProgramDesc Desc { get; }
 
 	/// <summary>
 	///     Compiles a default vertex-fragment shader program.
@@ -51,20 +21,20 @@ public class ShaderProgram : IDisposable {
 	/// <param name="vert">Vert shader code.</param>
 	/// <param name="frag">Frag shader code.</param>
 	/// <returns>A linked program.</returns>
-	public static ShaderProgram FragVert(string vert, string frag) {
-		ShaderModule vModule = new ShaderModule(
+	public static ShaderProgram CreateRender(string vert, string frag) {
+		ShaderModule vModule = RenderSystem.Create<ShaderModule>(
 			new ShaderModuleDesc {
 				Type = ShaderType.Vertex,
 				Code = vert
 				// Output: gl_Position
 			});
-		ShaderModule fModule = new ShaderModule(
+		ShaderModule fModule = RenderSystem.Create<ShaderModule>(
 			new ShaderModuleDesc {
 				Type = ShaderType.Fragment,
 				Code = frag
 				// Output: gl_FragColor
 			});
-		return new ShaderProgram(
+		return RenderSystem.Create<ShaderProgram>(
 			new ShaderProgramDesc {
 				Modules = [vModule, fModule]
 			});
