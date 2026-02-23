@@ -45,7 +45,7 @@ public class GLContext : AbstractThreadContext {
 		_window = RenderSystem.GetWindow();
 		_window.MakeContextCurrent();
 		
-		_gl = GL.GetApi(_window.GetOpaqueContext().GetProcAddress);
+		_gl = GL.GetApi(_window.GetProcAddress().GetProcAddress);
 		_exeCtx = new GLExecutionContext(_gl, _window);
 		
 		if (_window.Debug) {

@@ -64,6 +64,9 @@ public class Face : Component {
 	}
 
 	public override bool IsAccessible(in Vector2 cursor) {
+		if (Canvas.Presents.Count == 0) {
+			return false;
+		}
 		// We just check if it is the top face.
 		return this == Canvas.Presents[^1];
 	}

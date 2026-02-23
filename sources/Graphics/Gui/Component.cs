@@ -8,7 +8,6 @@ namespace Mino.Graphics.Gui;
 ///     User interface component base class.
 /// </summary>
 public abstract class Component {
-	private readonly List<Component> _children = new List<Component>();
 	private Dictionary<string, object?> _attrMap = new Dictionary<string, object?>();
 
 	public Action<Component, CanvasContext>? OnUpdate;
@@ -45,7 +44,7 @@ public abstract class Component {
 	///     Max bounding box of the component. This won't determine the visual size.
 	/// </summary>
 	public Box2 BoundingBox { get; set; }
-
+	
 	/// <summary>
 	///     Depth of the component.
 	/// </summary>
@@ -54,9 +53,7 @@ public abstract class Component {
 	/// <summary>
 	///     Children of the component.
 	/// </summary>
-	public IReadOnlyList<Component> Children {
-		get => _children;
-	}
+	public List<Component> Children { get; } = new List<Component>();
 
 	/// <summary>
 	///     Sets an attribute object.
@@ -95,7 +92,7 @@ public abstract class Component {
 			throw new Error("multiple parent");
 		}
 
-		_children.Add(child);
+		Children.Add(child);
 		child.Parent = this;
 		child.InitHooks();
 
@@ -115,7 +112,7 @@ public abstract class Component {
 	/// </summary>
 	/// <param name="child">Child to remove</param>
 	public void RemoveChild(Component child) {
-		if (_children.Remove(child)) {
+		if (Children.Remove(child)) {
 			child.Parent = null;
 			child.FreeHooks();
 		}
@@ -125,10 +122,10 @@ public abstract class Component {
 	///     Clears all children.
 	/// </summary>
 	public void ClearChildren() {
-		foreach (Component child in _children) {
+		foreach (Component child in Children) {
 			child.Parent = null;
 		}
-		_children.Clear();
+		Children.Clear();
 	}
 
 	/// <summary>
@@ -138,11 +135,15 @@ public abstract class Component {
 	public virtual void Update(CanvasContext ctx) {
 		OnUpdate?.Invoke(this, ctx);
 
-		foreach (Component child in _children) {
-			child.Update(ctx);
+		foreach (Component child in Children) {
+			UpdateChild(ctx, child);
 		}
 
 		Hovering = IsAccessible(ctx.Cursor);
+	}
+
+	protected virtual void UpdateChild(CanvasContext ctx, Component child) {
+		child.Update(ctx);
 	}
 
 	/// <summary>
@@ -152,9 +153,13 @@ public abstract class Component {
 	public virtual void Draw(CanvasContext ctx) {
 		OnDraw?.Invoke(this, ctx);
 
-		foreach (Component child in _children) {
-			child.Draw(ctx);
+		foreach (Component child in Children) {
+			DrawChild(ctx, child);
 		}
+	}
+
+	protected virtual void DrawChild(CanvasContext ctx, Component child) {
+		child.Draw(ctx);
 	}
 
 	/// <summary>
@@ -164,7 +169,7 @@ public abstract class Component {
 	public virtual void Resolve(CanvasContext ctx) {
 		OnResolve?.Invoke(this, ctx);
 
-		foreach (Component child in _children) {
+		foreach (Component child in Children) {
 			child.Resolve(ctx);
 		}
 	}
@@ -174,6 +179,17 @@ public abstract class Component {
 	/// </summary>
 	/// <param name="ctx">Tooltip context.</param>
 	public virtual void AppendTooltip(TooltipContext ctx) {
+	}
+
+	/// <summary>
+	///		Makes the bounding box relative to its parent.
+	/// </summary>
+	public void FollowParent() {
+		Parent?.HandleChildBox(this);
+	}
+
+	protected virtual void HandleChildBox(Component child) {
+		child.BoundingBox = child.BoundingBox.Translate(BoundingBox.Min);
 	}
 
 	// Called when init.

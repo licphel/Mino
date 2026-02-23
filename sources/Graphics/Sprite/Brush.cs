@@ -113,11 +113,17 @@ public unsafe class Brush : IDisposable {
 	private int _indCnt = 0;
 	private bool _disposed;
 	public int _Drawcalls = 0;
+	private Stack<ScissorDesc> _scissorStack = new Stack<ScissorDesc>();
 
 	public Brush(BrushCache? target = null) {
 		_target = target ?? new BrushCache.Self();
 		initGfxResources();
 	}
+
+	/// <summary>
+	///		Transform matrix stack.
+	/// </summary>
+	public MatrixStack<Matrix4x4> Transform = new MatrixStack<Matrix4x4>();
 
 	/// <summary>
 	///     Rendering color tint.
@@ -164,6 +170,11 @@ public unsafe class Brush : IDisposable {
 	///     Current viewport.
 	/// </summary>
 	public Box2 CurrentViewport { get; private set; }
+	
+	/// <summary>
+	///		Current scissor test.
+	/// </summary>
+	public ScissorDesc CurrentScissor { get; private set; } = ScissorDesc.Disabled;
 
 	/// <summary>
 	///     Brush depth value. By default is 0.0F (near).
@@ -188,33 +199,44 @@ public unsafe class Brush : IDisposable {
 	///     This operation will flush the brush.
 	/// </summary>
 	public void End() {
-		Flush();
+		Flush(true);
 		_renderTarget.Present();
 	}
 
 	/// <summary>
 	///     Flushes the brush, clears all buffers and submits the draw.
 	/// </summary>
-	public void Flush() {
+	/// <param name="force">True if a force state update is needed.</param>
+	public void Flush(bool force = false) {
 		if (_ast_Set == null || _ast_Pipe == null || _ast_Primitive == null) {
 			return; // Unreachable...?
 		}
-		if (_vertCnt <= 0) {
+		if (_vertCnt <= 0 && !force) {
 			return;
 		}
 		_Drawcalls++;
 
 		ByteBuffer vBuf = _target.VertexBuf;
 		ByteBuffer iBuf = _target.IndexBuf;
-
-		_encoder.SetRenderPipe(_ast_Pipe);
+		
 		_encoder.SetViewport(
 			(int) CurrentViewport.MinX, 
 			(int) CurrentViewport.MinY, 
 			(int) CurrentViewport.Width, 
 			(int) CurrentViewport.Height
 		);
+		_encoder.SetScissor(CurrentScissor);
+		
+		if (_vertCnt <= 0) {
+			if (force) {
+				_encoder.QueuedExecute();
+				_encoder.Reset();
+			}
+			return;
+		}
 
+		_encoder.SetRenderPipe(_ast_Pipe);
+		
 		_vbo.Submit<byte>(vBuf.AsSpan());
 		_encoder.SetBuffer(_vbo);
 
@@ -289,19 +311,18 @@ public unsafe class Brush : IDisposable {
 			Camera.Project(box.Min, CurrentViewport),
 			Camera.Project(box.Max, CurrentViewport)
 		);
-		_encoder.SetScissor(
-			new ScissorDesc {
-				Enable = true,
-				X = (int) newBox.MinX,
-				Y = (int) newBox.MinY,
-				Width = (int) MathF.Ceiling(newBox.Width),
-				Height = (int) MathF.Ceiling(newBox.Height)
-			});
+		CurrentScissor = new ScissorDesc {
+			Enable = true,
+			X = (int) newBox.MinX,
+			Y = (int) newBox.MinY,
+			Width = (int) MathF.Ceiling(newBox.Width),
+			Height = (int) MathF.Ceiling(newBox.Height)
+		};
 	}
 
 	public void DisableScissor() {
 		Flush();
-		_encoder.SetScissor(ScissorDesc.Disabled);
+		CurrentScissor = ScissorDesc.Disabled;
 	}
 
 	/// <summary>
@@ -338,10 +359,8 @@ public unsafe class Brush : IDisposable {
 			(v, v2) = (v2, v);
 		}
 
-		float x1 = x;
-		float y1 = y;
-		float x2 = x + w;
-		float y2 = y + h;
+		Transform.Top.Transform(x, y, Depth, out float x1, out float y1, out _);
+		Transform.Top.Transform(x + w, y + h, Depth, out float x2, out float y2, out _);
 
 		/* Vertex 0, 1, 2, 3 visualized.
 		 *
@@ -528,11 +547,9 @@ public unsafe class Brush : IDisposable {
 
 		ByteBuffer vBuf = _target.VertexBuf;
 		ByteBuffer iBuf = _target.IndexBuf;
-
-		float x1 = x;
-		float y1 = y;
-		float x2 = x + w;
-		float y2 = y + h;
+		
+		Transform.Top.Transform(x, y, Depth, out float x1, out float y1, out _);
+		Transform.Top.Transform(x + w, y + h, Depth, out float x2, out float y2, out _);
 
 		// 0
 		vBuf.Write(new Vector3(x1, y1, Depth));
@@ -599,11 +616,14 @@ public unsafe class Brush : IDisposable {
 		assert(BrushPrimitive.ColorLine);
 
 		ByteBuffer vBuf = _target.VertexBuf;
+		
+		Transform.Top.Transform(x1, y1, Depth, out float x1t, out float y1t, out _);
+		Transform.Top.Transform(x2, y2, Depth, out float x2t, out float y2t, out _);
 
-		vBuf.Write(new Vector3(x1, y1, Depth));
+		vBuf.Write(new Vector3(x1t, y1t, Depth));
 		vBuf.Write(Color.AsHalves());
 
-		vBuf.Write(new Vector3(x2, y2, Depth));
+		vBuf.Write(new Vector3(x2t, y2t, Depth));
 		vBuf.Write(Color.AsHalves());
 
 		_vertCnt += 2;
@@ -627,8 +647,10 @@ public unsafe class Brush : IDisposable {
 		assert(BrushPrimitive.ColorPoint);
 
 		ByteBuffer vBuf = _target.VertexBuf;
+		
+		Transform.Top.Transform(x, y, Depth, out float xt, out float yt, out _);
 
-		vBuf.Write(new Vector3(x, y, Depth));
+		vBuf.Write(new Vector3(xt, yt, Depth));
 		vBuf.Write(Color.AsHalves());
 
 		_vertCnt += 1;

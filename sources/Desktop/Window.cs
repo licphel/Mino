@@ -140,10 +140,10 @@ public abstract class Window : IDisposable {
 	public abstract void MakeContextCurrent();
 
 	/// <summary>
-	///     Gets an opaque context of this window for graphics apis.
+	///     Gets the proc address of this window for graphics apis.
 	/// </summary>
-	/// <returns>A native opaque context.</returns>
-	public abstract WindowOpaqueContext GetOpaqueContext();
+	/// <returns>A proc address object.</returns>
+	public abstract ProcAddress GetProcAddress();
 
 	/// <summary>
 	///     Process window events.

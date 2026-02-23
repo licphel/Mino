@@ -14,13 +14,34 @@ public static unsafe class GLDebug {
 		gl.Enable(EnableCap.DebugOutputSynchronous);
 		gl.DebugMessageCallback(callback, in IntPtr.Zero);
 
+		DebugType[] errorTypes = new[] { 
+			DebugType.DebugTypeError,
+			DebugType.DebugTypeDeprecatedBehavior,
+			DebugType.DebugTypeUndefinedBehavior,
+			DebugType.DebugTypePortability,
+			DebugType.DebugTypeMarker,
+			DebugType.DebugTypePushGroup,
+			DebugType.DebugTypePopGroup
+		};
+    
+		foreach (var type in errorTypes) {
+			gl.DebugMessageControl(
+				DebugSource.DontCare,
+				type,
+				DebugSeverity.DontCare,
+				0,
+				null,
+				true
+			);
+		}
+		
 		gl.DebugMessageControl(
 			DebugSource.DontCare,
-			DebugType.DebugTypeError,
+			DebugType.DebugTypePerformance,
 			DebugSeverity.DontCare,
 			0,
 			null,
-			true
+			false
 		);
 	}
 

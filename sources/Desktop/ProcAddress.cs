@@ -1,12 +1,12 @@
 ﻿namespace Mino.Desktop;
 
 /// <summary>
-///     Opaque window context locator.
+///     Opaque proc address resolver.
 /// </summary>
-public class WindowOpaqueContext {
+public class ProcAddress {
 	private Func<string, IntPtr> _gProcAddress;
 
-	public WindowOpaqueContext(Func<string, IntPtr> gProcAddress) {
+	public ProcAddress(Func<string, IntPtr> gProcAddress) {
 		_gProcAddress = gProcAddress;
 	}
 

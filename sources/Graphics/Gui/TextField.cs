@@ -40,6 +40,13 @@ public class TextField : Component {
 	 * [0] - Rendering font
 	 */
 	private Font _asset_Font;
+	
+	private Color[] _colorMap = [
+		new Color(1.0F, 1.0F, 1.0F, 0.25F), // Hint text
+		new Color(1.0F, 1.0F, 1.0F), // Text
+		new Color(0.2F, 0.65F, 1.0F, 0.5F), // Selected back rect
+		new Color(1.0F, 1.0F, 1.0F) // Selected text
+	];
 
 	private StringBuilder _sb = new StringBuilder();
 	private string _hint = string.Empty;
@@ -69,11 +76,6 @@ public class TextField : Component {
 		_childBar = bar;
 		bar.SetParentScrollable(true);
 		AddChild(bar);
-
-		SetAttribute("HintColor", new Color(1.0F, 1.0F, 1.0F, 0.25F));
-		SetAttribute("TextColor", new Color(1.0F, 1.0F, 1.0F));
-		SetAttribute("SelectBackColor", new Color(0.2F, 0.65F, 1.0F, 0.5F));
-		SetAttribute("SelectTextColor", new Color(1.0F, 1.0F, 1.0F));
 	}
 
 	/// <summary>
@@ -98,7 +100,7 @@ public class TextField : Component {
 	}
 
 	/// <summary>
-	///     Sets wrapping border of the bar.
+	///     Sets wrapping border of the text field.
 	/// </summary>
 	/// <param name="wrap">Wrap width.</param>
 	public void SetWrap(float wrap) {
@@ -229,17 +231,12 @@ public class TextField : Component {
 		}
 
 		if (_sb.Length == 0 && !string.IsNullOrEmpty(_hint)) {
-			Color color1 = (Color) GetAttribute("HintColor")!;
-			Color color2 = (Color) GetAttribute("TextColor")!;
-			drawGlyphs(ctx, _blobHint, color1, color2);
+			drawGlyphs(ctx, _blobHint, _colorMap[0], _colorMap[1]);
 		} else {
 			if (_alls) {
-				Color color1 = (Color) GetAttribute("SelectTextColor")!;
-				Color color2 = (Color) GetAttribute("SelectBackColor")!;
-				drawGlyphs(ctx, _blob, color1, color2);
+				drawGlyphs(ctx, _blob, _colorMap[3], _colorMap[2]);
 			} else {
-				Color color = (Color) GetAttribute("TextColor")!;
-				drawGlyphs(ctx, _blob, color, color);
+				drawGlyphs(ctx, _blob, _colorMap[1], _colorMap[1]);
 			}
 		}
 

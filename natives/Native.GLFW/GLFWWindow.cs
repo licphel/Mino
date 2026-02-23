@@ -208,8 +208,8 @@ public unsafe sealed class GLFWWindow : Window {
 		return true;
 	}
 
-	public override WindowOpaqueContext GetOpaqueContext() {
-		return new WindowOpaqueContext(proc => _glfw.GetProcAddress(proc));
+	public override ProcAddress GetProcAddress() {
+		return new ProcAddress(proc => _glfw.GetProcAddress(proc));
 	}
 
 	public override void ProcessWindowEvents() {
