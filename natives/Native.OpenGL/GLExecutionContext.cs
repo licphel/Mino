@@ -9,6 +9,7 @@ namespace Mino.Native.OpenGL;
 public unsafe sealed class GLExecutionContext {
 	public GL _gl;
 	public Window _window;
+	public GLCache _c;
 	public GLBufferObject[] _boundBuffers = new GLBufferObject[8];
 	public GLResourceSet[] _boundResourceSets = new GLResourceSet[8];
 	public GLRenderPipe? _boundPipe;
@@ -16,9 +17,10 @@ public unsafe sealed class GLExecutionContext {
 	public uint _texId = 0;
 	public uint _ubId = 0;
 
-	public GLExecutionContext(GL gl, Window window) {
+	public GLExecutionContext(GL gl, Window window, GLCache cache) {
 		_gl = gl;
 		_window = window;
+		_c = cache;
 	}
 	
 	public void ExecuteSetTopology(Topology topology) {
@@ -47,7 +49,7 @@ public unsafe sealed class GLExecutionContext {
 		// 2. VAO
 		// 3. VBO
 		GLBufferObject vbo = _boundBuffers[(int) BufferType.Vertex];
-		_gl.BindVertexArray(_boundPipe.FindVaoDx(vbo._handle));
+		_c.SetVertexArray(_boundPipe.FindVaoDx(vbo._handle));
 
 		// Apply resources
 		ResourceDx(_boundPipe);
@@ -70,12 +72,12 @@ public unsafe sealed class GLExecutionContext {
 		// 4. EBO
 		GLBufferObject vbo = _boundBuffers[(int) BufferType.Vertex];
 		GLBufferObject ebo = _boundBuffers[(int) BufferType.Index];
-		_gl.BindVertexArray(_boundPipe.FindVaoDx(vbo._handle, ebo._handle));
+		_c.SetVertexArray(_boundPipe.FindVaoDx(vbo._handle, ebo._handle));
 		/*
 		 * Bug fixed: ebo binding
 		 * I guess OpenGL do not cache ebo in vao? who knows.
 		 */
-		_gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, ebo._handle);
+		_c.SetBuffer(GLEnum.ElementArrayBuffer, ebo._handle);
 
 		// Apply resources
 		ResourceDx(_boundPipe);
@@ -101,16 +103,16 @@ public unsafe sealed class GLExecutionContext {
 
 	public void ExecuteViewport(int x, int y, int width, int height) {
 		int newMinY = -height - y + (int) _window.Size.Y;
-		_gl.Viewport(x, newMinY, (uint) width, (uint) height);
+		_c.SetViewport(x, newMinY, width, height);
 	}
 
 	public void ExecuteScissor(ScissorDesc desc) {
 		if (desc.Enable) {
-			_gl.Enable(EnableCap.ScissorTest);
+			_c.SetScissorTestEnabled(true);
 			int newMinY = -desc.Height - desc.Y + (int) _window.Size.Y;
-			_gl.Scissor(desc.X, newMinY, (uint) desc.Width, (uint) desc.Height);
+			_c.SetScissor(desc.X, newMinY, desc.Width, desc.Height);
 		} else {
-			_gl.Disable(EnableCap.ScissorTest);
+			_c.SetScissorTestEnabled(false);
 		}
 	}
 	

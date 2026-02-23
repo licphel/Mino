@@ -313,8 +313,8 @@ public unsafe class Brush : IDisposable {
 		);
 		CurrentScissor = new ScissorDesc {
 			Enable = true,
-			X = (int) newBox.MinX,
-			Y = (int) newBox.MinY,
+			X = (int) MathF.Floor(newBox.MinX),
+			Y = (int) MathF.Floor(newBox.MinY),
 			Width = (int) MathF.Ceiling(newBox.Width),
 			Height = (int) MathF.Ceiling(newBox.Height)
 		};

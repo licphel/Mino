@@ -44,8 +44,9 @@ public unsafe sealed class GLTexture : Texture {
 		byte[]? rawData = submission.Bytes;
 		
 		_ctx.Pend(() => {
-			_gl.ActiveTexture(TextureUnit.Texture0);
-			_gl.BindTexture(_target, _handle);
+			GLCache c = _ctx._cache;
+			
+			c.SetTexture(_target, 0, _handle);
 
 			// Flip-y for gl usage.
 			if (_desc.Type == TextureType.Texture2D) {
@@ -87,21 +88,21 @@ public unsafe sealed class GLTexture : Texture {
 				_gl.TexParameterI(_target, TextureParameterName.TextureMaxLevel, in maxLevel);
 				_gl.GenerateMipmap(_target);
 			}
-			
-			_gl.BindTexture(_target, 0);
 		});
 	}
 	
 	public void Blit(Texture to, int x, int y, int w, int h, int srcX, int srcY, int srcW, int srcH,
 		TextureFilter filter = TextureFilter.Nearest) {
 		_ctx.Pend(() => {
+			GLCache c = _ctx._cache;
+			
 			GLTexture srcTex = this;
 			GLTexture dstTex = (GLTexture) to;
 			uint srcFBO = _gl.GenFramebuffer();
 			uint dstFBO = _gl.GenFramebuffer();
-
+			
 			try {
-				_gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, srcFBO);
+				c.SetFramebuffer(GLEnum.ReadFramebuffer, srcFBO);
 				_gl.FramebufferTexture2D(
 					FramebufferTarget.ReadFramebuffer,
 					GLEnum.ColorAttachment0,
@@ -109,8 +110,8 @@ public unsafe sealed class GLTexture : Texture {
 					srcTex._handle,
 					0
 				);
-
-				_gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, dstFBO);
+				
+				c.SetFramebuffer(GLEnum.DrawFramebuffer, dstFBO);
 				_gl.FramebufferTexture2D(
 					FramebufferTarget.DrawFramebuffer,
 					GLEnum.ColorAttachment0,
@@ -118,7 +119,7 @@ public unsafe sealed class GLTexture : Texture {
 					dstTex._handle,
 					0
 				);
-
+				
 				_gl.BlitFramebuffer(
 					srcX, srcY, srcX + srcW, srcY + srcH,
 					x, y, x + w, y + h,
@@ -128,12 +129,10 @@ public unsafe sealed class GLTexture : Texture {
 			} finally {
 				_gl.DeleteFramebuffer(srcFBO);
 				_gl.DeleteFramebuffer(dstFBO);
-				_gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
-				_gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
 			}
 
 			// Regenerate mipmaps.
-			_gl.BindTexture(GLEnum.Texture2D, dstTex._handle);
+			c.SetTexture(GLEnum.Texture2D, 0, dstTex._handle);
 			_gl.GenerateMipmap(GLEnum.Texture2D);
 		});
 	}
@@ -152,6 +151,8 @@ public unsafe sealed class GLTexture : Texture {
 		_gl = _ctx._gl;
 		
 		_ctx.Pend(() => {
+			GLCache c = _ctx._cache;
+			
 			_handle = _gl.GenTexture();
 			
 			// Cache enums.
@@ -162,9 +163,8 @@ public unsafe sealed class GLTexture : Texture {
 			int height = _desc.Height;
 			int depth = _desc.Depth;
 			byte[]? data = _desc.InitialBytes;
-
-			_gl.ActiveTexture(TextureUnit.Texture0);
-			_gl.BindTexture(_target, _handle);
+			
+			c.SetTexture(_target, 0, _handle);
 
 			// Flip-y for gl usage.
 			if (_desc.Type == TextureType.Texture2D) {
@@ -205,8 +205,6 @@ public unsafe sealed class GLTexture : Texture {
 				_gl.TexParameterI(_target, TextureParameterName.TextureMaxLevel, in maxLevel);
 				_gl.GenerateMipmap(_target);
 			}
-			
-			_gl.BindTexture(_target, 0);
 		});
 	}
 	

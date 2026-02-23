@@ -13,6 +13,7 @@ public class GLContext : AbstractThreadContext {
 	public GL _gl = null!;
 	public Window _window = null!;
 	public GLExecutionContext _exeCtx = null!;
+	public GLCache _cache = null!;
 	
 	public override void PollEvents() {
 		// Send a pending event.
@@ -46,7 +47,8 @@ public class GLContext : AbstractThreadContext {
 		_window.MakeContextCurrent();
 		
 		_gl = GL.GetApi(_window.GetProcAddress().GetProcAddress);
-		_exeCtx = new GLExecutionContext(_gl, _window);
+		_cache = new GLCache(_gl);
+		_exeCtx = new GLExecutionContext(_gl, _window, _cache);
 		
 		if (_window.Debug) {
 			GLDebug.Enable(_gl);

@@ -292,6 +292,19 @@ public readonly struct Box2 : IEquatable<Box2> {
 		return new Box2(Vector2.Min(p1, p2), Vector2.Max(p1, p2));
 	}
 
+	/// <summary>
+	///		Converts the box to int [minX, minY, maxX, maxY] int bounds.
+	/// </summary>
+	/// <returns>A int[4], the bounds.</returns>
+	public int[] ToIntBounds() {
+		return [
+			(int) MathF.Floor(MinX), 
+			(int) MathF.Floor(MinY), 
+			(int) MathF.Ceiling(MaxX), 
+			(int) MathF.Ceiling(MaxY)
+		];
+	}
+
 	// Implicit cast Box3 -> Box2.
 	public static implicit operator Box2(in Box3 box3) {
 		return new Box2(box3.Min, box3.Max);

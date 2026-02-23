@@ -30,11 +30,9 @@ public class Bracket : Component {
 	}
 
 	/// <summary>
-	///		Count of the contained elements.
+	///		The element list.
 	/// </summary>
-	public int Count {
-		get => Children.Count - 1;
-	}
+	public List<Component> Elements { get; } = new List<Component>();
 
 	/// <summary>
 	///		Sets the maximum elements to be lined horizontally.
@@ -75,52 +73,91 @@ public class Bracket : Component {
 		SetHorizontalCapacity(horizontalCap);
 	}
 
-	protected override void UpdateChild(CanvasContext ctx, Component child) {
-		if (child == _childBar) {
-			base.UpdateChild(ctx, child);
-			return;
+	/// <summary>
+	///		Adds an element.
+	/// </summary>
+	/// <param name="comp">The element to add.</param>
+	public void AddElement(Component comp) {
+		Elements.Add(comp);
+		AddChild(comp);
+	}
+	
+	/// <summary>
+	///		Removes an element.
+	/// </summary>
+	/// <param name="comp">The element to remove.</param>
+	public void RemoveElement(Component comp) {
+		Elements.Remove(comp);
+		RemoveChild(comp);
+	}
+	
+	/// <summary>
+	///		Clears all elements.
+	/// </summary>
+	public void ClearElements() {
+		Children.RemoveAll(Elements.Contains);
+		Elements.Clear();
+	}
+
+	public override void Update(CanvasContext ctx) {
+		float dy = -_childBar.GetPos(ctx);
+		
+		foreach (Component e in Elements) {
+			trsC(e, dy); 
+			/*
+			 * Temporarily translate children pos
+			 *
+			 * We do not simply use a transform matrix since children may handle input or other
+			 * logics here...
+			 */
+			e.Update(ctx);
+			trsC(e, -dy);
 		}
 		
-		float dy = -_childBar.GetPos(ctx);
-		trsC(child, dy); 
-		/*
-		 * Temporarily translate children pos
-		 *
-		 * We do not simply use a transform matrix since children may handle input or other
-		 * logics here...
-		 */
-		child.Update(ctx);
-		trsC(child, -dy);
+		base.Update(ctx);
+	}
+
+	protected override void UpdateChild(CanvasContext ctx, Component child) {
+		if (!Elements.Contains(child)) {
+			base.UpdateChild(ctx, child);
+		}
 	}
 
 	public override void Draw(CanvasContext ctx) {
-		int hc = (int) MathF.Ceiling((float) Count / _horiCap);
-		_childBar.SetSize(hc * _eh + Math.Max(hc - 1, 0) * _wrap + _wrap * 2);
-		
 		Brush brush = ctx.Brush;
-		brush.SetScissor(Box2.GetUnion(BoundingBox, _childBar.BoundingBox));
 		
-		base.Draw(ctx);
+		Drawable? drawable = _asset_Drawables[0];
+		if (drawable != null) {
+			brush.Draw(drawable, BoundingBox);
+		}
+		
+		int hc = (int) MathF.Ceiling((float) Elements.Count / _horiCap);
+		_childBar.SetSize(hc * _eh + Math.Max(hc - 1, 0) * _wrap + _wrap * 2);
+		float dy = -_childBar.GetPos(ctx);
+		
+		brush.SetScissor(BoundingBox.Inflate(-_wrap, -_wrap));
+		
+		foreach (Component e in Elements) {
+			trsC(e, dy); 
+			/*
+			 * Temporarily translate children pos
+			 *
+			 * We do not simply use a transform matrix since children may handle input or other
+			 * logics here...
+			 */
+			e.Draw(ctx);
+			trsC(e, -dy);
+		}
 		
 		brush.DisableScissor();
+		
+		base.Draw(ctx);
 	}
 
 	protected override void DrawChild(CanvasContext ctx, Component child) {
-		if (child == _childBar) {
+		if (!Elements.Contains(child)) {
 			base.DrawChild(ctx, child);
-			return;
 		}
-		
-		float dy = -_childBar.GetPos(ctx);
-		trsC(child, dy); 
-		/*
-		 * Temporarily translate children pos
-		 *
-		 * We do not simply use a transform matrix since children may handle input or other
-		 * logics here...
-		 */
-		child.Draw(ctx);
-		trsC(child, -dy);
 	}
 
 	private static void trsC(Component child, float dy) {

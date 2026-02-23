@@ -47,6 +47,8 @@ public sealed class GLResourceSet : ResourceSet {
 	}
 	
 	public void ApplyDx(GLRenderPipe pipe) {
+		GLCache c = _ctx._cache;
+		
 		if (pipe._desc.ShaderProgram is not GLShaderProgram sp) {
 			return;
 		}
@@ -58,14 +60,13 @@ public sealed class GLResourceSet : ResourceSet {
 					uint uniformIndex = getUniformBlock(program, b);
 					_gl.UniformBlockBinding(program, uniformIndex, b._glUnits);
 					GLBufferObject buf = (GLBufferObject) b.Resources[0];
-					_gl.BindBufferRange(GLEnum.UniformBuffer, b._glUnits, buf._handle, b.Offset, (uint) b.Size);
+					c.SetUniformBuffer(b._glUnits, buf._handle, b.Offset, b.Size);
 					break;
 				case ResourceType.Texture:
-					_gl.ActiveTexture((TextureUnit) ((int) TextureUnit.Texture0 + b._glUnits));
 					GLTexture tex = (GLTexture) b.Resources[0];
-					_gl.BindTexture(tex._target, tex._handle);
+					c.SetTexture(tex._target, b._glUnits, tex._handle);
 					GLSampler samp = (GLSampler) b.Resources[1];
-					_gl.BindSampler(b._glUnits, samp._handle);
+					c.SetSampler(b._glUnits, samp._handle);
 
 					// Bug fixed: use gl handle.
 					int uniformLocation = getUniform(program, b);

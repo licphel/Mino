@@ -1,4 +1,5 @@
 ﻿#region
+using Mino.Graphics.Sprite;
 using Mino.Mathematics;
 #endregion
 
@@ -153,7 +154,9 @@ public abstract class Component {
 	public virtual void Draw(CanvasContext ctx) {
 		OnDraw?.Invoke(this, ctx);
 
+		Brush brush = ctx.Brush;
 		foreach (Component child in Children) {
+			brush.Depth = child.Depth;
 			DrawChild(ctx, child);
 		}
 	}

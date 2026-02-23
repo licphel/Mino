@@ -250,7 +250,7 @@ public class TextField : Component {
 
 		Brush brush = ctx.Brush;
 		Color _oldColor = brush.Color;
-		brush.SetScissor(BoundingBox);
+		brush.SetScissor(BoundingBox.Inflate(-_wrap, -_wrap));
 
 		// Draw bg rects.
 		if (_alls && _sb.Length > 0) {
@@ -268,8 +268,7 @@ public class TextField : Component {
 			if (!_cd2.Ready) {
 				if (_ptr != 0 && _ptr - 1 < blob.Length) {
 					GlyphInstance gi = blob.GlyphRunList[_ptr - 1];
-					//do not use emptyDisplay
-					x += gi.Bounds.MinX + gi.Glyph.Advance - 1.0F;
+					x += gi.Bounds.MinX + gi.Glyph.Advance;
 					y += gi.Line * _blob.Info.LineGap;
 				}
 				brush.Color = bgColor;
@@ -295,6 +294,8 @@ public class TextField : Component {
 
 		_sb.Insert(_ptr, txt);
 		_ptr += txt.Length;
+		// Typing will force the cursor to display.
+		_cd1.Push(TimeSpan.Zero);
 	}
 
 	private void rebake() {

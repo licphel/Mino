@@ -48,10 +48,11 @@ public unsafe sealed class GLBufferObject : BufferObject {
 		MemoryMarshal.Cast<T, byte>(data).CopyTo(buf.AsSpan(0, byteCount));
 		
 		_ctx.Pend(() => {
-			_gl.BindBuffer(_target, _handle);
+			GLCache c = _ctx._cache;
+			
+			c.SetBuffer(_target, _handle);
 			_gl.BufferData<byte>(_target, (uint) capacity, buf, _hint);
-			_gl.BindBuffer(_target, 0);
-
+			
 			Capacity = capacity;
 		});
 	}
@@ -87,7 +88,9 @@ public unsafe sealed class GLBufferObject : BufferObject {
 		MemoryMarshal.Cast<T, byte>(data).CopyTo(buf.AsSpan(0, byteCount));
 		
 		_ctx.Pend(() => {
-			_gl.BindBuffer(_target, _handle);
+			GLCache c = _ctx._cache;
+			
+			c.SetBuffer(_target, _handle);
 			fixed (void* ptr = buf) {
 				bool shouldOrphan = _desc.Frequency == BufferFrequency.Stream ||
 					_desc.Frequency == BufferFrequency.Dynamic && byteCount > Capacity / 4;
@@ -103,7 +106,6 @@ public unsafe sealed class GLBufferObject : BufferObject {
 					_gl.BufferSubData(_target, byteOffset, (UIntPtr) byteCount, ptr);
 				}
 			}
-			_gl.BindBuffer(_target, 0);
 		});
 	}
 	

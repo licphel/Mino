@@ -55,93 +55,80 @@ public unsafe sealed class GLRenderPipe : RenderPipe {
 	}
 
 	public void ApplyDx() {
+		GLCache c = _ctx._cache;
+		
 		if (_desc.ShaderProgram != null) {
 			GLShaderProgram sp = (GLShaderProgram) _desc.ShaderProgram;
-			_gl.UseProgram(sp._handle);
+			c.SetProgram(sp._handle);
 		}
 
 		if (_desc.Blend.Enable) {
-			_gl.Enable(EnableCap.Blend);
-			_gl.BlendFuncSeparate(
+			c.SetBlendEnabled(true);
+			c.SetBlendFunc(
 				GLEnumC.Cast(_desc.Blend.SrcColor),
 				GLEnumC.Cast(_desc.Blend.DstColor),
 				GLEnumC.Cast(_desc.Blend.SrcAlpha),
 				GLEnumC.Cast(_desc.Blend.DstAlpha)
 			);
-			_gl.BlendEquationSeparate(
+			c.SetBlendEquation(
 				GLEnumC.Cast(_desc.Blend.ColorFunc),
 				GLEnumC.Cast(_desc.Blend.AlphaFunc)
 			);
-			_gl.BlendColor(
-				_desc.Blend.Constant.Red,
-				_desc.Blend.Constant.Green,
-				_desc.Blend.Constant.Blue,
-				_desc.Blend.Constant.Alpha
-			);
+			c.SetBlendColor(_desc.Blend.Constant);
 		} else {
-			_gl.Disable(EnableCap.Blend);
+			c.SetBlendEnabled(false);
 		}
 
 		if (_desc.Depth.DepthTest) {
-			_gl.Enable(EnableCap.DepthTest);
-			_gl.DepthFunc(GLEnumC.Cast(_desc.Depth.DepthCompare));
-			_gl.DepthMask(_desc.Depth.DepthWrite);
+			c.SetDepthTestEnabled(true);
+			c.SetDepthFunc(GLEnumC.Cast(_desc.Depth.DepthCompare));
 		} else {
-			_gl.Disable(EnableCap.DepthTest);
-			_gl.DepthMask(false);
+			c.SetDepthTestEnabled(false);
 		}
+		
+		c.SetDepthMask(_desc.Depth.DepthWrite);
 
 		if (_desc.Stencil.StencilTest) {
-			_gl.Enable(EnableCap.StencilTest);
-			_gl.StencilMask(_desc.Stencil.StencilWriteMask);
-			_gl.StencilFuncSeparate(
-				TriangleFace.Front,
+			c.SetStencilTestEnabled(true);
+			c.SetStencilMask(_desc.Stencil.StencilWriteMask);
+			c.SetStencilFunc(
 				GLEnumC.Cast(_desc.Stencil.Front.CompareOp),
-				0,
-				_desc.Stencil.StencilReadMask
-			);
-			_gl.StencilFuncSeparate(
-				TriangleFace.Back,
 				GLEnumC.Cast(_desc.Stencil.Back.CompareOp),
 				0,
+				0,
 				_desc.Stencil.StencilReadMask
 			);
-			_gl.StencilOpSeparate(
-				TriangleFace.Front,
+			c.SetStencilOp(
 				GLEnumC.Cast(_desc.Stencil.Front.FailFunc),
 				GLEnumC.Cast(_desc.Stencil.Front.DepthFailFunc),
-				GLEnumC.Cast(_desc.Stencil.Front.PassFunc)
-			);
-			_gl.StencilOpSeparate(
-				TriangleFace.Back,
+				GLEnumC.Cast(_desc.Stencil.Front.PassFunc),
 				GLEnumC.Cast(_desc.Stencil.Back.FailFunc),
 				GLEnumC.Cast(_desc.Stencil.Back.DepthFailFunc),
 				GLEnumC.Cast(_desc.Stencil.Back.PassFunc)
 			);
 		} else {
-			_gl.Disable(EnableCap.StencilTest);
+			c.SetStencilTestEnabled(false);
 		}
 
-		_gl.PolygonMode(TriangleFace.FrontAndBack, GLEnumC.Cast(_desc.Rasterization.PolygonMode));
+		c.SetPolygonMode(GLEnumC.Cast(_desc.Rasterization.PolygonMode));
 
 		if (_desc.Rasterization.CullMode != CullMode.None) {
-			_gl.Enable(EnableCap.CullFace);
-			_gl.CullFace(GLEnumC.Cast(_desc.Rasterization.CullMode));
+			c.SetCullFaceEnabled(true);
+			c.SetCullFace(GLEnumC.Cast(_desc.Rasterization.CullMode));
 		} else {
-			_gl.Disable(EnableCap.CullFace);
+			c.SetCullFaceEnabled(false);
 		}
 
-		_gl.FrontFace(
-			_desc.Rasterization.FrontFace == FrontFace.Clockwise ? FrontFaceDirection.CW : FrontFaceDirection.Ccw);
+		c.SetFrontFace(_desc.Rasterization.FrontFace == FrontFace.Clockwise ? GLEnum.CW : GLEnum.Ccw);
 
 		if (_desc.Rasterization.DepthBiasEnable) {
-			_gl.Enable(EnableCap.PolygonOffsetFill);
-			_gl.PolygonOffset(
+			c.SetPolygonOffsetFillEnabled(true);
+			c.SetPolygonOffsetFill(
 				_desc.Rasterization.DepthBiasSlopeFactor,
 				_desc.Rasterization.DepthBiasConstantFactor
 			);
 		} else {
-			_gl.Disable(EnableCap.PolygonOffsetFill);
+			c.SetPolygonOffsetFillEnabled(false);
 		}
 	}
 	
