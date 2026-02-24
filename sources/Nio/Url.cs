@@ -22,17 +22,20 @@ public readonly struct Url : IEquatable<Url> {
 	/// <summary>
 	///     Synchronously opens a stream for I/O.
 	/// </summary>
+	/// <param name="op">Operations, 'r', 'w' or 'a' (Append).</param>
 	/// <returns>A nullable stream.</returns>
-	public Stream? OpenStream() {
-		return Scheme.OpenStream(this);
+	public Stream? OpenStream(string op) {
+		return Scheme.OpenStream(this, op);
 	}
 
 	/// <summary>
 	///     Asynchronously opens a stream for I/O.
 	/// </summary>
+	/// <param name="op">Operations, 'r', 'w' or 'a' (Append).</param>
+	/// <param name="ct">The token.</param>
 	/// <returns>A nullable stream.</returns>
-	public async Task<Stream?> OpenStreamAsync(CancellationToken ct = default) {
-		return await Scheme.OpenStreamAsync(this, ct);
+	public async Task<Stream?> OpenStreamAsync(string op, CancellationToken ct = default) {
+		return await Scheme.OpenStreamAsync(this, op, ct);
 	}
 
 	/// <summary>
@@ -51,7 +54,7 @@ public readonly struct Url : IEquatable<Url> {
 	/// <returns>A resource byte buffer.</returns>
 	/// <exception cref="Error">If the url has no resource.</exception>
 	public ByteBuffer Read() {
-		Stream? stream = OpenStream();
+		Stream? stream = OpenStream("r");
 		if (stream == null) {
 			throw new Error("URL cannot open a stream");
 		}
@@ -66,13 +69,42 @@ public readonly struct Url : IEquatable<Url> {
 	/// <returns>A resource byte buffer.</returns>
 	/// <exception cref="Error">If the url has no resource.</exception>
 	public async Task<ByteBuffer> ReadAsync() {
-		Stream? stream = await OpenStreamAsync();
+		Stream? stream = await OpenStreamAsync("r");
 		if (stream == null) {
 			throw new Error("URL cannot open a stream");
 		}
 		using MemoryStream memoryStream = new MemoryStream();
 		await stream.CopyToAsync(memoryStream, StreamBufferSize);
 		return new ByteBuffer(memoryStream.ToArray());
+	}
+	
+	/// <summary>
+	///     Synchronously writes the buffer.
+	/// </summary>
+	/// <param name="buffer">Buffer to write.</param>
+	/// <exception cref="Error">If the url has no resource.</exception>
+	public void Write(ByteBuffer buffer) {
+		Stream? stream = OpenStream("w");
+		if (stream == null) {
+			throw new Error("URL cannot open a stream");
+		}
+		stream.Write(buffer.AsSpan());
+		stream.Flush();
+	}
+
+	/// <summary>
+	///     Asynchronously writes the buffer.
+	/// </summary>
+	/// <param name="buffer">Buffer to write.</param>
+	/// <returns>An async task.</returns>
+	/// <exception cref="Error">If the url has no resource.</exception>
+	public async Task WriteAsync(ByteBuffer buffer) {
+		Stream? stream = await OpenStreamAsync("w");
+		if (stream == null) {
+			throw new Error("URL cannot open a stream");
+		}
+		await stream.WriteAsync(buffer.AsMemory());
+		await stream.FlushAsync();
 	}
 
 	public override string ToString() {

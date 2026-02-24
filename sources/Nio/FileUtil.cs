@@ -20,8 +20,8 @@ public static class FileUtil {
 	/// <returns>Name with extension.</returns>
 	public static string GetName(in Url url) {
 		ensureFile(url);
-		int idx = url.Path.LastIndexOf('/');
-		return idx >= 0 ? url.Path.Substring(idx + 1) : url.Path;
+		int idx = url.ToFilePath().LastIndexOf('/');
+		return idx >= 0 ? url.ToFilePath().Substring(idx + 1) : url.ToFilePath();
 	}
 
 	/// <summary>
@@ -56,7 +56,7 @@ public static class FileUtil {
 	public static PathType GetTypeOf(in Url url) {
 		ensureFile(url);
 		try {
-			FileAttributes attributes = File.GetAttributes(url.Path);
+			FileAttributes attributes = File.GetAttributes(url.ToFilePath());
 			if (attributes.HasFlag(FileAttributes.Directory)) {
 				return PathType.Directory;
 			}
@@ -73,7 +73,7 @@ public static class FileUtil {
 	/// <returns>The collection of subordinate directories.</returns>
 	public static IEnumerable<Url> SubDirectories(in Url url) {
 		ensureFile(url);
-		return Array.ConvertAll(Directory.GetDirectories(url.Path), path => new Url(path));
+		return Array.ConvertAll(Directory.GetDirectories(url.ToFilePath()), path => new Url(path));
 	}
 
 	/// <summary>
@@ -83,7 +83,7 @@ public static class FileUtil {
 	/// <returns>The collection of subordinate files.</returns>
 	public static IEnumerable<Url> SubFiles(in Url url) {
 		ensureFile(url);
-		return Array.ConvertAll(Directory.GetFiles(url.Path), path => new Url(path));
+		return Array.ConvertAll(Directory.GetFiles(url.ToFilePath()), path => new Url(path));
 	}
 
 	/// <summary>
@@ -94,9 +94,9 @@ public static class FileUtil {
 		ensureFile(url);
 		PathType urlType = GetTypeOf(url);
 		if (urlType == PathType.File) {
-			File.Delete(url.Path);
+			File.Delete(url.ToFilePath());
 		} else if (urlType == PathType.Directory) {
-			Directory.Delete(url.Path, true);
+			Directory.Delete(url.ToFilePath(), true);
 		}
 	}
 
@@ -114,15 +114,15 @@ public static class FileUtil {
 		}
 
 		// Ensure destination's parent.
-		string? destDir = Path.GetDirectoryName(dst.Path);
+		string? destDir = Path.GetDirectoryName(dst.ToFilePath());
 		if (!string.IsNullOrEmpty(destDir) && !Directory.Exists(destDir)) {
 			Directory.CreateDirectory(destDir);
 		}
 
 		if (urlType == PathType.File) {
-			File.Move(src.Path, dst.Path);
+			File.Move(src.ToFilePath(), dst.ToFilePath());
 		} else if (urlType == PathType.Directory) {
-			Directory.Move(src.Path, dst.Path);
+			Directory.Move(src.ToFilePath(), dst.ToFilePath());
 		}
 	}
 
@@ -134,11 +134,11 @@ public static class FileUtil {
 		ensureFile(url);
 		try {
 			Url parent = ~url;
-			Directory.CreateDirectory(parent.Path);
+			Directory.CreateDirectory(parent.ToFilePath());
 		} catch {
 			// ignored.
 		}
-		File.Create(url.Path).Close();
+		File.Create(url.ToFilePath()).Close();
 	}
 
 	/// <summary>
@@ -147,12 +147,12 @@ public static class FileUtil {
 	/// <param name="url">Target file url.</param>
 	public static void CreateDirectory(in Url url) {
 		ensureFile(url);
-		Directory.CreateDirectory(url.Path);
+		Directory.CreateDirectory(url.ToFilePath());
 	}
 
 	private static void ensureFile(in Url url) {
-		if (url.Scheme != UrlScheme.PcFile) {
-			throw new Error("URL is not 'file://' scheme");
+		if (!url.Scheme.IsFileBased) {
+			throw new Error("URL is not file-based");
 		}
 	}
 }

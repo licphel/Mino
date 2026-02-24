@@ -1,15 +1,17 @@
-﻿namespace Mino.Nio;
+﻿using Mino.Nio;
+
+namespace Mino.Framework;
 
 /// <summary>
 ///     Universal async resource loader based on url.
 /// </summary>
-public class UrlLoader {
+public class Loader {
 	public delegate void UrlProcessor(Url id, Url resourceUrl);
 
 	private int _processedCount;
 	private Dictionary<Predicate<Url>, UrlProcessor> _processors =
 		new Dictionary<Predicate<Url>, UrlProcessor>();
-	private Queue<UrlLoader> _subordinateLoaders = new Queue<UrlLoader>();
+	private Queue<Loader> _subordinateLoaders = new Queue<Loader>();
 	private Queue<Action> _taskQueue = new Queue<Action>();
 	private int _totalCount;
 
@@ -45,7 +47,7 @@ public class UrlLoader {
 		// Init stage.
 		if (_processedCount == 0) {
 			BeginTask();
-			foreach (UrlLoader c in _subordinateLoaders) {
+			foreach (Loader c in _subordinateLoaders) {
 				c.BeginTask();
 			}
 		}
@@ -55,13 +57,13 @@ public class UrlLoader {
 				Done = true;
 				Progress = 1.0;
 				EndTask();
-				foreach (UrlLoader c in _subordinateLoaders) {
+				foreach (Loader c in _subordinateLoaders) {
 					c.EndTask();
 				}
 				return;
 			}
 
-			UrlLoader subLoader = _subordinateLoaders.Peek();
+			Loader subLoader = _subordinateLoaders.Peek();
 			subLoader.Next();
 			++_processedCount;
 			Progress = (double) _processedCount / _totalCount;
@@ -89,7 +91,7 @@ public class UrlLoader {
 	/// </summary>
 	/// <param name="loader">The src loader.</param>
 	/// <exception cref="Error">If the loading has begun.</exception>
-	public void Enqueue(UrlLoader loader) {
+	public void Enqueue(Loader loader) {
 		if (loader == null) {
 			return;
 		}

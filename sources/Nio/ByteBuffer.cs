@@ -74,6 +74,24 @@ public class ByteBuffer {
 	}
 
 	/// <summary>
+	///     Converts the written buffer to a memory.
+	/// </summary>
+	/// <returns>A memory containing the written bytes.</returns>
+	public Memory<byte> AsMemory() {
+		return new Memory<byte>(BufferArray, 0, WriteIndex);
+	}
+
+	/// <summary>
+	///		Quick set endianness.
+	/// </summary>
+	/// <param name="endianness">The endianness.</param>
+	/// <returns>Byte buffer itself.</returns>
+	public ByteBuffer With(Endianness endianness) {
+		Endianness = endianness;
+		return this;
+	}
+	
+	/// <summary>
 	///     Clears all bytes but keeps the capacity.
 	/// </summary>
 	public void Clear() {

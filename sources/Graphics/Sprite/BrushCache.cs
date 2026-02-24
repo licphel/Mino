@@ -15,13 +15,7 @@ public interface BrushCache {
 	///     Self cache, no additional output.
 	/// </summary>
 	public class Self : BrushCache {
-		public ByteBuffer VertexBuf { get; } = new ByteBuffer();
-		public ByteBuffer IndexBuf { get; } = new ByteBuffer();
-
-		public Self() {
-			// Set to native endianness as gfx api expected.
-			VertexBuf.Endianness = Endianness.Native;
-			IndexBuf.Endianness = Endianness.Native;
-		}
+		public ByteBuffer VertexBuf { get; } = new ByteBuffer().With(Endianness.Native);
+		public ByteBuffer IndexBuf { get; } = new ByteBuffer().With(Endianness.Native);
 	}
 }

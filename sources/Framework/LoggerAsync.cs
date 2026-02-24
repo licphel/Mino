@@ -24,7 +24,7 @@ public class LoggerAsync : Logger {
 	}
 
 	public void OutputTo(in Url url) {
-		Stream? stream = url.OpenStream();
+		Stream? stream = url.OpenStream("w");
 		if (stream != null) {
 			// Use no bom UTF-8.
 			_writers.Add(new StreamWriter(stream, new UTF8Encoding(false), 1024));

@@ -23,9 +23,14 @@ public interface UrlScheme {
 		get => new Url(this, name);
 	}
 
-	Stream? OpenStream(Url url);
+	/// <summary>
+	///     Whether the scheme is file-based.
+	/// </summary>
+	bool IsFileBased { get; }
 
-	Task<Stream?> OpenStreamAsync(Url url, CancellationToken ct = default);
+	Stream? OpenStream(Url url, string op);
+
+	Task<Stream?> OpenStreamAsync(Url url, string op, CancellationToken ct = default);
 
 	string ToFilePath(Url url);
 
@@ -42,16 +47,38 @@ public interface UrlScheme {
 
 	// 'file' scheme implementation.
 	private sealed class FileImpl : UrlScheme {
-		public Stream OpenStream(Url url) {
-			return new FileStream(url.Path, FileMode.OpenOrCreate);
+		public bool IsFileBased {
+			get => true;
 		}
 
-		public async Task<Stream?> OpenStreamAsync(Url url, CancellationToken ct) {
-			return await Task.Run(
-				() => new FileStream(
-					url.Path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read, 4096,
-					true),
-				ct);
+		public Stream OpenStream(Url url, string op) {
+			if (op == "r") {
+				return new FileStream(url.Path, FileMode.Open, FileAccess.Read, FileShare.Read);
+			}
+			if (op == "w") {
+				return new FileStream(url.Path, FileMode.Create, FileAccess.Write, FileShare.Write);
+			}
+			if (op == "a") {
+				return new FileStream(url.Path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write);
+			}
+			throw new Error($"unknown op: {op}");
+		}
+
+		public async Task<Stream?> OpenStreamAsync(Url url, string op, CancellationToken ct) {
+			if (op == "r") {
+				return await Task.Run(
+					() => new FileStream(url.Path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, true), ct);
+			}
+			if (op == "w") {
+				return await Task.Run(
+					() => new FileStream(url.Path, FileMode.Create, FileAccess.Write, FileShare.Write, 4096, true), ct);
+			}
+			if (op == "a") {
+				return await Task.Run(
+					() => new FileStream(
+						url.Path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write, 4096, true), ct);
+			}
+			throw new Error($"unknown op: {op}");
 		}
 
 		public string ToFilePath(Url url) {
@@ -77,7 +104,14 @@ public interface UrlScheme {
 			};
 		}
 
-		public Stream? OpenStream(Url url) {
+		public bool IsFileBased {
+			get => false;
+		}
+
+		public Stream? OpenStream(Url url, string op) {
+			if (op != "r") {
+				throw new Error("http cannot write");
+			}
 			try {
 				HttpResponseMessage response =
 					_httpClient.GetAsync(url.ToString()).GetAwaiter().GetResult();
@@ -88,7 +122,10 @@ public interface UrlScheme {
 			}
 		}
 
-		public async Task<Stream?> OpenStreamAsync(Url url, CancellationToken ct) {
+		public async Task<Stream?> OpenStreamAsync(Url url, string op, CancellationToken ct) {
+			if (op != "r") {
+				throw new Error("http cannot write");
+			}
 			try {
 				HttpResponseMessage response = await _httpClient.GetAsync(
 					url.ToString(), HttpCompletionOption.ResponseHeadersRead, ct);
@@ -111,14 +148,18 @@ public interface UrlScheme {
 	// 'rf' (Resource Finding) scheme implementation,
 	// like 'rf://example/sound/test.wav'.
 	private sealed class RfImpl : UrlScheme {
-		private static readonly Url _runtimeModUrl = Url.GetExecUrl() / "run/mod";
+		private static readonly Url _runtimeModUrl = Url.GetExecUrl() / "run";
 
-		public Stream? OpenStream(Url url) {
-			return (_runtimeModUrl / url.Path).OpenStream();
+		public bool IsFileBased {
+			get => true;
 		}
 
-		public Task<Stream?> OpenStreamAsync(Url url, CancellationToken ct) {
-			return (_runtimeModUrl / url.Path).OpenStreamAsync(ct);
+		public Stream? OpenStream(Url url, string op) {
+			return (_runtimeModUrl / url.Path).OpenStream(op);
+		}
+
+		public Task<Stream?> OpenStreamAsync(Url url, string op, CancellationToken ct) {
+			return (_runtimeModUrl / url.Path).OpenStreamAsync(op, ct);
 		}
 
 		public string ToFilePath(Url url) {
@@ -133,7 +174,14 @@ public interface UrlScheme {
 	// 'console' scheme implementation.
 	// Supports: 'console://in', 'console://out', 'console://err'.
 	private sealed class ConsoleImpl : UrlScheme {
-		public Stream? OpenStream(Url url) {
+		public bool IsFileBased {
+			get => false;
+		}
+
+		public Stream? OpenStream(Url url, string op) {
+			if (op != "w") {
+				throw new Error("console cannot read");
+			}
 			return url.Path.ToLowerInvariant() switch {
 				"stdin" or "in" => Console.OpenStandardInput(),
 				"stdout" or "out" => Console.OpenStandardOutput(),
@@ -142,8 +190,8 @@ public interface UrlScheme {
 			};
 		}
 
-		public Task<Stream?> OpenStreamAsync(Url url, CancellationToken ct = default) {
-			return Task.FromResult(OpenStream(url));
+		public Task<Stream?> OpenStreamAsync(Url url, string op, CancellationToken ct = default) {
+			return Task.FromResult(OpenStream(url, op));
 		}
 
 		public string ToFilePath(Url url) {
