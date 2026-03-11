@@ -2,6 +2,7 @@
 using Mino.Framework.Resource;
 using Mino.Graphics.Desc;
 using Mino.Graphics.Enum;
+using Mino.Nio;
 #endregion
 
 namespace Mino.Graphics;
@@ -21,7 +22,7 @@ public interface ShaderProgram : ThreadContextHolder, IDisposable {
 	/// <param name="vert">Vert shader code.</param>
 	/// <param name="frag">Frag shader code.</param>
 	/// <returns>A linked program.</returns>
-	public static ShaderProgram CreateRender(string vert, string frag) {
+	public static ShaderProgram CreateRender(TextAccess vert, TextAccess frag) {
 		ShaderModule vModule = RenderSystem.Create<ShaderModule>(
 			new ShaderModuleDesc {
 				Type = ShaderType.Vertex,

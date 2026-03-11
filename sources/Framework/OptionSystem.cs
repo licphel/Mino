@@ -7,7 +7,7 @@ namespace Mino.Framework;
 ///		Manages all option values.
 /// </summary>
 public static class OptionSystem {
-	internal static TagMap _serialization = new TagMap();
+	internal static TagMap _G = new TagMap();
 	internal static bool _init;
 	
 	/// <summary>
@@ -22,15 +22,14 @@ public static class OptionSystem {
 		_init = true;
 		
 		AppDomain.CurrentDomain.ProcessExit += delegate {
-			ByteBuffer buf = new ByteBuffer().With(Endianness.Little);
-			TagSystem.Encode(_serialization, buf);
-			url.Write(buf);
+			TextAccess ta = TagSystem.DumpJson(_G);
+			ta.Write(url);
 		};
 		
 		if (FileUtil.GetTypeOf(url) == FileUtil.PathType.NotExist) {
 			// No local data.
 			return;
 		}
-		_serialization = TagSystem.Decode(url.Read().With(Endianness.Little));
+		_G = TagSystem.ParseJson(url);
 	}
 }

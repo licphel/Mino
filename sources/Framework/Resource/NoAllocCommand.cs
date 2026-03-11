@@ -1,6 +1,6 @@
 ﻿namespace Mino.Framework.Resource;
 
-using unsafe CmdPtr = delegate* managed<object, ThreadContext, byte[]?, void>;
+using unsafe CmdPtr = delegate* managed<object, ThreadContext, void>;
 
 /// <summary>
 ///		Allocation-free context command.
@@ -8,10 +8,9 @@ using unsafe CmdPtr = delegate* managed<object, ThreadContext, byte[]?, void>;
 public unsafe struct NoAllocCommand {
 	private CmdPtr _ptr;
 	private object _pin;
-	private byte[]? _data;
 
 	public readonly void Execute(ThreadContext ctx) {
-		_ptr(_pin, ctx, _data);
+		_ptr(_pin, ctx);
 	}
 
 	///  <summary>
@@ -19,13 +18,11 @@ public unsafe struct NoAllocCommand {
 	///  </summary>
 	///  <param name="obj">Object to pin.</param>
 	///  <param name="ptr">Static function pointer.</param>
-	///  <param name="data">Optional additional data.</param>
 	///  <returns></returns>
-	public static NoAllocCommand Create(object? obj, CmdPtr ptr, byte[]? data = null) {
+	public static NoAllocCommand Create(object? obj, CmdPtr ptr) {
 		return new NoAllocCommand {
 			_ptr = ptr,
-			_pin = obj!, // Ignore nullability.
-			_data = data
+			_pin = obj! // Ignore nullability.
 		};
 	}
 }

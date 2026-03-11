@@ -35,9 +35,9 @@ public sealed class Language {
 	///  <param name="key">The translation key.</param>
 	///  <param name="fallback">The fallback value.</param>
 	///  <returns>The translation value with a fallback.</returns>
-	public string Get(string key, string? fallback = null) {
+	public string Get(in Seq key, string? fallback = null) {
 		_lock.EnterReadLock();
-		string result = _i18nMap.Seek(key, fallback);
+		string result = _i18nMap.Get(key, fallback);
 		_lock.ExitReadLock();
 		return result;
 	}

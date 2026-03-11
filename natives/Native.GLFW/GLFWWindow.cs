@@ -110,6 +110,10 @@ public unsafe sealed class GLFWWindow : Window {
 	}
 
 	public override string ClipboardText {
+		/*
+		 * Silk.NET has wrongly handled encoding so we turn to another lib..
+		 * That's stupid.
+		 */
 		get => ClipboardService.GetText() ?? string.Empty;
 		set => ClipboardService.SetText(value);
 	}

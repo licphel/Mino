@@ -1,4 +1,6 @@
-﻿namespace Mino.Nio.NBT;
+﻿using System.Text.Json;
+
+namespace Mino.Nio.NBT;
 
 /// <summary>
 ///     Provides tag map serialization and tag validation.
@@ -36,6 +38,13 @@ public static class TagSystem {
 	private const byte Bool = 13;
 	private const byte String = 14;
 	private const byte Bytes = 15;
+	
+	private static readonly JsonSerializerOptions _dumpOptions = new JsonSerializerOptions {
+		WriteIndented = true,
+		Converters = {
+			new TagMapJsonConverter()
+		}
+	};
 
 	public static bool Validate(object? o) {
 		return Tell(o) != 0;
@@ -86,6 +95,24 @@ public static class TagSystem {
 			byte[] => Bytes,
 			_ => 0
 		};
+	}
+
+	/// <summary>
+	///		Parses a tag map from a JSON string.
+	/// </summary>
+	/// <param name="json">JSON to parse.</param>
+	/// <returns>A new tag map.</returns>
+	/// <exception cref="Error">Thrown if the parsing process has faults.</exception>
+	public static TagMap ParseJson(TextAccess json) {
+		return JsonSerializer.Deserialize<TagMap>(json, _dumpOptions) ?? throw new Error("invalid json");
+	}
+
+	/// <summary>
+	///     Dumps a tag map to JSON string.
+	/// </summary>
+	/// <param name="map">Serialized map.</param>
+	public static string DumpJson(TagMap map) {
+		return JsonSerializer.Serialize(map, _dumpOptions);
 	}
 
 	/// <summary>

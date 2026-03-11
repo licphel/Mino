@@ -136,18 +136,19 @@ public readonly struct Url : IEquatable<Url> {
 	/// <summary>
 	///     Finds the executable file's parent directory url.
 	/// </summary>
-	/// <returns>The executable file's parent directory url.</returns>
 	/// <exception cref="Error">If cannot find the url.</exception>
-	public static Url GetExecUrl() {
-		Assembly? entryAssembly = Assembly.GetCallingAssembly();
-		if (entryAssembly == null) {
-			throw new Error("cannot find current assembly");
+	public static Url Runtime {
+		get {
+			Assembly? entryAssembly = Assembly.GetCallingAssembly();
+			if (entryAssembly == null) {
+				throw new Error("cannot find current assembly");
+			}
+			DirectoryInfo? dir = new FileInfo(entryAssembly.Location).Directory;
+			if (dir == null) {
+				throw new Error("cannot find current assembly location");
+			}
+			return new Url(UrlScheme.PcFile, dir.FullName + "/run");
 		}
-		DirectoryInfo? dir = new FileInfo(entryAssembly.Location).Directory;
-		if (dir == null) {
-			throw new Error("cannot find current assembly location");
-		}
-		return new Url(UrlScheme.PcFile, dir.FullName);
 	}
 
 	public bool Equals(Url other) {

@@ -8,11 +8,16 @@ namespace Mino.Nio.NBT;
 ///     NBT Map component.
 /// </summary>
 public class TagMap : IEnumerable<KeyValuePair<string, object>> {
+	
 	// Toolkit factories.
 	// Used like map.Get<TagMap>("my_key", TagMap.NewMap);
 	public static readonly Func<TagMap> NewMap = () => new TagMap();
 	public static readonly Func<TagList> NewList = () => new TagList();
-
+	
+	// For seek.
+	private static readonly TagMap _tmp = new TagMap();
+	private static readonly Func<TagMap> _tmpFactory = () => _tmp;
+	
 	private Dictionary<string, object?> _dict = new Dictionary<string, object?>();
 
 	/// <summary>
@@ -34,7 +39,11 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	/// </summary>
 	/// <param name="key">Checking key.</param>
 	/// <returns>True if has, otherwise false.</returns>
-	public bool Has(string key) {
+	public bool Has(in Seq key) {
+		if (key.ShouldSplit) {
+			SeekForDest(key, false, out TagMap? map, out _);
+			return map != null;
+		}
 		return _dict.ContainsKey(key);
 	}
 
@@ -46,7 +55,15 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	/// <param name="fallback">Fallback value.</param>
 	/// <typeparam name="T">Type cast target.</typeparam>
 	/// <returns>A casted value.</returns>
-	public T Get<T>(string key, T? fallback = default) {
+	public T Get<T>(in Seq key, T? fallback = default) {
+		if (key.ShouldSplit) {
+			SeekForDest(key, false, out TagMap? map, out Seq key1);
+			if (map == null) {
+				return TagSystem.GetNonnullFallback(fallback);
+			}
+			return map.Get(key1, fallback);
+		}
+		// Default case.
 		if (_dict.TryGetValue(key, out object? value)) {
 			return TagSystem.AsWithFallback(value, fallback);
 		}
@@ -60,55 +77,21 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	/// <param name="fallback">Fallback value.</param>
 	/// <typeparam name="T">Type cast target.</typeparam>
 	/// <returns>A casted value.</returns>
-	public T Get<T>(string key, Func<T> fallback) {
+	public T Get<T>(in Seq key, Func<T> fallback) {
+		if (key.ShouldSplit) {
+			SeekForDest(key, false, out TagMap? map, out Seq key1);
+			if (map == null) {
+				return fallback();
+			}
+			return map.Get(key1, fallback);
+		}
+		// Default case.
 		if (_dict.TryGetValue(key, out object? value)) {
 			return TagSystem.AsWithFallback(value, fallback);
 		}
 		return fallback.Invoke();
 	}
-
-	/// <summary>
-	///     Seeks by a key sequence like "key1.key2.key3".
-	/// </summary>
-	/// <param name="key">Key sequence.</param>
-	/// <param name="fallback">Fallback value.</param>
-	/// <typeparam name="T">Type cast target.</typeparam>
-	/// <returns></returns>
-	public T Seek<T>(string key, T? fallback = default) {
-		string[] keys = key.Split('.');
-		if (keys.Length <= 1) {
-			return Get(key, fallback);
-		}
-
-		TagMap map = Get(keys[0], NewMap);
-		for (int i = 1; i < keys.Length - 1; i++) {
-			map = map.Get(keys[i], NewMap);
-		}
-
-		return map.Get(keys[^1], fallback);
-	}
-
-	/// <summary>
-	///     Seeks by a key sequence like "key1.key2.key3".
-	/// </summary>
-	/// <param name="key">Key sequence.</param>
-	/// <param name="fallback">Fallback value.</param>
-	/// <typeparam name="T">Type cast target.</typeparam>
-	/// <returns></returns>
-	public T Seek<T>(string key, Func<T> fallback) {
-		string[] keys = key.Split('.');
-		if (keys.Length <= 1) {
-			return Get(key, fallback);
-		}
-
-		TagMap map = Get(keys[0], NewMap);
-		for (int i = 1; i < keys.Length - 1; i++) {
-			map = map.Get(keys[i], NewMap);
-		}
-
-		return map.Get(keys[^1], fallback);
-	}
-
+	
 	/// <summary>
 	///     Tries getting a value.
 	/// </summary>
@@ -116,7 +99,16 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	/// <param name="value">Output value.</param>
 	/// <typeparam name="T">Type cast target.</typeparam>
 	/// <returns>True if this map has the key, otherwise false.</returns>
-	public bool TryGet<T>(string key, out T value) {
+	public bool TryGet<T>(in Seq key, out T value) {
+		if (key.ShouldSplit) {
+			SeekForDest(key, false, out TagMap? map, out Seq key1);
+			if (map == null) {
+				value = default!;
+				return false;
+			}
+			return map.TryGet(key1, out value);
+		}
+		// Default case.
 		if (_dict.TryGetValue(key, out object? raw)) {
 			if (raw != null) {
 				value = TagSystem.AsWithFallback(raw, default(T));
@@ -133,19 +125,63 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	/// <param name="key">Map key.</param>
 	/// <param name="v">Set value.</param>
 	/// <exception cref="Error">Thrown if value type is invalid.</exception>
-	public void Set(string key, object? v) {
+	public void Set(in Seq key, object? v) {
 		if (!TagSystem.Validate(v)) {
 			throw new Error($"invalid type: {v?.GetType()}");
 		}
-		_dict[key] = v;
+		if (key.ShouldSplit) {
+			SeekForDest(key, true, out TagMap? map, out Seq key1);
+			map!.Set(key1, v);
+		} else {
+			_dict[key] = v;
+		}
 	}
 
 	/// <summary>
 	///     Removes a key-value pair.
 	/// </summary>
 	/// <param name="key">Map key.</param>
-	public void Remove(string key) {
-		_dict.Remove(key);
+	public void Remove(in Seq key) {
+		if (key.ShouldSplit) {
+			SeekForDest(key, false, out TagMap? map, out Seq key1);
+			map?.Remove(key1);
+		} else {
+			_dict.Remove(key);
+		}
+	}
+
+	///  <summary>
+	/// 		Seeks a tag map.
+	///  </summary>
+	///  <param name="key">Key sequence.</param>
+	///  <param name="shouldCreate">If the seeking should create new map in the way.</param>
+	///  <param name="mapEnd">Output sought map.</param>
+	///  <param name="keyEnd">Output sought key.</param>
+	public void SeekForDest(in Seq key, bool shouldCreate, out TagMap? mapEnd, out Seq keyEnd) {
+		string[] keys = key.Semantic.Split('.');
+		if (keys.Length <= 1) {
+			keyEnd = key;
+			mapEnd = this;
+			return;
+		}
+		Func<TagMap> factory = shouldCreate ? NewMap : _tmpFactory;
+
+		TagMap map = Get(keys[0], factory);
+		// Bug fixed: first level map does not expose to its parent.
+		if (shouldCreate) {
+			Set(keys[0], map);
+		}
+		
+		for (int i = 1; i < keys.Length - 1; i++) {
+			TagMap nMap = map.Get(keys[i], factory);
+			if (shouldCreate) {
+				map.Set(keys[i], nMap);
+			}
+			map = nMap;
+		}
+		
+		keyEnd = keys[^1];
+		mapEnd = ReferenceEquals(_tmp, map) ? null : map;
 	}
 
 	public IEnumerator<KeyValuePair<string, object>> GetEnumerator() {

@@ -7,14 +7,17 @@ namespace Mino.Framework;
 /// </summary>
 public class Option<T> {
 	private T _value;
-	private string _key;
+	private Seq _key;
 
-	public Option(string key, T? defaultValue = default) {
+	public Option(Seq key, T? defaultValue = default) {
 		if (!OptionSystem._init) {
 			throw new Error("local data not loaded");
 		}
 		_key = key;
-		_value = OptionSystem._serialization.Get(key, defaultValue);
+		if (!OptionSystem._G.Has(key)) {
+			OptionSystem._G.Set(key, defaultValue);
+		}
+		_value = OptionSystem._G.Get(key, defaultValue);
 	}
 
 	/// <summary>
@@ -23,7 +26,7 @@ public class Option<T> {
 	/// <param name="value">Value to set.</param>
 	public void Set(T value) {
 		_value = value;
-		OptionSystem._serialization.Set(_key, _value);
+		OptionSystem._G.Set(_key, _value);
 	}
 
 	/// <summary>

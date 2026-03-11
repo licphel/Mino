@@ -148,7 +148,7 @@ public interface UrlScheme {
 	// 'rf' (Resource Finding) scheme implementation,
 	// like 'rf://example/sound/test.wav'.
 	private sealed class RfImpl : UrlScheme {
-		private static readonly Url _runtimeModUrl = Url.GetExecUrl() / "run";
+		private static readonly Url _runtimeModUrl = Url.Runtime;
 
 		public bool IsFileBased {
 			get => true;

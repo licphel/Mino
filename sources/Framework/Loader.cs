@@ -18,7 +18,7 @@ public class Loader {
 	/// <summary>
 	///     The base url of the loader for relative paths.
 	/// </summary>
-	public Url BaseUrl { get; set; } = Url.GetExecUrl();
+	public Url BaseUrl { get; set; } = Url.Runtime;
 
 	/// <summary>
 	///     Called before the first item loading.

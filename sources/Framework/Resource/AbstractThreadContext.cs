@@ -39,7 +39,6 @@ public abstract unsafe class AbstractThreadContext : ThreadContext {
 	public virtual void PollEvents() { }
 
 	public void Present() {
-
 	}
 
 	public void Pend(in NoAllocCommand cmd) {
@@ -50,7 +49,7 @@ public abstract unsafe class AbstractThreadContext : ThreadContext {
 		Pend(NoAllocCommand.Create(action, &wrapper));
 		return;
 
-		static void wrapper(object? obj, ThreadContext ctx, byte[]? data) {
+		static void wrapper(object? obj, ThreadContext ctx) {
 			Action? action = obj as Action;
 			action?.Invoke();
 		}
