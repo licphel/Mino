@@ -1,5 +1,6 @@
 ﻿#region
 using System.Collections;
+using Mino.Utility;
 #endregion
 
 namespace Mino.Nio.NBT;
@@ -55,7 +56,7 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	/// <param name="fallback">Fallback value.</param>
 	/// <typeparam name="T">Type cast target.</typeparam>
 	/// <returns>A casted value.</returns>
-	public T Get<T>(in Seq key, T? fallback = default) {
+	public T Get<T>(in Seq key, in Maybe<T> fallback = default) {
 		if (key.ShouldSplit) {
 			SeekForDest(key, false, out TagMap? map, out Seq key1);
 			if (map == null) {
@@ -111,7 +112,7 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 		// Default case.
 		if (_dict.TryGetValue(key, out object? raw)) {
 			if (raw != null) {
-				value = TagSystem.AsWithFallback(raw, default(T));
+				value = TagSystem.AsWithFallback(raw, Maybe<T>.None);
 				return true;
 			}
 		}

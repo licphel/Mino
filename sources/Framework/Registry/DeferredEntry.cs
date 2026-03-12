@@ -1,11 +1,9 @@
-﻿using Mino.Nio;
-
-namespace Mino.Framework.Registry;
+﻿namespace Mino.Framework.Registry;
 
 /// <summary>
 ///		Deferred registered value.
 /// </summary>
-public class DeferredEntry<T> where T : class {
+public class DeferredEntry<T> where T : Registerable {
 	private Func<T> _fetcher;
 	
 	public DeferredEntry(Func<T> fetcher, in Identifier id) {
@@ -21,7 +19,7 @@ public class DeferredEntry<T> where T : class {
 	/// <summary>
 	///		The optional value.
 	/// </summary>
-	public T? Value { get; private set; } = null;
+	public T? Value { get; private set; } = default;
 
 	/// <summary>
 	///		Whether the value is fetched.

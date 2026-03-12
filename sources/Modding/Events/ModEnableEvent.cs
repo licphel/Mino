@@ -1,12 +1,12 @@
 ﻿namespace Mino.Modding.Events;
 
 /// <summary>
-///		Event: on mod disabled.
+///		Event: on mod enabled.
 /// </summary>
-public class ModDisableEvent : Event {
-	public string ModId;
+public class ModEnableEvent : Event {
+	public readonly string ModId;
 	
-	public ModDisableEvent(string modId) {
+	public ModEnableEvent(string modId) {
 		ModId = modId;
 	}
 }

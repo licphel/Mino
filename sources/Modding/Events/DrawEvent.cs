@@ -1,5 +1,14 @@
-﻿namespace Mino.Modding.Events;
+﻿using Mino.Framework;
 
-public class DrawEvent {
+namespace Mino.Modding.Events;
+
+/// <summary>
+///		Event: on Executor.OnDraw.
+/// </summary>
+public class DrawEvent : Event {
+	public readonly Executor Executor;
 	
+	public DrawEvent(Executor executor) {
+		Executor = executor;
+	}
 }

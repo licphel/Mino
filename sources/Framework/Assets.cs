@@ -6,7 +6,7 @@ namespace Mino.Framework;
 ///		Provides global asset management.
 /// </summary>
 public static class Assets {
-	private static ConcurrentDictionary<Identifier, object> _mapped = new ConcurrentDictionary<Identifier, object>();
+	internal static ConcurrentDictionary<Identifier, object> _mapped = new ConcurrentDictionary<Identifier, object>();
 
 	/// <summary>
 	///		Sets an asset.
@@ -22,15 +22,22 @@ public static class Assets {
 	/// </summary>
 	/// <param name="key">Asset key.</param>
 	/// <typeparam name="T">Asset type generic.</typeparam>
-	/// <returns>A converted asset.</returns>
+	/// <returns>An asset ref.</returns>
 	/// <exception cref="Error">Thrown if type does not match or no such key.</exception>
-	public static T Get<T>(in Identifier key) {
-		if (_mapped.TryGetValue(key, out object? value)) {
-			if (value is T t) {
-				return t;
-			}
-		}
-		throw new Error($"no such asset: {key}");
+	public static Asset<T> Get<T>(in Identifier key) {
+		return new Asset<T>(key);
+	}
+
+	///  <summary>
+	/// 		Gets an asset.
+	///  </summary>
+	///  <param name="key">Asset key.</param>
+	///  <param name="fallback">Fallback value.</param>
+	///  <typeparam name="T">Asset type generic.</typeparam>
+	///  <returns>An asset ref.</returns>
+	///  <exception cref="Error">Thrown if type does not match or no such key.</exception>
+	public static Asset<T> Get<T>(in Identifier key, T fallback) {
+		return new Asset<T>(key, fallback);
 	}
 
 	/// <summary>

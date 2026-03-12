@@ -1,9 +1,16 @@
-﻿namespace Mino.Modding.Mino.Framework.Event;
+﻿namespace Mino.Modding;
 
 /// <summary>
-/// 普通事件基类
+///		Event class.
 /// </summary>
-public abstract class Event : IEvent {
-	public bool IsCanceled { get; set; }
-	public bool IsHandled { get; set; }
+public abstract class Event {
+	/// <summary>
+	///		Whether the event is canceled.
+	/// </summary>
+	public bool Canceled { get; set; }
+	
+	/// <summary>
+	///		Whether the event is handled.
+	/// </summary>
+	public bool Handled { get; set; }
 }

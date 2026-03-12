@@ -1,7 +1,7 @@
-﻿namespace Mino.Modding.Mino.Framework.Event;
+﻿namespace Mino.Modding;
 
 /// <summary>
-/// 事件监听器属性
+///		Marks a static method is a subscriber.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
 public class SubscribeEventAttribute : Attribute {

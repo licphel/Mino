@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Mino.Utility;
 
 namespace Mino.Nio.NBT;
 
@@ -50,17 +51,20 @@ public static class TagSystem {
 		return Tell(o) != 0;
 	}
 
-	public static T GetNonnullFallback<T>(T? fallback) {
-		if (fallback != null) {
-			return fallback;
+	public static T GetNonnullFallback<T>(in Maybe<T> fallback) {
+		if (fallback.HasValue) {
+			return fallback.Value;
 		}
 		if (typeof(T) == typeof(string)) {
 			return (T) Convert.ChangeType(string.Empty, typeof(T));
 		}
+		if (default(T) != null) {
+			return default!;
+		}
 		throw new Error("unsupported type");
 	}
 
-	public static T AsWithFallback<T>(object? v, T? fallback) {
+	public static T AsWithFallback<T>(object? v, in Maybe<T> fallback) {
 		if (v == null) {
 			return GetNonnullFallback(fallback);
 		}

@@ -1,4 +1,5 @@
 ﻿using Mino.Nio.NBT;
+using Mino.Utility;
 
 namespace Mino.Framework;
 
@@ -35,7 +36,7 @@ public sealed class Language {
 	///  <param name="key">The translation key.</param>
 	///  <param name="fallback">The fallback value.</param>
 	///  <returns>The translation value with a fallback.</returns>
-	public string Get(in Seq key, string? fallback = null) {
+	public string Get(in Seq key, in Maybe<string> fallback = default) {
 		_lock.EnterReadLock();
 		string result = _i18nMap.Get(key, fallback);
 		_lock.ExitReadLock();

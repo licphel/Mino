@@ -8,8 +8,7 @@
 Mino is a lightweight, cross-platform game development framework for .NET. It offers a comprehensive suite of commonly
 used features including audio, rendering, networking, serialization, and resource management.
 
-![README_banner.png](documents/README_banner.png)
-![README_tf.png](documents/README_tf.png)
+![README_banner.png](documents/README_head.png)
 
 ## Features
 

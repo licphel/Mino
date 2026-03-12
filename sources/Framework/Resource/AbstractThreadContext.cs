@@ -8,7 +8,7 @@ namespace Mino.Framework.Resource;
 ///     Thread context with batch processing support.
 /// </summary>
 public abstract unsafe class AbstractThreadContext : ThreadContext {
-	private readonly ConcurrentQueue<NoAllocCommand> _commandQueue = new ConcurrentQueue<NoAllocCommand>();
+	private readonly BlockingCollection<NoAllocCommand> _commandQueue = new BlockingCollection<NoAllocCommand>(64);
 	private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 	private volatile bool _disposed;
 	private volatile bool _initialized;
@@ -39,7 +39,7 @@ public abstract unsafe class AbstractThreadContext : ThreadContext {
 	public virtual void PollEvents() { }
 
 	public void Pend(in NoAllocCommand cmd) {
-		_commandQueue.Enqueue(cmd);
+		_commandQueue.Add(cmd);
 	}
 
 	public void Pend(Action action) {
@@ -68,26 +68,9 @@ public abstract unsafe class AbstractThreadContext : ThreadContext {
 	private void loop() {
 		try {
 			OnContextStart();
-
-			var localBatch = new List<NoAllocCommand>(1024);
-
+			
 			while (!_cts.Token.IsCancellationRequested) {
-				localBatch.Clear();
-
-				while (_commandQueue.TryDequeue(out NoAllocCommand cmd)) {
-					localBatch.Add(cmd);
-					if (localBatch.Count >= 1024) {
-						break;
-					}
-				}
-
-				if (localBatch.Count > 0) {
-					foreach (NoAllocCommand cmd in localBatch) {
-						cmd.Execute(this);
-					}
-				} else {
-					Thread.SpinWait(100);
-				}
+				_commandQueue.Take().Execute(this);
 			}
 		} finally {
 			OnContextStop();

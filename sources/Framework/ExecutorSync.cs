@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using Mino.Desktop;
 using Mino.Input;
+using Mino.Modding;
+using Mino.Modding.Events;
 #endregion
 
 namespace Mino.Framework;
@@ -50,6 +52,7 @@ public class ExecutorSync : Executor {
 
 				double delta = (double) tickInterval / TicksPerSecond;
 				OnUpdate?.Invoke(new TimeStep(gameTime, delta));
+				EventBus.Instance.Post(new UpdateEvent(this, Step = new TimeStep(gameTime, delta)));
 
 				gameTime += TimeSpan.FromSeconds(delta);
 				tickCount++;
@@ -71,6 +74,7 @@ public class ExecutorSync : Executor {
 			if (shouldRender) {
 				previousFrame = current;
 				OnDraw?.Invoke();
+				EventBus.Instance.Post(new DrawEvent(this));
 				frameCount++;
 			}
 
@@ -102,5 +106,6 @@ public class ExecutorSync : Executor {
 		}
 
 		OnDispose?.Invoke();
+		EventBus.Instance.Post(new DisposeEvent(this));
 	}
 }

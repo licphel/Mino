@@ -1,7 +1,7 @@
-﻿namespace Mino.Modding.Mino.Framework.Event;
+﻿namespace Mino.Modding;
 
 /// <summary>
-/// 事件优先级
+///		Event priorities.
 /// </summary>
 public enum EventPriority {
 	Highest = 0,

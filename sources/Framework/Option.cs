@@ -1,4 +1,5 @@
 ﻿using Mino.Nio.NBT;
+using Mino.Utility;
 
 namespace Mino.Framework;
 
@@ -6,10 +7,10 @@ namespace Mino.Framework;
 ///		An auto-saved option.
 /// </summary>
 public class Option<T> {
-	private T? _fallback;
+	private Maybe<T> _fallback;
 	private Seq _key;
 
-	public Option(Seq key, T? fallback) {
+	public Option(Seq key, in Maybe<T> fallback) {
 		_key = key;
 		_fallback = fallback;
 		OptionSystem._finalW.Enqueue(delegate {

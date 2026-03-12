@@ -1,8 +1,24 @@
 ﻿namespace Mino.Modding;
 
-internal interface EventHandler {
-	void Invoke(Event @event);
+public delegate void EventFn<in T>(T @event) where T : Event;
+
+/// <summary>
+///		An event handler.
+/// </summary>
+public interface EventHandler {
+	/// <summary>
+	///		Event class type.
+	/// </summary>
 	Type EventType { get; }
+	
+	/// <summary>
+	///		Event priority.
+	/// </summary>
 	EventPriority Priority { get; }
-	object? Target { get; }
+	
+	/// <summary>
+	///		Accepts an event.
+	/// </summary>
+	/// <param name="event">Accepted event.</param>
+	void Invoke(Event @event);
 }

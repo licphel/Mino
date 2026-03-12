@@ -1,5 +1,6 @@
 ﻿#region
 using System.Collections;
+using Mino.Utility;
 #endregion
 
 namespace Mino.Nio.NBT;
@@ -31,7 +32,7 @@ public class TagList : IEnumerable<object> {
 	/// <param name="fallback">Fallback value.</param>
 	/// <typeparam name="T">Type cast target.</typeparam>
 	/// <returns>A casted value.</returns>
-	public T Get<T>(int i, T? fallback = default) {
+	public T Get<T>(int i, in Maybe<T> fallback = default) {
 		if (i >= Count || i < 0) {
 			return TagSystem.GetNonnullFallback(fallback);
 		}
