@@ -54,7 +54,7 @@ public readonly struct Url : IEquatable<Url> {
 	/// <returns>A resource byte buffer.</returns>
 	/// <exception cref="Error">If the url has no resource.</exception>
 	public ByteBuffer Read() {
-		Stream? stream = OpenStream("r");
+		using Stream? stream = OpenStream("r");
 		if (stream == null) {
 			throw new Error("URL cannot open a stream");
 		}
@@ -84,7 +84,7 @@ public readonly struct Url : IEquatable<Url> {
 	/// <param name="buffer">Buffer to write.</param>
 	/// <exception cref="Error">If the url has no resource.</exception>
 	public void Write(ByteBuffer buffer) {
-		Stream? stream = OpenStream("w");
+		using Stream? stream = OpenStream("w");
 		if (stream == null) {
 			throw new Error("URL cannot open a stream");
 		}
@@ -125,12 +125,12 @@ public readonly struct Url : IEquatable<Url> {
 		}
 		return new Url(url.Scheme, url.Path.Substring(0, idx + 1));
 	}
-
-	public static Url GetRelativeName(Url basePath, Url path) {
-		if (basePath.Scheme != path.Scheme) {
-			throw new Error("cannot operate between difference schemes");
+	
+	public static Url GetRelativeName(in Url basePath, in Url path) {
+		if (!basePath.Scheme.IsFileBased || !path.Scheme.IsFileBased) {
+			throw new Error("not a file based url.");
 		}
-		return new Url(basePath.Scheme, path.Path.Replace(basePath.Path + "/", ""));
+		return new Url(basePath.Scheme, path.ToFilePath().Replace(basePath.ToFilePath() + "/", ""));
 	}
 
 	/// <summary>
@@ -169,6 +169,14 @@ public readonly struct Url : IEquatable<Url> {
 
 	public static bool operator !=(Url left, Url right) {
 		return !left.Equals(right);
+	}
+
+	public static implicit operator string(in Url url) {
+		return url.Path;
+	}
+	
+	public static implicit operator Url(string str) {
+		return new Url(str);
 	}
 
 	private static (string, UrlScheme) parseUrl(string url) {

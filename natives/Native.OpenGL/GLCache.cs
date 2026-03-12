@@ -89,10 +89,12 @@ public class GLCache {
 	}
 
 	public void SetBuffer(GLEnum target, uint buffer) {
-		if (_currentBuffer.GetValueOrDefault(target) != buffer) {
+		// Bug fixed: buffer should not be cached.
+		
+		//if (_currentBuffer.GetValueOrDefault(target) != buffer) {
 			_currentBuffer[target] = buffer;
 			_gl.BindBuffer(target, buffer);
-		}
+		//}
 	}
 
 	public void SetVertexArray(uint vao) {

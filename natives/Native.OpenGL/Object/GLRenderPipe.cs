@@ -23,14 +23,13 @@ public unsafe sealed class GLRenderPipe : RenderPipe {
 		get => _desc;
 	}
 	
-	public uint FindVaoDx(uint vbo, uint ebo = 0) {
+	public uint FindVaoDx(GLCache c, uint vbo, uint ebo = 0) {
 		(uint vbo, uint ebo) key = (vbo, ebo);
 
 		if (!_vaoCache.TryGetValue(key, out uint vao)) {
 			vao = _gl.GenVertexArray();
-			_gl.BindVertexArray(vao);
-
-			_gl.BindBuffer(GLEnum.ArrayBuffer, vbo);
+			c.SetVertexArray(vao);
+			c.SetBuffer(GLEnum.ArrayBuffer, vbo);
 			foreach (VertexLayout.Attr attr in _desc.VertexLayout.Attrs) {
 				_gl.EnableVertexAttribArray((uint) attr.Location);
 				_gl.VertexAttribPointer(
@@ -44,10 +43,9 @@ public unsafe sealed class GLRenderPipe : RenderPipe {
 			}
 
 			if (ebo != 0) {
-				_gl.BindBuffer(GLEnum.ElementArrayBuffer, ebo);
+				c.SetBuffer(GLEnum.ElementArrayBuffer, ebo);
 			}
-
-			_gl.BindVertexArray(0);
+			
 			_vaoCache[key] = vao;
 		}
 

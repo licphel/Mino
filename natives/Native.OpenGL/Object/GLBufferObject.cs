@@ -91,7 +91,7 @@ public unsafe sealed class GLBufferObject : BufferObject {
 			GLCache c = _ctx._cache;
 			
 			c.SetBuffer(_target, _handle);
-			fixed (void* ptr = buf) {
+			fixed (byte* ptr = buf) {
 				bool shouldOrphan = _desc.Frequency == BufferFrequency.Stream ||
 					_desc.Frequency == BufferFrequency.Dynamic && byteCount > Capacity / 4;
 				if (shouldOrphan) {

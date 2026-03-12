@@ -38,9 +38,6 @@ public abstract unsafe class AbstractThreadContext : ThreadContext {
 
 	public virtual void PollEvents() { }
 
-	public void Present() {
-	}
-
 	public void Pend(in NoAllocCommand cmd) {
 		_commandQueue.Enqueue(cmd);
 	}

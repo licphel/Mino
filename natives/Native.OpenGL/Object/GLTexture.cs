@@ -28,11 +28,6 @@ public unsafe sealed class GLTexture : Texture {
 	public TextureDesc Desc {
 		get => _desc;
 	}
-
-	public int Capacity { get; set; }
-
-	// By default, we allow expansion.
-	public bool CanExpand { get; set; } = true;
 	
 	public void Submit(in TextureSubmission submission) {
 		int x = (int) submission.Region.MinX;

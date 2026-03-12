@@ -13,12 +13,7 @@ public interface ThreadContext : IDisposable {
 	///     Raises a request to poll events.
 	/// </summary>
 	void PollEvents();
-
-	/// <summary>
-	///     Runs all commands.
-	/// </summary>
-	public void Present();
-
+	
 	/// <summary>
 	///     Raises a request to execute a command.
 	/// </summary>

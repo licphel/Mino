@@ -49,7 +49,7 @@ public unsafe sealed class GLExecutionContext {
 		// 2. VAO
 		// 3. VBO
 		GLBufferObject vbo = _boundBuffers[(int) BufferType.Vertex];
-		_c.SetVertexArray(_boundPipe.FindVaoDx(vbo._handle));
+		_c.SetVertexArray(_boundPipe.FindVaoDx(_c, vbo._handle));
 
 		// Apply resources
 		ResourceDx(_boundPipe);
@@ -72,7 +72,7 @@ public unsafe sealed class GLExecutionContext {
 		// 4. EBO
 		GLBufferObject vbo = _boundBuffers[(int) BufferType.Vertex];
 		GLBufferObject ebo = _boundBuffers[(int) BufferType.Index];
-		_c.SetVertexArray(_boundPipe.FindVaoDx(vbo._handle, ebo._handle));
+		_c.SetVertexArray(_boundPipe.FindVaoDx(_c, vbo._handle, ebo._handle));
 		/*
 		 * Bug fixed: ebo binding
 		 * I guess OpenGL do not cache ebo in vao? who knows.

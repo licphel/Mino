@@ -115,13 +115,13 @@ public unsafe class Brush : IDisposable {
 	public int _Drawcalls = 0;
 	private Stack<ScissorDesc> _scissorStack = new Stack<ScissorDesc>();
 
-	public Brush(BrushCache? target = null) {
-		_target = target ?? new BrushCache.Self();
+	public Brush(BrushCache target) {
+		_target = target;
 		initGfxResources();
 	}
 
 	/// <summary>
-	///		Transform matrix stack.
+	///     Transform matrix stack.
 	/// </summary>
 	public MatrixStack<Matrix4x4> Transform = new MatrixStack<Matrix4x4>();
 
@@ -170,9 +170,9 @@ public unsafe class Brush : IDisposable {
 	///     Current viewport.
 	/// </summary>
 	public Box2 CurrentViewport { get; private set; }
-	
+
 	/// <summary>
-	///		Current scissor test.
+	///     Current scissor test.
 	/// </summary>
 	public ScissorDesc CurrentScissor { get; private set; } = ScissorDesc.Disabled;
 
@@ -218,15 +218,15 @@ public unsafe class Brush : IDisposable {
 
 		ByteBuffer vBuf = _target.VertexBuf;
 		ByteBuffer iBuf = _target.IndexBuf;
-		
+
 		_encoder.SetViewport(
-			(int) CurrentViewport.MinX, 
-			(int) CurrentViewport.MinY, 
-			(int) CurrentViewport.Width, 
+			(int) CurrentViewport.MinX,
+			(int) CurrentViewport.MinY,
+			(int) CurrentViewport.Width,
 			(int) CurrentViewport.Height
 		);
 		_encoder.SetScissor(CurrentScissor);
-		
+
 		if (_vertCnt <= 0) {
 			if (force) {
 				_encoder.QueuedExecute();
@@ -236,7 +236,7 @@ public unsafe class Brush : IDisposable {
 		}
 
 		_encoder.SetRenderPipe(_ast_Pipe);
-		
+
 		_vbo.Submit<byte>(vBuf.AsSpan());
 		_encoder.SetBuffer(_vbo);
 
@@ -337,13 +337,14 @@ public unsafe class Brush : IDisposable {
 	/// <param name="v">Src v.</param>
 	/// <param name="uw">Src width.</param>
 	/// <param name="vh">Src height.</param>
-	public void DrawTexture(FragileTexture? tex, float x, float y, float w, float h, float u, float v, float uw, float vh) {
+	public void DrawTexture(FragileTexture? tex, float x, float y, float w, float h, float u, float v, float uw,
+		float vh) {
 		if (tex == null) {
 			return;
 		}
 		assert(BrushPrimitive.TextureSprite);
 		assert(tex.Pin());
-		
+
 		ByteBuffer vBuf = _target.VertexBuf;
 		ByteBuffer iBuf = _target.IndexBuf;
 
@@ -391,12 +392,12 @@ public unsafe class Brush : IDisposable {
 		vBuf.Write(Color.AsHalves());
 		vBuf.Write(new Vector2(u, v2));
 
-		iBuf.Write(_vertCnt + 0);
-		iBuf.Write(_vertCnt + 2);
-		iBuf.Write(_vertCnt + 1);
-		iBuf.Write(_vertCnt + 2);
-		iBuf.Write(_vertCnt + 0);
-		iBuf.Write(_vertCnt + 3);
+		iBuf.Write((uint) _vertCnt + 0);
+		iBuf.Write((uint) _vertCnt + 2);
+		iBuf.Write((uint) _vertCnt + 1);
+		iBuf.Write((uint) _vertCnt + 2);
+		iBuf.Write((uint) _vertCnt + 0);
+		iBuf.Write((uint) _vertCnt + 3);
 
 		_vertCnt += 4;
 		_indCnt += 6;
@@ -411,7 +412,7 @@ public unsafe class Brush : IDisposable {
 	public void DrawTexture(FragileTexture? tex, in Box2 dst, in Box2 src) {
 		DrawTexture(tex, dst.MinX, dst.MinY, dst.Width, dst.Height, src.MinX, src.MinY, src.Width, src.Height);
 	}
-	
+
 	/// <summary>
 	///     Draws a texture.
 	/// </summary>
@@ -547,7 +548,7 @@ public unsafe class Brush : IDisposable {
 
 		ByteBuffer vBuf = _target.VertexBuf;
 		ByteBuffer iBuf = _target.IndexBuf;
-		
+
 		Transform.Top.Transform(x, y, Depth, out float x1, out float y1, out _);
 		Transform.Top.Transform(x + w, y + h, Depth, out float x2, out float y2, out _);
 
@@ -564,12 +565,12 @@ public unsafe class Brush : IDisposable {
 		vBuf.Write(new Vector3(x1, y2, Depth));
 		vBuf.Write(Color.AsHalves());
 
-		iBuf.Write(_vertCnt + 0);
-		iBuf.Write(_vertCnt + 2);
-		iBuf.Write(_vertCnt + 1);
-		iBuf.Write(_vertCnt + 2);
-		iBuf.Write(_vertCnt + 0);
-		iBuf.Write(_vertCnt + 3);
+		iBuf.Write((uint) _vertCnt + 0);
+		iBuf.Write((uint) _vertCnt + 2);
+		iBuf.Write((uint) _vertCnt + 1);
+		iBuf.Write((uint) _vertCnt + 2);
+		iBuf.Write((uint) _vertCnt + 0);
+		iBuf.Write((uint) _vertCnt + 3);
 
 		_vertCnt += 4;
 		_indCnt += 6;
@@ -616,7 +617,7 @@ public unsafe class Brush : IDisposable {
 		assert(BrushPrimitive.ColorLine);
 
 		ByteBuffer vBuf = _target.VertexBuf;
-		
+
 		Transform.Top.Transform(x1, y1, Depth, out float x1t, out float y1t, out _);
 		Transform.Top.Transform(x2, y2, Depth, out float x2t, out float y2t, out _);
 
@@ -647,7 +648,7 @@ public unsafe class Brush : IDisposable {
 		assert(BrushPrimitive.ColorPoint);
 
 		ByteBuffer vBuf = _target.VertexBuf;
-		
+
 		Transform.Top.Transform(x, y, Depth, out float xt, out float yt, out _);
 
 		vBuf.Write(new Vector3(xt, yt, Depth));
@@ -735,6 +736,10 @@ public unsafe class Brush : IDisposable {
 				Type = BufferType.Index,
 				Usage = BufferUsage.GpuRead | BufferUsage.CpuWrite
 			});
+		
+		_vbo.Allocate<byte>(1024 * 1024, null);
+		_ibo.Allocate<byte>(1024 * 1024, null);
+		
 		_ubo = RenderSystem.Create<BufferObject>(
 			new BufferObjectDesc {
 				Frequency = BufferFrequency.Stream,
@@ -838,6 +843,7 @@ public unsafe class Brush : IDisposable {
 			_ast_Set = _sets[0];
 		}
 
+		_ast_Tex = null;
 		_ast_Primitive = primitive;
 	}
 

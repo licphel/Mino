@@ -6,18 +6,16 @@ namespace Mino.Framework;
 ///		An auto-saved option.
 /// </summary>
 public class Option<T> {
-	private T _value;
+	private T? _fallback;
 	private Seq _key;
 
-	public Option(Seq key, T? defaultValue = default) {
-		if (!OptionSystem._init) {
-			throw new Error("local data not loaded");
-		}
+	public Option(Seq key, T? fallback) {
 		_key = key;
-		if (!OptionSystem._G.Has(key)) {
-			OptionSystem._G.Set(key, defaultValue);
-		}
-		_value = OptionSystem._G.Get(key, defaultValue);
+		_fallback = fallback;
+		OptionSystem._finalW.Enqueue(delegate {
+			// Flush the value.
+			Set(Get());	
+		});
 	}
 
 	/// <summary>
@@ -25,8 +23,10 @@ public class Option<T> {
 	/// </summary>
 	/// <param name="value">Value to set.</param>
 	public void Set(T value) {
-		_value = value;
-		OptionSystem._G.Set(_key, _value);
+		if (!OptionSystem._init) {
+			throw new Error("local data not loaded");
+		}
+		OptionSystem._G.Set(_key, value);
 	}
 
 	/// <summary>
@@ -34,6 +34,13 @@ public class Option<T> {
 	/// </summary>
 	/// <returns>The option value.</returns>
 	public T Get() {
-		return _value;
+		if (!OptionSystem._init) {
+			throw new Error("local data not loaded");
+		}
+		return OptionSystem._G.Get(_key, _fallback);
+	}
+
+	public static implicit operator T(Option<T> opt) {
+		return opt.Get();
 	}
 }

@@ -36,12 +36,12 @@ public abstract class Executor {
 	/// <summary>
 	///     Called on logic ticks.
 	/// </summary>
-	public Action<TimeStep>? OnTick { get; set; }
+	public Action<TimeStep>? OnUpdate { get; set; }
 
 	/// <summary>
 	///     Called on render ticks.
 	/// </summary>
-	public Action? OnRender { get; set; }
+	public Action? OnDraw { get; set; }
 
 	/// <summary>
 	///     Called on dispose stage.

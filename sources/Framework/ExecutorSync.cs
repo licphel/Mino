@@ -49,7 +49,7 @@ public class ExecutorSync : Executor {
 				previousTick += tickInterval;
 
 				double delta = (double) tickInterval / TicksPerSecond;
-				OnTick?.Invoke(new TimeStep(gameTime, delta));
+				OnUpdate?.Invoke(new TimeStep(gameTime, delta));
 
 				gameTime += TimeSpan.FromSeconds(delta);
 				tickCount++;
@@ -70,7 +70,7 @@ public class ExecutorSync : Executor {
 			bool shouldRender = frameInterval == 0 || current - previousFrame >= frameInterval;
 			if (shouldRender) {
 				previousFrame = current;
-				OnRender?.Invoke();
+				OnDraw?.Invoke();
 				frameCount++;
 			}
 

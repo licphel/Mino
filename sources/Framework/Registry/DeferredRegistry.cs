@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using Mino.Nio;
 
 namespace Mino.Framework.Registry;
 
@@ -7,7 +6,7 @@ namespace Mino.Framework.Registry;
 ///		A deferred register of class types.
 /// </summary>
 public class DeferredRegistry<T> where T : class {
-	private ConcurrentDictionary<Url, DeferredEntry<T>> _map = new ConcurrentDictionary<Url, DeferredEntry<T>>();
+	private ConcurrentDictionary<Identifier, DeferredEntry<T>> _map = new ConcurrentDictionary<Identifier, DeferredEntry<T>>();
 	private ConcurrentQueue<Action> _pendingTasks = new ConcurrentQueue<Action>();
 	private string _scope;
 	private string _tName;
@@ -20,18 +19,30 @@ public class DeferredRegistry<T> where T : class {
 	/// <summary>
 	///		Registers an object.
 	/// </summary>
-	/// <param name="key">Object url key.</param>
+	/// <param name="key">Object id key.</param>
 	/// <param name="t">Object itself.</param>
 	/// <returns>A deferred entry.</returns>
-	public DeferredEntry<T> Register(in Url key, T t) {
+	public DeferredEntry<T> Register(Identifier key, T t) {
+		key = Identifier.Fallback(_scope, key);
 		DeferredEntry<T> entry = _map[key] = new DeferredEntry<T>(() => t, key);
 		_pendingTasks.Enqueue(() => {
 			entry.Fetch();
 		});
 		return entry;
 	}
+
+	/// <summary>
+	///		Executes all pending register requests.
+	/// </summary>
+	public void ExecuteAll() {
+		while (!_pendingTasks.IsEmpty) {
+			if (_pendingTasks.TryDequeue(out Action? act)) {
+				act();
+			}
+		}
+	}
 	
-	public T this[in Url key] {
+	public T this[in Identifier key] {
 		get => _map[key];
 	}
 }

@@ -12,9 +12,17 @@ public interface BrushCache {
 	public ByteBuffer IndexBuf { get; }
 
 	/// <summary>
+	///     Creates a normal closed cache.
+	/// </summary>
+	/// <returns>A brush cache.</returns>
+	public static BrushCache CreateNormal() {
+		return new Self();
+	}
+
+	/// <summary>
 	///     Self cache, no additional output.
 	/// </summary>
-	public class Self : BrushCache {
+	internal class Self : BrushCache {
 		public ByteBuffer VertexBuf { get; } = new ByteBuffer().With(Endianness.Native);
 		public ByteBuffer IndexBuf { get; } = new ByteBuffer().With(Endianness.Native);
 	}

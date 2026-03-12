@@ -8,15 +8,15 @@ namespace Mino.Framework.Registry;
 public class DeferredEntry<T> where T : class {
 	private Func<T> _fetcher;
 	
-	public DeferredEntry(Func<T> fetcher, in Url url) {
+	public DeferredEntry(Func<T> fetcher, in Identifier id) {
 		_fetcher = fetcher;
-		Url = url;
+		Id = id;
 	}
 	
 	/// <summary>
-	///		The registry entry url.
+	///		The registry entry id.
 	/// </summary>
-	public Url Url { get; }
+	public Identifier Id { get; }
 
 	/// <summary>
 	///		The optional value.
@@ -49,6 +49,15 @@ public class DeferredEntry<T> where T : class {
 		} catch {
 			return false;
 		}
+	}
+
+	/// <summary>
+	///		Ensures the value.
+	/// </summary>
+	/// <returns>A present value.</returns>
+	public T Ensure() {
+		Fetch();
+		return Value!;
 	}
 
 	public static implicit operator T(DeferredEntry<T> entry) {

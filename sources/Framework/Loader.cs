@@ -6,7 +6,7 @@ namespace Mino.Framework;
 ///     Universal async resource loader based on url.
 /// </summary>
 public class Loader {
-	public delegate void UrlProcessor(Url id, Url resourceUrl);
+	public delegate void UrlProcessor(Identifier id, Url resourceUrl);
 
 	private int _processedCount;
 	private Dictionary<Predicate<Url>, UrlProcessor> _processors =
@@ -14,6 +14,11 @@ public class Loader {
 	private Queue<Loader> _subordinateLoaders = new Queue<Loader>();
 	private Queue<Action> _taskQueue = new Queue<Action>();
 	private int _totalCount;
+	private string _scope;
+	
+	public Loader(string scope) {
+		_scope = scope;
+	}
 
 	/// <summary>
 	///     The base url of the loader for relative paths.
@@ -126,7 +131,7 @@ public class Loader {
 			throw new Error("cannot enqueue while loading");
 		}
 		Url resName = Url.GetRelativeName(BaseUrl, url);
-		designateToProcessor(resName, url);
+		designateToProcessor(new Identifier(_scope, resName.Path), url);
 	}
 
 	/// <summary>
@@ -140,7 +145,12 @@ public class Loader {
 	///     Scan through the base url.
 	/// </summary>
 	/// <param name="baseUrl">Scan url root.</param>
-	public void Scan(in Url baseUrl) {
+	/// <param name="chRoot">Whether to set base path.</param>
+	public void Scan(in Url baseUrl, bool chRoot = true) {
+		if (chRoot) {
+			BaseUrl = baseUrl;
+		}
+		
 		FileUtil.PathType type = FileUtil.GetTypeOf(baseUrl);
 		if (type == FileUtil.PathType.NotExist) {
 			return;
@@ -150,21 +160,21 @@ public class Loader {
 			return;
 		}
 		// Scan recursively.
-		IEnumerable<Url> files = FileUtil.SubDirectories(baseUrl);
-		foreach (Url file in files) {
-			Scan(file);
+		IEnumerable<Url> subs = FileUtil.SubDirectories(baseUrl);
+		foreach (Url dir in subs) {
+			Scan(dir, false);
 		}
 		// Load files.
-		files = FileUtil.SubFiles(baseUrl);
-		foreach (Url file in files) {
+		subs = FileUtil.SubFiles(baseUrl);
+		foreach (Url file in subs) {
 			Enqueue(file);
 		}
 	}
 
-	private void designateToProcessor(Url id, Url resourceUrl) {
+	private void designateToProcessor(Identifier id, Url resourceUrl) {
 		Enqueue(() => {
 			foreach (KeyValuePair<Predicate<Url>, UrlProcessor> kv in _processors) {
-				if (kv.Key(id)) {
+				if (kv.Key(resourceUrl)) {
 					kv.Value(id, resourceUrl);
 				}
 			}

@@ -18,7 +18,7 @@ public ref struct TextAccess {
 	///  <param name="url">Writing destination.</param>
 	///  <param name="mode">Writing mode, 'a' or 'w'.</param>
 	public void Write(in Url url, string? mode = null) {
-		Stream? stream = url.OpenStream(mode ?? "w");
+		using Stream? stream = url.OpenStream(mode ?? "w");
 		if (stream == null || !stream.CanWrite) {
 			return;
 		}
@@ -30,7 +30,7 @@ public ref struct TextAccess {
 			stream.SetLength(0);
 			stream.Position = 0;
 		}
-
+		
 		using StreamWriter writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
 		writer.Write(_text);
 	}
@@ -47,7 +47,7 @@ public ref struct TextAccess {
 
 	// URL src -> TA
 	public static implicit operator TextAccess(in Url url) {
-		Stream? stream = url.OpenStream("r");
+		using Stream? stream = url.OpenStream("r");
 		if (stream == null || !stream.CanRead) {
 			return string.Empty;
 		}
