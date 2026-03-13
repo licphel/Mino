@@ -29,7 +29,7 @@ public class ExecutorSync : Executor {
 		if (tps <= 0) {
 			throw new Crash("Tps must be > 0");
 		}
-
+		
 		_stopwatch.Start();
 		Key.AddListeningThread(Thread.CurrentThread);
 		
@@ -43,71 +43,83 @@ public class ExecutorSync : Executor {
 		int tickCount = 0, frameCount = 0;
 		TimeSpan gameTime = TimeSpan.Zero;
 
-		while (!window.Closed) {
-			long current = _stopwatch.ElapsedTicks;
-			
-			window.ProcessWindowEvents();
+		try {
+			while (!window.Closed) {
+				long current = _stopwatch.ElapsedTicks;
 
-			// Fixed step ticking.
-			while (current - previousTick >= tickInterval) {
-				previousTick += tickInterval;
+				window.ProcessWindowEvents();
 
-				double delta = (double) tickInterval / TicksPerSecond;
-				OnUpdate?.Invoke(new TimeStep(gameTime, delta));
-				EventBus.Instance.Post(new UpdateEvent(this, Step = new TimeStep(gameTime, delta)));
+				// Fixed step ticking.
+				while (current - previousTick >= tickInterval) {
+					previousTick += tickInterval;
 
-				gameTime += TimeSpan.FromSeconds(delta);
-				tickCount++;
-				Ticks++;
+					double delta = (double) tickInterval / TicksPerSecond;
+					OnUpdate?.Invoke(new TimeStep(gameTime, delta));
+					EventBus.Instance.Post(new UpdateEvent(this, Step = new TimeStep(gameTime, delta)));
 
-				Key.NextListeningRoll();
-				
-				if (current - previousTick >= tickInterval * 4) {
-					previousTick = current - tickInterval;
-					Log.Warn("Tick falls behind");
-					break;
-				}
-			}
+					gameTime += TimeSpan.FromSeconds(delta);
+					tickCount++;
+					Ticks++;
 
-			Partial = (float) ((current - previousTick) / (double) tickInterval);
+					Key.NextListeningRoll();
 
-			// Rendering stage.
-			bool shouldRender = frameInterval == 0 || current - previousFrame >= frameInterval;
-			if (shouldRender) {
-				previousFrame = current;
-				OnDraw?.Invoke();
-				EventBus.Instance.Post(new DrawEvent(this));
-				frameCount++;
-			}
-
-			// Stats.
-			if (current - previousStat >= TicksPerSecond / 2) {
-				Fps = frameCount * 2;
-				Tps = tickCount * 2;
-				frameCount = tickCount = 0;
-				previousStat = current;
-			}
-
-			// Frame control.
-			if (frameInterval > 0) {
-				long nextFrameTime = previousFrame + frameInterval;
-				long sleepTicks = nextFrameTime - _stopwatch.ElapsedTicks;
-
-				if (sleepTicks > 0) {
-					double sleepMs = sleepTicks * 1000.0 / TicksPerSecond;
-					if (sleepMs > 2.0) {
-						Thread.Sleep((int) (sleepMs - 1));
-					}
-					while (_stopwatch.ElapsedTicks < nextFrameTime) {
-						Thread.SpinWait(1);
+					if (current - previousTick >= tickInterval * 4) {
+						previousTick = current - tickInterval;
+						Log.Warn("Tick falls behind");
+						break;
 					}
 				}
-			} else if (!window.Vsync) {
-				Thread.Sleep(0);
+
+				Partial = (float) ((current - previousTick) / (double) tickInterval);
+
+				// Rendering stage.
+				bool shouldRender = frameInterval == 0 || current - previousFrame >= frameInterval;
+				if (shouldRender) {
+					previousFrame = current;
+					OnDraw?.Invoke();
+					EventBus.Instance.Post(new DrawEvent(this));
+					frameCount++;
+				}
+
+				// Stats.
+				if (current - previousStat >= TicksPerSecond / 2) {
+					Fps = frameCount * 2;
+					Tps = tickCount * 2;
+					frameCount = tickCount = 0;
+					previousStat = current;
+				}
+
+				// Frame control.
+				if (frameInterval > 0) {
+					long nextFrameTime = previousFrame + frameInterval;
+					long sleepTicks = nextFrameTime - _stopwatch.ElapsedTicks;
+
+					if (sleepTicks > 0) {
+						double sleepMs = sleepTicks * 1000.0 / TicksPerSecond;
+						if (sleepMs > 2.0) {
+							Thread.Sleep((int) (sleepMs - 1));
+						}
+						while (_stopwatch.ElapsedTicks < nextFrameTime) {
+							Thread.SpinWait(1);
+						}
+					}
+				} else if (!window.Vsync) {
+					Thread.Sleep(0);
+				}
 			}
+		} catch (Exception ex) {
+			/*gi
+			 * Crashes will terminate the game loop.
+			 * We handle them for logging stacktrace.
+			 */
+			Log.Fatal(ex);
 		}
 
-		OnDispose?.Invoke();
-		EventBus.Instance.Post(new DisposeEvent(this));
+		try {
+			OnDispose?.Invoke();
+			EventBus.Instance.Post(new DisposeEvent(this));
+		} catch {
+			// Ignored
+		}
 	}
 }

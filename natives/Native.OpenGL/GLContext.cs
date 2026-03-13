@@ -57,6 +57,8 @@ public class GLContext : AbstractThreadContext {
 		// Initial NDC args.
 		// Default 0 near 1 far.
 		_gl.DepthRange(0.0, 1.0);
+		
+		Log.Info("OpenGL context was successfully initialized");
 	}
 	
 	protected override void OnContextStop() {

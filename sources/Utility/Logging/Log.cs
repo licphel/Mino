@@ -27,39 +27,39 @@ public static class Log {
 	/// <param name="level">The log level.</param>
 	/// <param name="msg">The message to log.</param>
 	/// <param name="ex">Optional exception to log.</param>
-	public static void Print(Severity level, string? msg, Exception? ex) {
-		Instance.Print(level, msg, ex);
+	public static void Print(Severity level, string? msg, Exception? ex, bool header) {
+		Instance.Print(level, msg, ex, header);
 	}
 	
-	public static void Debug(string msg, Exception? ex = null) {
-		Print(Severity.Debug, msg, ex);
+	public static void Debug(string msg, Exception? ex = null, bool header = true) {
+		Print(Severity.Debug, msg, ex, header);
 	}
 
-	public static void Info(string msg, Exception? ex = null) {
-		Print(Severity.Info, msg, ex);
+	public static void Info(string msg, Exception? ex = null, bool header = true) {
+		Print(Severity.Info, msg, ex, header);
 	}
 	
-	public static void Warn(string msg, Exception? ex = null) {
-		Print(Severity.Warn, msg, ex);
+	public static void Warn(string msg, Exception? ex = null, bool header = true) {
+		Print(Severity.Warn, msg, ex, header);
 	}
 
-	public static void Fatal(string msg, Exception? ex = null) {
-		Print(Severity.Fatal, msg, ex);
+	public static void Fatal(string msg, Exception? ex = null, bool header = true) {
+		Print(Severity.Fatal, msg, ex, header);
 	}
 	
-	public static void Debug(Exception ex) {
-		Print(Severity.Debug, null, ex);
+	public static void Debug(Exception ex, bool header = true) {
+		Print(Severity.Debug, null, ex, header);
 	}
 
-	public static void Info(Exception ex) {
-		Print(Severity.Info, null, ex);
+	public static void Info(Exception ex, bool header = true) {
+		Print(Severity.Info, null, ex, header);
 	}
 	
-	public static void Warn(Exception ex) {
-		Print(Severity.Warn, null, ex);
+	public static void Warn(Exception ex, bool header = true) {
+		Print(Severity.Warn, null, ex, header);
 	}
 
-	public static void Fatal(Exception ex) {
-		Print(Severity.Fatal, null, ex);
+	public static void Fatal(Exception ex, bool header = true) {
+		Print(Severity.Fatal, null, ex, header);
 	}
 }

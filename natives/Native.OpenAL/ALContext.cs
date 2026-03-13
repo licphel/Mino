@@ -63,6 +63,7 @@ public unsafe sealed class ALContext : AbstractThreadContext {
 			throw new Crash("OpenAL create context failed");
 		}
 		_alc.MakeContextCurrent(_context);
+		Log.Info("OpenAL context was successfully initialized");
 
 		/*
 		 * Initial listener position & orientation.

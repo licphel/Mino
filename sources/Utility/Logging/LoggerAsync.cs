@@ -16,9 +16,10 @@ public class LoggerAsync : Logger {
 	private readonly Task _processor;
 	private readonly ConcurrentBag<StreamWriter> _writers = new ConcurrentBag<StreamWriter>();
 	private bool _debugEnabled;
-	private bool _rethrow;
+	private bool _noexcept;
 	private bool _disposed;
-
+	private readonly TaskCompletionSource _completed = new TaskCompletionSource();
+	
 	public LoggerAsync() {
 		_processor = Task.Run(processAsync);
 	}
@@ -36,7 +37,7 @@ public class LoggerAsync : Logger {
 	}
 
 	public void EnableNoexcept() {
-		_rethrow = true;
+		_noexcept = true;
 	}
 
 	public void Flush() {
@@ -45,12 +46,18 @@ public class LoggerAsync : Logger {
 		}
 	}
 
-	public void Print(Severity level, string? msg, Exception? ex) {
+	public void Print(Severity level, string? msg, Exception? ex, bool header) {
 		if (level == Severity.Debug && !_debugEnabled) {
 			return;
 		}
-		_channel.Writer.TryWrite(Logger.FormatLog(level, msg, ex));
-		if (_rethrow && ex != null) {
+
+		string ln = Logger.FormatLog(level, msg, ex, header);
+		if (!_channel.Writer.TryWrite(ln)) {
+			// Instead use console.
+			Console.WriteLine(ln);
+		}
+
+		if (ex != null && _noexcept) {
 			throw ex;
 		}
 	}
@@ -59,13 +66,10 @@ public class LoggerAsync : Logger {
 		while (!_cts.IsCancellationRequested) {
 			try {
 				string line = await _channel.Reader.ReadAsync(_cts.Token);
+				
 				foreach (StreamWriter writer in _writers) {
-					try {
-						await writer.WriteAsync(line);
-						await writer.FlushAsync();
-					} catch {
-						_writers.TryTake(out _);
-					}
+					await writer.WriteLineAsync(line);
+					await writer.FlushAsync();
 				}
 			} catch (OperationCanceledException) {
 				break;
@@ -83,7 +87,14 @@ public class LoggerAsync : Logger {
 		GC.SuppressFinalize(this);
 
 		_channel.Writer.Complete();
-		_processor.Wait(100);
+		
+		try {
+			// Wait at most 1.5s.
+			_processor.Wait((int) (1000 * 1.5));
+		} catch (AggregateException) {
+			// Ignored
+		}
+		
 		foreach (StreamWriter? writer in _writers) {
 			writer?.Dispose();
 		}

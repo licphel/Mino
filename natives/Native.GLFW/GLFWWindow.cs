@@ -6,6 +6,7 @@ using Mino.Input;
 using Mino.Mathematics;
 using Mino.Nio;
 using Mino.Utility;
+using Mino.Utility.Logging;
 using Silk.NET.GLFW;
 using TextCopy;
 using GLFW_Image = Silk.NET.GLFW.Image;
@@ -183,6 +184,8 @@ public unsafe sealed class GLFWWindow : Window {
 		if (hints.Visible) {
 			_glfw.ShowWindow(_handle);
 		}
+		
+		Log.Info("GLFW env successfully set");
 	}
 	
 	public override void MakeContextCurrent() {

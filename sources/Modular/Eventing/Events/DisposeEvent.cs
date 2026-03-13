@@ -5,7 +5,7 @@ namespace Mino.Modular.Eventing.Events;
 /// <summary>
 ///		Event: on Executor.OnDispose.
 /// </summary>
-public class DisposeEvent : Event {
+public sealed class DisposeEvent : Event {
 	public readonly Executor Executor;
 	
 	public DisposeEvent(Executor executor) {

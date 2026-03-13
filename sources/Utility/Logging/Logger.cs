@@ -36,7 +36,8 @@ public interface Logger : IDisposable {
 	/// <param name="level">The log level.</param>
 	/// <param name="msg">The message to log.</param>
 	/// <param name="ex">Optional exception to log.</param>
-	void Print(Severity level, string? msg, Exception? ex);
+	/// <param name="header">Whether to use logging header.</param>
+	void Print(Severity level, string? msg, Exception? ex, bool header);
 
 	/// <summary>
 	///     Gets a standard log line.
@@ -44,16 +45,19 @@ public interface Logger : IDisposable {
 	/// <param name="level">The log level.</param>
 	/// <param name="msg">The message to log.</param>
 	/// <param name="ex">Optional exception.</param>
-	/// <returns></returns>
-	public static string FormatLog(Severity level, string? msg, Exception? ex) {
+	/// <param name="header">Whether to use logging header.</param>
+	/// <returns>A formatted line.</returns>
+	public static string FormatLog(Severity level, string? msg, Exception? ex, bool header) {
 		string timestamp = DateTime.UtcNow.ToString("u", CultureInfo.CurrentCulture);
 		string levelStr = level.ToString();
+		string threadName = Thread.CurrentThread.Name ?? "-";
+		string head = header ? $"[{timestamp}] [{threadName}/{levelStr}]" : string.Empty;
 		if (ex == null) {
-			return $"{timestamp} {levelStr}. {msg}\n";
+			return $"{head} {msg}";
 		}
 		if (msg != null) {
-			return $"{timestamp} {levelStr}. {msg}: {ex}\n";
+			return $"{head} {msg}: {ex}";
 		}
-		return $"{timestamp} {levelStr}. {ex}\n";
+		return $"{head} {ex}";
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using Mino.Utility;
+using Mino.Utility.Logging;
 
 namespace Mino.Modular.Registry;
 
@@ -41,6 +42,8 @@ public class DeferredRegistry<T> where T : class, Registerable {
 			throw new Crash($"Try to register '{key}' after registry is frozen");
 		}
 		
+		Log.Debug($"Register {_scope}:{_tName}, key={key}");
+		
 		key = Identifier.Fallback(_scope, key);
 		DeferredEntry<T> entry = new DeferredEntry<T>(key);
 		_pendingTasks.Enqueue(() => {
@@ -60,6 +63,8 @@ public class DeferredRegistry<T> where T : class, Registerable {
 	/// </summary>
 	public void Freeze() {
 		_lock.EnterWriteLock();
+		Log.Info($"Registry {_scope}:{_tName} is frozen");
+		
 		while (_pendingTasks.Count > 0) {
 			if (_pendingTasks.TryDequeue(out Action? act)) {
 				act();

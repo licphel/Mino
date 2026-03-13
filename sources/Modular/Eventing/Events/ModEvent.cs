@@ -3,7 +3,7 @@
 /// <summary>
 ///		Event: on mod changes.
 /// </summary>
-public class ModEvent : Event {
+public sealed class ModEvent : Event {
 	public readonly string ModId;
 	// "e" - enabling
 	// "d" - disabling

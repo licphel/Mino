@@ -25,7 +25,7 @@ public class AssetLoader {
 	/// <summary>
 	///     The base url of the loader for relative paths.
 	/// </summary>
-	public Url BaseUrl { get; set; } = Url.Runtime;
+	public Url BaseUrl { get; set; } = Url.Local(string.Empty);
 
 	/// <summary>
 	///     Called before the first item loading.
@@ -155,6 +155,7 @@ public class AssetLoader {
 		if (chRoot) {
 			BaseUrl = baseUrl;
 		}
+		Log.Debug($"Scan in '{baseUrl}'");
 		
 		FileUtil.PathType type = FileUtil.GetTypeOf(baseUrl);
 		if (type == FileUtil.PathType.NotExist) {
@@ -180,6 +181,7 @@ public class AssetLoader {
 		Enqueue(() => {
 			foreach (KeyValuePair<Predicate<Url>, UrlProcessor> kv in _processors) {
 				if (kv.Key(assetUrl)) {
+					Log.Debug($"Loaded asset: {id}");
 					kv.Value(id, assetUrl);
 				}
 			}
