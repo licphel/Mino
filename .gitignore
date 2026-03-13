@@ -1,5 +1,3 @@
 # Ignore csharp compiling output dirs.
 bin/
 obj/
-covtest/
-.idea/

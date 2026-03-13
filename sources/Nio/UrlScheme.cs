@@ -16,7 +16,6 @@ public interface UrlScheme {
 	public static readonly UrlScheme PcFile = RegisterScheme("file", new FileImpl());
 	public static readonly UrlScheme PcHttp = RegisterScheme("http", new HttpImpl("http"));
 	public static readonly UrlScheme PcHttps = RegisterScheme("https", new HttpImpl("https"));
-	public static readonly UrlScheme PcRf = RegisterScheme("rf", new RfImpl());
 	public static readonly UrlScheme PcConsole = RegisterScheme("console", new ConsoleImpl());
 
 	public Url this[string name] {
@@ -142,32 +141,6 @@ public interface UrlScheme {
 
 		public override string ToString() {
 			return _scheme;
-		}
-	}
-
-	// 'rf' (Resource Finding) scheme implementation,
-	// like 'rf://example/sound/test.wav'.
-	private sealed class RfImpl : UrlScheme {
-		private static readonly Url _runtimeModUrl = Url.Runtime / "mod";
-
-		public bool IsFileBased {
-			get => true;
-		}
-
-		public Stream? OpenStream(Url url, string op) {
-			return (_runtimeModUrl / url.Path).OpenStream(op);
-		}
-
-		public Task<Stream?> OpenStreamAsync(Url url, string op, CancellationToken ct) {
-			return (_runtimeModUrl / url.Path).OpenStreamAsync(op, ct);
-		}
-
-		public string ToFilePath(Url url) {
-			return (_runtimeModUrl / url.Path).Path;
-		}
-
-		public override string ToString() {
-			return "rf";
 		}
 	}
 

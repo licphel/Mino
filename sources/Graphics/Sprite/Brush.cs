@@ -4,7 +4,7 @@ using Mino.Graphics.Desc;
 using Mino.Graphics.Enum;
 using Mino.Graphics.Text;
 using Mino.Mathematics;
-using Mino.Mathematics.Planar;
+using Mino.Mathematics.TwoDim;
 using Mino.Nio;
 #endregion
 
@@ -105,7 +105,7 @@ public unsafe class Brush : IDisposable {
 	private Encoder _encoder = null!;
 	private BufferObject _ibo = null!;
 	private BufferObject _ubo = null!;
-	private CameraPlanar _camera = CameraPlanar.Normal(new CameraPlanar());
+	private Camera2D _camera = Camera2D.Normal(new Camera2D());
 	/*
 	 * Other variables
 	 */
@@ -134,7 +134,7 @@ public unsafe class Brush : IDisposable {
 	///     Current camera.
 	///     This operation will flush the brush.
 	/// </summary>
-	public CameraPlanar Camera {
+	public Camera2D Camera {
 		get => _camera;
 		set {
 			SetViewProjection(value.ViewProjectionMatrix);

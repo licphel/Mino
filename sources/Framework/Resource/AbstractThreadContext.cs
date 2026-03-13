@@ -70,6 +70,9 @@ public abstract unsafe class AbstractThreadContext : ThreadContext {
 			OnContextStart();
 			
 			while (!_cts.Token.IsCancellationRequested) {
+				// Bug fixed: No SpinWait, no Sleep.
+				// (for fast screen recording)
+				// use a blocking queue is much better.
 				_commandQueue.Take().Execute(this);
 			}
 		} finally {

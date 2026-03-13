@@ -97,7 +97,7 @@ internal class TagMapJsonConverter : JsonConverter<TagMap> {
 
 	public override void Write(Utf8JsonWriter writer, TagMap value, JsonSerializerOptions options) {
 		writer.WriteStartObject();
-
+		
 		foreach (KeyValuePair<string, object> kv in value) {
 			writer.WritePropertyName(kv.Key);
 			_write(writer, kv.Value, options);

@@ -9,6 +9,12 @@ namespace Mino.Nio.NBT;
 ///     NBT Map component.
 /// </summary>
 public class TagMap : IEnumerable<KeyValuePair<string, object>> {
+	/*
+	 * 'Split semantic' is what makes a key sequence like 'a.b.c' able to get a value in layered objects properly.
+	 * To use this, you must add a '$' before your key content.
+	 * However, 'a.b.<List Index>' is unacceptable now.
+	 */
+	public const char SplitSemanticChar = '$';
 	
 	// Toolkit factories.
 	// Used like map.Get<TagMap>("my_key", TagMap.NewMap);
@@ -40,8 +46,8 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	/// </summary>
 	/// <param name="key">Checking key.</param>
 	/// <returns>True if has, otherwise false.</returns>
-	public bool Has(in Seq key) {
-		if (key.ShouldSplit) {
+	public bool Has(string key) {
+		if (key.StartsWith(SplitSemanticChar)) {
 			SeekForDest(key, false, out TagMap? map, out _);
 			return map != null;
 		}
@@ -56,9 +62,9 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	/// <param name="fallback">Fallback value.</param>
 	/// <typeparam name="T">Type cast target.</typeparam>
 	/// <returns>A casted value.</returns>
-	public T Get<T>(in Seq key, in Maybe<T> fallback = default) {
-		if (key.ShouldSplit) {
-			SeekForDest(key, false, out TagMap? map, out Seq key1);
+	public T Get<T>(string key, in Maybe<T> fallback = default) {
+		if (key.StartsWith(SplitSemanticChar)) {
+			SeekForDest(key, false, out TagMap? map, out string key1);
 			if (map == null) {
 				return TagSystem.GetNonnullFallback(fallback);
 			}
@@ -78,9 +84,9 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	/// <param name="fallback">Fallback value.</param>
 	/// <typeparam name="T">Type cast target.</typeparam>
 	/// <returns>A casted value.</returns>
-	public T Get<T>(in Seq key, Func<T> fallback) {
-		if (key.ShouldSplit) {
-			SeekForDest(key, false, out TagMap? map, out Seq key1);
+	public T Get<T>(string key, Func<T> fallback) {
+		if (key.StartsWith(SplitSemanticChar)) {
+			SeekForDest(key, false, out TagMap? map, out string key1);
 			if (map == null) {
 				return fallback();
 			}
@@ -100,9 +106,9 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	/// <param name="value">Output value.</param>
 	/// <typeparam name="T">Type cast target.</typeparam>
 	/// <returns>True if this map has the key, otherwise false.</returns>
-	public bool TryGet<T>(in Seq key, out T value) {
-		if (key.ShouldSplit) {
-			SeekForDest(key, false, out TagMap? map, out Seq key1);
+	public bool TryGet<T>(string key, out T value) {
+		if (key.StartsWith(SplitSemanticChar)) {
+			SeekForDest(key, false, out TagMap? map, out string key1);
 			if (map == null) {
 				value = default!;
 				return false;
@@ -126,12 +132,12 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	/// <param name="key">Map key.</param>
 	/// <param name="v">Set value.</param>
 	/// <exception cref="Error">Thrown if value type is invalid.</exception>
-	public void Set(in Seq key, object? v) {
+	public void Set(string key, object? v) {
 		if (!TagSystem.Validate(v)) {
 			throw new Error($"invalid type: {v?.GetType()}");
 		}
-		if (key.ShouldSplit) {
-			SeekForDest(key, true, out TagMap? map, out Seq key1);
+		if (key.StartsWith(SplitSemanticChar)) {
+			SeekForDest(key, true, out TagMap? map, out string key1);
 			map!.Set(key1, v);
 		} else {
 			_dict[key] = v;
@@ -142,9 +148,9 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	///     Removes a key-value pair.
 	/// </summary>
 	/// <param name="key">Map key.</param>
-	public void Remove(in Seq key) {
-		if (key.ShouldSplit) {
-			SeekForDest(key, false, out TagMap? map, out Seq key1);
+	public void Remove(string key) {
+		if (key.StartsWith(SplitSemanticChar)) {
+			SeekForDest(key, false, out TagMap? map, out string key1);
 			map?.Remove(key1);
 		} else {
 			_dict.Remove(key);
@@ -158,8 +164,8 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	///  <param name="shouldCreate">If the seeking should create new map in the way.</param>
 	///  <param name="mapEnd">Output sought map.</param>
 	///  <param name="keyEnd">Output sought key.</param>
-	public void SeekForDest(in Seq key, bool shouldCreate, out TagMap? mapEnd, out Seq keyEnd) {
-		string[] keys = key.Semantic.Split('.');
+	public void SeekForDest(string key, bool shouldCreate, out TagMap? mapEnd, out string keyEnd) {
+		string[] keys = key.Substring(1).Split('.');
 		if (keys.Length <= 1) {
 			keyEnd = key;
 			mapEnd = this;

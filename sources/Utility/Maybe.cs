@@ -91,4 +91,12 @@ public readonly struct Maybe<T> : IEquatable<Maybe<T>> {
 			? $"Some({_value})"
 			: "None";
 	}
+
+    public static bool operator ==(Maybe<T> left, Maybe<T> right) {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Maybe<T> left, Maybe<T> right) {
+        return !(left == right);
+    }
 }

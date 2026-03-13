@@ -2,8 +2,8 @@
 using System.Diagnostics;
 using Mino.Desktop;
 using Mino.Input;
-using Mino.Modding;
-using Mino.Modding.Events;
+using Mino.Modular;
+using Mino.Modular.Events;
 #endregion
 
 namespace Mino.Framework;

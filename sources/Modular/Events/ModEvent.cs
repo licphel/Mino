@@ -1,0 +1,16 @@
+﻿namespace Mino.Modular.Events;
+
+/// <summary>
+///		Event: on mod changes.
+/// </summary>
+public class ModEvent : Event {
+	public readonly string ModId;
+	// "e" - enabling
+	// "d" - disabling
+	public string Op;
+	
+	public ModEvent(string modId, string op) {
+		ModId = modId;
+		Op = op;
+	}
+}

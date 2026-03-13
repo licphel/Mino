@@ -1,5 +1,4 @@
-﻿using Mino.Nio.NBT;
-using Mino.Utility;
+﻿using Mino.Utility;
 
 namespace Mino.Framework;
 
@@ -8,9 +7,9 @@ namespace Mino.Framework;
 /// </summary>
 public class Option<T> {
 	private Maybe<T> _fallback;
-	private Seq _key;
+	private string _key;
 
-	public Option(Seq key, in Maybe<T> fallback) {
+	public Option(string key, in Maybe<T> fallback) {
 		_key = key;
 		_fallback = fallback;
 		OptionSystem._finalW.Enqueue(delegate {

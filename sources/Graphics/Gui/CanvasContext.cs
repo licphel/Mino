@@ -2,7 +2,7 @@
 using Mino.Framework;
 using Mino.Graphics.Sprite;
 using Mino.Mathematics;
-using Mino.Mathematics.Planar;
+using Mino.Mathematics.TwoDim;
 #endregion
 
 namespace Mino.Graphics.Gui;
@@ -24,7 +24,7 @@ public class CanvasContext {
 	/// <summary>
 	///     Canvas camera.
 	/// </summary>
-	public virtual CameraPlanar Camera {
+	public virtual Camera2D Camera {
 		get => Brush.Camera;
 	}
 

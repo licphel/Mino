@@ -1,6 +1,6 @@
 ﻿#region
 using System.Runtime.CompilerServices;
-using Mino.Mathematics.Spatial;
+using Mino.Mathematics.ThreeDim;
 #endregion
 
 namespace Mino.Mathematics;

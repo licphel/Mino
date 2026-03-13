@@ -1,5 +1,5 @@
 ﻿#region
-using Mino.Mathematics.Spatial;
+using Mino.Mathematics.ThreeDim;
 #endregion
 
 namespace Mino.Mathematics;
@@ -102,7 +102,7 @@ public readonly struct Sphere : IEquatable<Sphere> {
 	/// <param name="ray">The ray to test.</param>
 	/// <param name="t">Output intersection distance (closest if two intersections).</param>
 	/// <returns>True if ray intersects the sphere.</returns>
-	public bool Intersects(in Ray ray, out float t) {
+	public bool Intersects(in Ray3D ray, out float t) {
 		Vector3 oc = ray.Origin - Center;
 		float a = ray.Direction.LengthSquared;
 		float b = 2.0F * oc.Dot(ray.Direction);
