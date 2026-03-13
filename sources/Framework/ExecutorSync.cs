@@ -2,8 +2,10 @@
 using System.Diagnostics;
 using Mino.Desktop;
 using Mino.Input;
-using Mino.Modular;
-using Mino.Modular.Events;
+using Mino.Modular.Eventing;
+using Mino.Modular.Eventing.Events;
+using Mino.Utility;
+using Mino.Utility.Logging;
 #endregion
 
 namespace Mino.Framework;
@@ -25,7 +27,7 @@ public class ExecutorSync : Executor {
 	/// <param name="fps">Target frames per second. Use -1 for unlimited (VSync).</param>
 	public override void Start(Window window, int tps, int fps = -1) {
 		if (tps <= 0) {
-			throw new Error("tps must be > 0");
+			throw new Crash("Tps must be > 0");
 		}
 
 		_stopwatch.Start();
@@ -62,7 +64,7 @@ public class ExecutorSync : Executor {
 				
 				if (current - previousTick >= tickInterval * 4) {
 					previousTick = current - tickInterval;
-					Logger.Global.Warn("tick falls behind");
+					Log.Warn("Tick falls behind");
 					break;
 				}
 			}

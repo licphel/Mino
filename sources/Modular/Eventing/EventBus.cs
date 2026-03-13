@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 #endregion
 
-namespace Mino.Modular;
+namespace Mino.Modular.Eventing;
 
 /// <summary>
 ///		High speed event bus.
@@ -48,7 +48,7 @@ public sealed class EventBus {
 				MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
 
 				foreach (MethodInfo method in methods) {
-					SubscribeEventAttribute? attr = method.GetCustomAttribute<SubscribeEventAttribute>();
+					SubscribeEvent? attr = method.GetCustomAttribute<SubscribeEvent>();
 					if (attr == null) {
 						continue;
 					}
@@ -160,8 +160,8 @@ public sealed class EventBus {
 	}
 
 	private static EventHandler mkDelegate(MethodInfo method, Type eventType) {
-		EventPriority priority = method.GetCustomAttribute<SubscribeEventAttribute>()!.Priority;
-		bool receiveCanceled = method.GetCustomAttribute<SubscribeEventAttribute>()!.ReceiveCanceled;
+		EventPriority priority = method.GetCustomAttribute<SubscribeEvent>()!.Priority;
+		bool receiveCanceled = method.GetCustomAttribute<SubscribeEvent>()!.ReceiveCanceled;
 
 		DynamicMethod dynamicMethod = new DynamicMethod(
 			$"dynamic_{method.Name}",

@@ -1,5 +1,6 @@
 ﻿#region
 using Mino.Graphics.Enum;
+using Mino.Utility;
 #endregion
 
 namespace Mino.Graphics;
@@ -43,7 +44,7 @@ public class VertexLayout {
 			VertexAttributeType.Int32 => 4,
 			VertexAttributeType.Float16 => 2,
 			VertexAttributeType.Float32 => 4,
-			_ => throw new Error(nameof(type))
+			_ => throw new Crash("Invalid arg:" + nameof(type))
 		};
 	}
 

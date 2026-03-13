@@ -265,8 +265,6 @@ public unsafe class Brush : IDisposable {
 				_encoder.SetTopology(Topology.Point);
 				_encoder.Draw(_vertCnt, 0);
 				break;
-			default:
-				throw new Error("unreachable");
 		}
 
 		_encoder.QueuedExecute();

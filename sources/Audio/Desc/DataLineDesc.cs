@@ -1,6 +1,7 @@
 ﻿#region
 using Mino.Audio.Enum;
 using Mino.Nio;
+using Mino.Utility;
 using NAudio.Wave;
 #endregion
 
@@ -69,8 +70,8 @@ public record struct DataLineDesc {
 			(1, 16) => DataLineFormat.Mono16,
 			(2, 8) => DataLineFormat.Stereo8,
 			(2, 16) => DataLineFormat.Stereo16,
-			_ => throw new Error(
-				$"unsupported PCM WAVE format: {channels}ch {bitsPerSample}bit")
+			_ => throw new Crash(
+				$"Unsupported PCM WAVE format: {channels}ch {bitsPerSample}bit")
 		};
 	}
 }

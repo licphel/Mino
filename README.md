@@ -22,8 +22,8 @@ used features including audio, rendering, networking, serialization, and resourc
 - **Cross-thread Graphics System**
 - **2D Batching and GUI System**
 - **Networking (Bases on packets)**
-- **Resource Management**
-- **Lifecycle Control**
+- **Resource and I18N Management**
+- **Built-in Modding System and Event Bus**
 
 ## Quick Start
 

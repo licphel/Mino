@@ -1,6 +1,8 @@
 ﻿using Mino.Audio;
 using Mino.Framework.Resource;
 using Mino.Native.OpenAL.Object;
+using Mino.Utility;
+using Mino.Utility.Logging;
 using Silk.NET.OpenAL;
 using ALC = Silk.NET.OpenAL.ALContext;
 
@@ -28,7 +30,7 @@ public unsafe sealed class ALContext : AbstractThreadContext {
 		Pend(() => {
 			AudioError err;
 			while ((err = _al.GetError()) != AudioError.NoError) {
-				throw new Error($"al error raised '{err}'");
+				Log.Warn($"OpenAL error raised: '{err}'");
 			}
 
 			// Tracking playback states.
@@ -54,11 +56,11 @@ public unsafe sealed class ALContext : AbstractThreadContext {
 	protected override void OnContextStart() {
 		_device = _alc.OpenDevice(null);
 		if (_device == null) {
-			throw new Error("al open device failed");
+			throw new Crash("OpenAL open device failed");
 		}
 		_context = _alc.CreateContext(_device, null);
 		if (_context == null) {
-			throw new Error("al create context failed");
+			throw new Crash("OpenAL create context failed");
 		}
 		_alc.MakeContextCurrent(_context);
 

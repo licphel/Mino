@@ -1,6 +1,7 @@
 ﻿#region
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Mino.Utility;
 #endregion
 
 namespace Mino.Nio;
@@ -152,7 +153,7 @@ public class ByteBuffer {
 		int size = Unsafe.SizeOf<T>();
 
 		if (size > 1 && Endianness == Endianness.Unsure) {
-			throw new Error("unsure endianness for >1 bytes read");
+			throw new Crash("Unsure endianness for >1 bytes read");
 		}
 
 		Ensure(size);
@@ -215,11 +216,11 @@ public class ByteBuffer {
 		int size = Unsafe.SizeOf<T>();
 
 		if (ReadableBytes < size) {
-			throw new Error("nothing to read");
+			throw new Crash("Nothing to read");
 		}
 
 		if (size > 1 && Endianness == Endianness.Unsure) {
-			throw new Error("unsure endianness for >1 bytes read");
+			throw new Crash("Unsure endianness for >1 bytes read");
 		}
 
 		Span<byte> span = BufferArray.AsSpan(ReadIndex, size);

@@ -1,3 +1,5 @@
+using Mino.Utility;
+
 namespace Mino.Mathematics.Random;
 
 /// <summary>
@@ -20,7 +22,7 @@ public class RandomGeneratorXoroshiro128 : RandomGenerator {
 
 	public RandomGeneratorXoroshiro128(ulong stateA, ulong stateB) {
 		if (stateA == 0 && stateB == 0) {
-			throw new Error("state cannot be all zeros");
+			throw new Crash("States cannot be all zeros");
 		}
 		_stateIA = _stateA = stateA;
 		_stateIB = _stateB = stateB;
@@ -35,7 +37,7 @@ public class RandomGeneratorXoroshiro128 : RandomGenerator {
 
 	public int NextInt(int bound) {
 		if (bound <= 0) {
-			throw new Error(nameof(bound), "Bound must be positive.");
+			throw new Crash("Bound must be positive");
 		}
 
 		ulong mask = ~0UL;
@@ -70,7 +72,7 @@ public class RandomGeneratorXoroshiro128 : RandomGenerator {
 
 	public void Recover(ulong[] state) {
 		if (state.Length != 3 || state[0] != Xor128Header) {
-			throw new Error("unknown state format");
+			throw new Crash("Unknown state format");
 		}
 		_stateIA = _stateA = state[1];
 		_stateIB = _stateB = state[2];

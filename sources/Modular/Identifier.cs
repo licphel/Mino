@@ -1,4 +1,5 @@
 ﻿using Mino.Nio;
+using Mino.Utility;
 
 namespace Mino.Modular;
 
@@ -74,11 +75,11 @@ public readonly struct Identifier : IEquatable<Identifier> {
 	///		Converts to a url.
 	/// </summary>
 	/// <returns>A url of scope - mod id, key - resource finder.</returns>
-	/// <exception cref="Error">Thrown if there's no matching mod.</exception>
+	/// <exception cref="Crash">Thrown if there's no matching mod.</exception>
 	public Url ToUrl() {
 		Mod? mod = Mod.Mods!.GetValueOrDefault(Scope, null);
 		if (mod == null) {
-			throw new Error("scope does not match a mod id");
+			throw new Crash($"Scope '{Scope}' is not a mod id");
 		}
 		
 		return mod.Directory / Key;

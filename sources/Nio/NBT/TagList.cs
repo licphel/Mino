@@ -57,10 +57,10 @@ public class TagList : IEnumerable<object> {
 	///     Adds a value to the end of the list.
 	/// </summary>
 	/// <param name="v">Pushed value.</param>
-	/// <exception cref="Error">Thrown if value type is invalid.</exception>
+	/// <exception cref="Crash">Thrown if value type is invalid.</exception>
 	public void Add(object? v) {
 		if (!TagSystem.Validate(v)) {
-			throw new Error($"invalid type: {v?.GetType()}");
+			throw new Crash($"Invalid type: {v?.GetType()}");
 		}
 		_list.Add(v);
 	}
@@ -70,10 +70,10 @@ public class TagList : IEnumerable<object> {
 	/// </summary>
 	/// <param name="index">Index.</param>
 	/// <param name="v">Inserted value.</param>
-	/// <exception cref="Error">Thrown if value type is invalid.</exception>
+	/// <exception cref="Crash">Thrown if value type is invalid.</exception>
 	public void Insert(int index, object? v) {
 		if (!TagSystem.Validate(v)) {
-			throw new Error($"invalid type: {v?.GetType()}");
+			throw new Crash($"Invalid type: {v?.GetType()}");
 		}
 		_list.Insert(index, v);
 	}
@@ -83,10 +83,10 @@ public class TagList : IEnumerable<object> {
 	/// </summary>
 	/// <param name="index">Index.</param>
 	/// <param name="v">Set value.</param>
-	/// <exception cref="Error">Thrown if value type is invalid.</exception>
+	/// <exception cref="Crash">Thrown if value type is invalid.</exception>
 	public void Set(int index, object? v) {
 		if (!TagSystem.Validate(v)) {
-			throw new Error($"invalid type: {v?.GetType()}");
+			throw new Crash($"Invalid type: {v?.GetType()}");
 		}
 		_list[index] = v;
 	}
@@ -141,7 +141,7 @@ public class TagList : IEnumerable<object> {
 
 	public override int GetHashCode() {
 		// Hashcode is not stable.
-		throw new Error("cannot use as key");
+		throw new Crash("Cannot use TagList as keys");
 	}
 
 	public static bool operator ==(TagList? left, TagList? right) {

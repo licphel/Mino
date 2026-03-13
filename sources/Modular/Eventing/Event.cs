@@ -1,4 +1,4 @@
-﻿namespace Mino.Modular;
+﻿namespace Mino.Modular.Eventing;
 
 /// <summary>
 ///		Event class.

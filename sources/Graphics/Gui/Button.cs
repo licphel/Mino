@@ -50,10 +50,10 @@ public class Button : Component {
 
 	public Button(Drawable?[] drawables, DataLine?[] lines, Mode mode = Mode.Clicking) {
 		if (drawables.Length != (mode == Mode.Clicking ? 3 : 2)) {
-			throw new Error("asset confirmation failed");
+			throw new Crash("Asset confirmation failed");
 		}
 		if (lines.Length != 2) {
-			throw new Error("asset confirmation failed");
+			throw new Crash("Asset confirmation failed");
 		}
 
 		_asset_Drawables = drawables;
@@ -74,11 +74,11 @@ public class Button : Component {
 	/// <summary>
 	///     Whether the button is switched on.
 	/// </summary>
-	/// <exception cref="Error">Thrown if the button cannot switch.</exception>
+	/// <exception cref="Crash">Thrown if the button cannot switch.</exception>
 	public bool IsOn {
 		get {
 			if (_mode != Mode.Switching) {
-				throw new Error("cannot switch");
+				throw new Crash("Button cannot switch");
 			}
 			return _state == 1;
 		}

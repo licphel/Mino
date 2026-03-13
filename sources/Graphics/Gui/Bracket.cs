@@ -1,5 +1,6 @@
 ﻿using Mino.Graphics.Sprite;
 using Mino.Mathematics;
+using Mino.Utility;
 
 namespace Mino.Graphics.Gui;
 
@@ -20,7 +21,7 @@ public class Bracket : Component {
 
 	public Bracket(Drawable?[] drawables, ScrollBar bar) {
 		if (drawables.Length != 1) {
-			throw new Error("asset confirmation failed");
+			throw new Crash("Asset confirmation failed");
 		}
 		_asset_Drawables = drawables;
 		

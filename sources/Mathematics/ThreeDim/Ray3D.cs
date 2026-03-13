@@ -1,4 +1,6 @@
-﻿namespace Mino.Mathematics.ThreeDim;
+﻿using Mino.Utility;
+
+namespace Mino.Mathematics.ThreeDim;
 
 /// <summary>
 ///     Immutable ray 3D.
@@ -12,11 +14,11 @@ public readonly struct Ray3D {
 	/// </summary>
 	/// <param name="origin">Ray origin point.</param>
 	/// <param name="direction">Ray direction (will be normalized).</param>
-	/// <exception cref="Error">Thrown when direction is zero vector.</exception>
+	/// <exception cref="Crash">Thrown when direction is zero vector.</exception>
 	public Ray3D(in Vector3 origin, in Vector3 direction) {
 		Origin = origin;
 		if (Comparison.DoEqual(0.0F, direction.LengthSquared)) {
-			throw new Error("zero directional vector");
+			throw new Crash("Zero directional vector");
 		}
 		Direction = direction.Normalize();
 	}

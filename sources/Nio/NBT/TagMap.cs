@@ -131,10 +131,10 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	/// </summary>
 	/// <param name="key">Map key.</param>
 	/// <param name="v">Set value.</param>
-	/// <exception cref="Error">Thrown if value type is invalid.</exception>
+	/// <exception cref="Crash">Thrown if value type is invalid.</exception>
 	public void Set(string key, object? v) {
 		if (!TagSystem.Validate(v)) {
-			throw new Error($"invalid type: {v?.GetType()}");
+			throw new Crash($"Invalid type: {v?.GetType()}");
 		}
 		if (key.StartsWith(SplitSemanticChar)) {
 			SeekForDest(key, true, out TagMap? map, out string key1);
@@ -225,7 +225,7 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 
 	public override int GetHashCode() {
 		// Hashcode is not stable.
-		throw new Error("cannot use as key");
+		throw new Crash("Cannot use TagMap as keys");
 	}
 
 	public static bool operator ==(TagMap? left, TagMap? right) {

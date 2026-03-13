@@ -1,4 +1,6 @@
-﻿namespace Mino.Mathematics.Random;
+﻿using Mino.Utility;
+
+namespace Mino.Mathematics.Random;
 
 /// <summary>
 ///     Recoverable random generator.
@@ -74,10 +76,10 @@ public interface RandomGenerator {
 	/// </summary>
 	/// <param name="list">The target non-empty list.</param>
 	/// <returns>A random element in the given list.</returns>
-	/// <exception cref="Error">Thrown if the list is empty.</exception>
+	/// <exception cref="Crash">Thrown if the list is empty.</exception>
 	public T Select<T>(List<T> list) {
 		if (list.Count == 0) {
-			throw new Error("empty list");
+			throw new Crash("Cannot make choice: empty list");
 		}
 		return list[NextInt(list.Count)];
 	}
@@ -87,10 +89,10 @@ public interface RandomGenerator {
 	/// </summary>
 	/// <param name="arr">The target non-empty array.</param>
 	/// <returns>A random element in the given array.</returns>
-	/// <exception cref="Error">Thrown if the array is empty.</exception>
+	/// <exception cref="Crash">Thrown if the array is empty.</exception>
 	public T Select<T>(params T[] arr) {
 		if (arr.Length == 0) {
-			throw new Error("empty array");
+			throw new Crash("Cannot make choice: empty array");
 		}
 		return arr[NextInt(arr.Length)];
 	}

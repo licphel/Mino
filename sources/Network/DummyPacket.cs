@@ -1,6 +1,6 @@
 ﻿#region
-using Mino.Framework;
 using Mino.Nio;
+using Mino.Utility.Logging;
 #endregion
 
 namespace Mino.Network;
@@ -28,6 +28,6 @@ public class DummyPacket : Packet {
 	}
 
 	public override void Perform() {
-		Logger.Global.Info(_text);
+		Log.Info(_text);
 	}
 }

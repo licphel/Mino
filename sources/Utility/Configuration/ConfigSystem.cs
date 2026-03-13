@@ -2,29 +2,29 @@
 using Mino.Nio;
 using Mino.Nio.NBT;
 
-namespace Mino.Framework;
+namespace Mino.Utility.Configuration;
 
 /// <summary>
-///		Manages all option values.
+///		Manages all config values.
 /// </summary>
-public static class OptionSystem {
+public static class ConfigSystem {
 	internal static TagMap _G = new TagMap();
 	internal static bool _init;
 	internal static ConcurrentQueue<Action> _finalW = new ConcurrentQueue<Action>();
 	
 	/// <summary>
-	///		Initializes the option system.
+	///		Initializes the config system.
 	/// </summary>
-	/// <param name="url">Local option storage file.</param>
-	/// <exception cref="Error">Thrown if url is not a file url.</exception>
+	/// <param name="url">Local config storage file.</param>
+	/// <exception cref="Crash">Thrown if url is not a file url.</exception>
 	public static void Init(Url url) {
 		if (!url.Scheme.IsFileBased) {
-			throw new Error("not a file url");
+			throw new Crash($"Url {url} is not a file url");
 		}
 		_init = true;
 		
 		AppDomain.CurrentDomain.ProcessExit += delegate {
-			// Write present options.
+			// Write present configs.
 			while (!_finalW.IsEmpty) {
 				if (_finalW.TryDequeue(out Action? act)) {
 					act.Invoke();

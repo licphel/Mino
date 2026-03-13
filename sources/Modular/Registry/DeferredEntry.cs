@@ -1,13 +1,12 @@
-﻿namespace Mino.Modular.Registry;
+﻿using Mino.Utility;
+
+namespace Mino.Modular.Registry;
 
 /// <summary>
 ///		Deferred registered value.
 /// </summary>
-public class DeferredEntry<T> where T : Registerable {
-	private Func<T> _fetcher;
-	
-	public DeferredEntry(Func<T> fetcher, in Identifier id) {
-		_fetcher = fetcher;
+public class DeferredEntry<T> where T : class, Registerable {
+	public DeferredEntry(in Identifier id) {
 		Id = id;
 	}
 	
@@ -17,51 +16,21 @@ public class DeferredEntry<T> where T : Registerable {
 	public Identifier Id { get; }
 
 	/// <summary>
-	///		The optional value.
+	///		The deferred-injected value.
 	/// </summary>
-	public T? Value { get; private set; } = default;
+	public T? Value { get; internal set; } = null;
 
 	/// <summary>
 	///		Whether the value is fetched.
 	/// </summary>
 	public bool HasValue {
-		get {
-			if (Value != null) {
-				return true;
-			}
-			return Fetch();
-		}
-	}
-
-	/// <summary>
-	///		Fetches a registered value.
-	/// </summary>
-	/// <returns>If the value is present.</returns>
-	public bool Fetch() {
-		if (Value != null) {
-			return true;
-		}
-		try {
-			Value = _fetcher();
-			return true;
-		} catch {
-			return false;
-		}
-	}
-
-	/// <summary>
-	///		Ensures the value.
-	/// </summary>
-	/// <returns>A present value.</returns>
-	public T Ensure() {
-		Fetch();
-		return Value!;
+		get => Value != null;
 	}
 
 	public static implicit operator T(DeferredEntry<T> entry) {
 		if (entry.HasValue) {
 			return entry.Value!;
 		}
-		throw new Error("cannot fetch value");
+		throw new Crash("Deferred registry entry has no value");
 	}
 }

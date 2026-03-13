@@ -1,6 +1,7 @@
 ﻿#region
 using Mino.Graphics.Sprite;
 using Mino.Mathematics;
+using Mino.Utility;
 #endregion
 
 namespace Mino.Graphics.Gui;
@@ -87,10 +88,10 @@ public abstract class Component {
 	///     Adds a child to the component.
 	/// </summary>
 	/// <param name="child">Child to add.</param>
-	/// <exception cref="Error">Thrown if the child is already another comp's child.</exception>
+	/// <exception cref="Crash">Thrown if the child is already another comp's child.</exception>
 	public void AddChild(Component child) {
 		if (child.Parent != null) {
-			throw new Error("multiple parent");
+			throw new Crash("Cannot have multiple parent");
 		}
 
 		Children.Add(child);

@@ -1,10 +1,10 @@
-﻿using System.Buffers;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Mino.Framework.Resource;
 using Mino.Graphics;
 using Mino.Graphics.Desc;
 using Mino.Graphics.Enum;
+using Mino.Utility;
 using Silk.NET.OpenGL;
 
 namespace Mino.Native.OpenGL.Object;
@@ -35,7 +35,7 @@ public unsafe sealed class GLBufferObject : BufferObject {
 	
 	public void Allocate<T>(int capacity, ReadOnlySpan<T> data) where T : unmanaged {
 		if (capacity < 0) {
-			throw new Error("negative capacity");
+			throw new Crash("Negative capacity on buffer alloc");
 		}
 		
 		int elementSize = Unsafe.SizeOf<T>();
@@ -62,7 +62,7 @@ public unsafe sealed class GLBufferObject : BufferObject {
 			return;
 		}
 		if (offset < 0) {
-			throw new Error("negative offset");
+			throw new Crash("Negative offset on buffer submit");
 		}
 
 		int elementSize = Unsafe.SizeOf<T>();
@@ -72,7 +72,7 @@ public unsafe sealed class GLBufferObject : BufferObject {
 		// Need to expand.
 		if (byteOffset + byteCount > Capacity) {
 			if (!CanExpand) {
-				throw new Error("expand disabled");
+				throw new Crash("Buffer expansion disabled");
 			}
 
 			int newcap = Math.Max(byteOffset + byteCount, Capacity == 0 ? byteCount : Capacity * 2);

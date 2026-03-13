@@ -1,6 +1,7 @@
 ﻿using Mino.Framework.Resource;
 using Mino.Graphics;
 using Mino.Graphics.Desc;
+using Mino.Utility;
 using Silk.NET.OpenGL;
 
 namespace Mino.Native.OpenGL.Object;
@@ -43,7 +44,7 @@ public sealed class GLShaderModule : ShaderModule {
 			_gl.GetShader(_handle, ShaderParameterName.CompileStatus, out int status);
 			if (status == 0) {
 				_gl.GetShaderInfoLog(_handle, out string txt);
-				throw new Error($"shader compilation failed: {txt}");
+				throw new Crash($"Shader compilation failed: {txt}");
 			}
 		});
 	}

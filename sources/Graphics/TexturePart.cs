@@ -1,5 +1,7 @@
 ﻿#region
 using Mino.Mathematics;
+using Mino.Utility;
+using Mino.Utility.Logging;
 #endregion
 
 namespace Mino.Graphics;
@@ -24,13 +26,13 @@ public readonly struct TexturePart : IEquatable<TexturePart> {
 	/// </summary>
 	/// <param name="part">A texture part.</param>
 	/// <param name="region">A region in the given part.</param>
-	/// <exception cref="Error">Thrown if the region is outside of the given part.</exception>
+	/// <exception cref="Crash">Thrown if the region is outside of the given part.</exception>
 	public TexturePart(in TexturePart part, in Box3 region) {
 		Src = part.Src;
 		Region = region.Translate(part.Region.Min);
 
 		if (!part.Region.Contains(Region)) {
-			throw new Error("Region is outside of the parent part.");
+			Log.Warn("Region is outside of the parent part");
 		}
 	}
 

@@ -1,10 +1,10 @@
-﻿namespace Mino.Modular;
+﻿namespace Mino.Modular.Eventing;
 
 /// <summary>
 ///		Marks a static method is a subscriber.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
-public class SubscribeEventAttribute : Attribute {
+public class SubscribeEvent : Attribute {
 	/// <summary>
 	///		The event subscriber priority.
 	/// </summary>

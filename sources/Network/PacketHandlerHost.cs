@@ -3,8 +3,9 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using Mino.Framework;
 using Mino.Nio;
+using Mino.Utility;
+using Mino.Utility.Logging;
 #endregion
 
 namespace Mino.Network;
@@ -63,11 +64,12 @@ public class PacketHandlerHost : IDisposable {
 	///     Starts the server.
 	/// </summary>
 	/// <exception cref="ObjectDisposedException">Thrown if server is disposed.</exception>
-	/// <exception cref="Error">Thrown if server is already started.</exception>
+	/// <exception cref="Crash">Thrown if server is already started.</exception>
 	/// <exception cref="SocketException">Thrown if socket initialization fails.</exception>
 	public void Start() {
 		if (_active) {
-			throw new Error("already started");
+			Log.Warn("Server socket has already started");
+			return;
 		}
 
 		try {
@@ -103,7 +105,7 @@ public class PacketHandlerHost : IDisposable {
 		} catch (Exception ex) {
 			_active = false;
 			cleanup();
-			throw new Error("Failed to start server.", ex);
+			throw new Crash("Failed to start server.", ex);
 		}
 	}
 
@@ -111,10 +113,11 @@ public class PacketHandlerHost : IDisposable {
 	///     Sends a packet to all connected clients.
 	/// </summary>
 	/// <param name="packet">The packet to send.</param>
-	/// <exception cref="Error">Thrown if server is not active.</exception>
+	/// <exception cref="Crash">Thrown if server is not active.</exception>
 	public void Send(Packet packet) {
 		if (!IsActive) {
-			throw new Error("not active");
+			Log.Warn("Server is not active");
+			return;
 		}
 
 		_lock.EnterReadLock();
@@ -141,10 +144,11 @@ public class PacketHandlerHost : IDisposable {
 	/// </summary>
 	/// <param name="uid">The uid of the target client.</param>
 	/// <param name="packet">The packet to send.</param>
-	/// <exception cref="Error">Thrown if server is not active.</exception>
+	/// <exception cref="Crash">Thrown if server is not active.</exception>
 	public void Send(in Uid16 uid, Packet packet) {
 		if (!IsActive) {
-			throw new Error("not active");
+			Log.Warn("Server is not active");
+			return;
 		}
 
 		_lock.EnterReadLock();
@@ -171,10 +175,11 @@ public class PacketHandlerHost : IDisposable {
 	/// </summary>
 	/// <param name="uids">The uids of the target clients.</param>
 	/// <param name="packet">The packet to send.</param>
-	/// <exception cref="Error">Thrown if server is not active.</exception>
+	/// <exception cref="Crash">Thrown if server is not active.</exception>
 	public void Send(ICollection<Uid16> uids, Packet packet) {
 		if (!IsActive) {
-			throw new Error("not active");
+			Log.Warn("Server is not active");
+			return;
 		}
 
 		_lock.EnterReadLock();
@@ -301,7 +306,7 @@ public class PacketHandlerHost : IDisposable {
 				// Cancellation requested.
 				break;
 			} catch (Exception ex) {
-				Logger.Global.Debug(ex);
+				Log.Debug(ex);
 
 				if (!isSocketErrorRecoverable(ex)) {
 					break;
@@ -323,7 +328,7 @@ public class PacketHandlerHost : IDisposable {
 			try {
 				broadcaster.Send(bytes, bytes.Length, broadcastEp);
 			} catch (SocketException ex) {
-				Logger.Global.Debug(ex);
+				Log.Debug(ex);
 
 				if (!isSocketErrorRecoverable(ex)) {
 					break;
@@ -344,7 +349,7 @@ public class PacketHandlerHost : IDisposable {
 				try {
 					packet.Perform();
 				} catch (Exception ex) {
-					Logger.Global.Debug(ex);
+					Log.Debug(ex);
 				}
 			}
 		}
@@ -387,7 +392,7 @@ public class PacketHandlerHost : IDisposable {
 				// Check for timeout (10s).
 				if ((now - ch.LastHeartbeatTime).TotalMilliseconds > 10_000) {
 					ch.MarkForRemoval();
-					Logger.Global.Info($"Channel {ch.Uid} kicked for timeout.");
+					Log.Info($"Channel {ch.Uid} kicked for timeout.");
 					continue;
 				}
 
@@ -410,7 +415,7 @@ public class PacketHandlerHost : IDisposable {
 				_socketLs = null;
 			}
 		} catch (SocketException ex) {
-			Logger.Global.Debug(ex);
+			Log.Debug(ex);
 		}
 
 		// Stop threads.
@@ -547,7 +552,7 @@ public class PacketHandlerHost : IDisposable {
 					_socket.Close(100);
 				}
 			} catch (SocketException ex) {
-				Logger.Global.Debug(ex);
+				Log.Debug(ex);
 			} finally {
 				Server.removeChannel(this);
 			}
@@ -619,7 +624,7 @@ public class PacketHandlerHost : IDisposable {
 					} catch (SocketException ex) when (ex.SocketErrorCode == SocketError.TimedOut) {
 						// Timeout, continue.
 					} catch (Exception ex) {
-						Logger.Global.Debug(ex);
+						Log.Debug(ex);
 						Disconnect();
 						break;
 					}
@@ -665,7 +670,7 @@ public class PacketHandlerHost : IDisposable {
 						Disconnect();
 						break;
 					} catch (Exception ex) {
-						Logger.Global.Debug(ex);
+						Log.Debug(ex);
 						Disconnect();
 						break;
 					}
@@ -681,7 +686,7 @@ public class PacketHandlerHost : IDisposable {
 				int len = _rcvBuf.Read<int>();
 
 				if (len is < 0 or > Net.CompressionBufferSize) {
-					Logger.Global.Debug($"Invalid packet length from {EndpointName}: {len}");
+					Log.Debug($"Invalid packet length from {EndpointName}: {len}");
 					Disconnect();
 					return;
 				}
@@ -705,7 +710,7 @@ public class PacketHandlerHost : IDisposable {
 
 					Server.enqueuePacket(packet);
 				} catch (Exception ex) {
-					Logger.Global.Debug(ex);
+					Log.Debug(ex);
 					// Skip corrupted packet but stay connected.
 					_rcvBuf.ReadIndex += len;
 				}

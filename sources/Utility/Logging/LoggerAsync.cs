@@ -5,7 +5,7 @@ using System.Threading.Channels;
 using Mino.Nio;
 #endregion
 
-namespace Mino.Framework;
+namespace Mino.Utility.Logging;
 
 /// <summary>
 ///     Default asynchronous logger.
@@ -45,8 +45,8 @@ public class LoggerAsync : Logger {
 		}
 	}
 
-	public void Log(Logger.Level level, string msg, Exception? ex) {
-		if (level == Logger.Level.Debug && !_debugEnabled) {
+	public void Print(Severity level, string? msg, Exception? ex) {
+		if (level == Severity.Debug && !_debugEnabled) {
 			return;
 		}
 		_channel.Writer.TryWrite(Logger.FormatLog(level, msg, ex));

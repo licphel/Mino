@@ -1,5 +1,6 @@
 ﻿#region
 using Mino.Mathematics.ThreeDim;
+using Mino.Utility;
 #endregion
 
 namespace Mino.Mathematics;
@@ -19,10 +20,10 @@ public readonly struct Sphere : IEquatable<Sphere> {
 	/// </summary>
 	/// <param name="center">Sphere center.</param>
 	/// <param name="radius">Sphere radius (must be >= 0).</param>
-	/// <exception cref="Error">Thrown when radius is negative.</exception>
+	/// <exception cref="Crash">Thrown when radius is negative.</exception>
 	public Sphere(in Vector3 center, float radius) {
 		if (radius < 0) {
-			throw new Error("Sphere radius cannot be negative.", nameof(radius));
+			throw new Crash("Sphere radius cannot be negative");
 		}
 		Center = center;
 		Radius = radius;
@@ -200,7 +201,7 @@ public readonly struct Sphere : IEquatable<Sphere> {
 	/// </summary>
 	/// <param name="points">Collection of points to enclose.</param>
 	/// <returns>The smallest sphere containing all points.</returns>
-	/// <exception cref="Error">Thrown when points collection is empty.</exception>
+	/// <exception cref="Crash">Thrown when points collection is empty.</exception>
 	public static Sphere CreateFromPoints(IEnumerable<Vector3> points) {
 		IEnumerable<Vector3> flatPs = points as Vector3[] ?? points.ToArray();
 

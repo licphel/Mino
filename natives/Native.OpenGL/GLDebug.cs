@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Mino.Framework;
+using Mino.Utility.Logging;
 using Silk.NET.OpenGL;
 #endregion
 
@@ -37,19 +37,17 @@ public static unsafe class GLDebug {
 			int lineNumber = frame.GetFileLineNumber();
 
 			if (!string.IsNullOrEmpty(fileName) && lineNumber > 0) {
-				Logger.Global.Fatal("[GL DBG output]");
-				Logger.Global.Fatal($"  source: {source}");
-				Logger.Global.Fatal($"  type: {type}");
-				Logger.Global.Fatal($"  id: {id}");
-				Logger.Global.Fatal($"  severity: {severity}");
-				Logger.Global.Fatal($"  msg: {msg}");
-				Logger.Global.Fatal($"  location: {method?.DeclaringType?.Name}.{method?.Name}");
-				Logger.Global.Fatal($"  file: {fileName}:{lineNumber}");
-				Logger.Global.Fatal("\n");
+				Log.Fatal("[OpenGL detailed debugger output]");
+				Log.Fatal($"  source: {source}");
+				Log.Fatal($"  type: {type}");
+				Log.Fatal($"  id: {id}");
+				Log.Fatal($"  severity: {severity}");
+				Log.Fatal($"  msg: {msg}");
+				Log.Fatal($"  location: {method?.DeclaringType?.Name}.{method?.Name}");
+				Log.Fatal($"  file: {fileName}:{lineNumber}");
+				Log.Fatal("\n");
 				break;
 			}
 		}
-
-		throw new Error($"error raised '{msg}'");
 	}
 }

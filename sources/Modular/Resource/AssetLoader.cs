@@ -1,6 +1,8 @@
 ﻿using Mino.Nio;
+using Mino.Utility;
+using Mino.Utility.Logging;
 
-namespace Mino.Modular;
+namespace Mino.Modular.Resource;
 
 /// <summary>
 ///     Universal async asset loader based on url.
@@ -95,13 +97,14 @@ public class AssetLoader {
 	///     Enqueues all tasks in a loader into this loader.
 	/// </summary>
 	/// <param name="loader">The src loader.</param>
-	/// <exception cref="Error">If the loading has begun.</exception>
+	/// <exception cref="Crash">If the loading has begun.</exception>
 	public void Enqueue(AssetLoader loader) {
 		if (loader == null) {
 			return;
 		}
 		if (_processedCount != 0 || loader._processedCount != 0) {
-			throw new Error("cannot enqueue while loading");
+			Log.Warn("Cannot enqueue while loading");
+			return;
 		}
 		_subordinateLoaders.Enqueue(loader);
 		_totalCount += loader._totalCount;
@@ -111,10 +114,11 @@ public class AssetLoader {
 	///     Enqueues a task.
 	/// </summary>
 	/// <param name="task">The task.</param>
-	/// <exception cref="Error">If the loading has begun.</exception>
+	/// <exception cref="Crash">If the loading has begun.</exception>
 	public void Enqueue(Action task) {
 		if (_processedCount != 0) {
-			throw new Error("cannot enqueue while loading");
+			Log.Warn("Cannot enqueue while loading");
+			return;
 		}
 		_taskQueue.Enqueue(task);
 		++_totalCount;
@@ -125,10 +129,11 @@ public class AssetLoader {
 	///     Enqueues a url and lets the loader to designate a task.
 	/// </summary>
 	/// <param name="url">The resource url.</param>
-	/// <exception cref="Error">If the loading has begun.</exception>
+	/// <exception cref="Crash">If the loading has begun.</exception>
 	public void Enqueue(in Url url) {
 		if (_processedCount != 0) {
-			throw new Error("cannot enqueue while loading");
+			Log.Warn("Cannot enqueue while loading");
+			return;
 		}
 		Url resName = Url.GetRelativeName(BaseUrl, url);
 		designateToProcessor(new Identifier(_scope, resName.Path), url);

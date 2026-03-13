@@ -5,6 +5,7 @@ using Mino.Desktop;
 using Mino.Input;
 using Mino.Mathematics;
 using Mino.Nio;
+using Mino.Utility;
 using Silk.NET.GLFW;
 using TextCopy;
 using GLFW_Image = Silk.NET.GLFW.Image;
@@ -134,11 +135,11 @@ public unsafe sealed class GLFWWindow : Window {
 
 	public override void Init(WindowHints hints) {
 		if (!_glfw.Init()) {
-			throw new Error("glfw init failed");
+			throw new Crash("GLFW init failed");
 		}
 
 		if (!tryCreateCtx(hints, 4) && !tryCreateCtx(hints, 3)) {
-			throw new Error("gl 3.0+ not supported");
+			throw new Crash("GL 3.0+ not supported");
 		}
 
 		// Locate at center.

@@ -1,5 +1,6 @@
 ﻿#region
 using Mino.Audio.Enum;
+using Mino.Utility;
 using Silk.NET.OpenAL;
 #endregion
 
@@ -12,7 +13,7 @@ internal static class ALEnumC {
 			SourceState.Playing => ClipPlayback.Active,
 			SourceState.Paused => ClipPlayback.Inactive,
 			SourceState.Stopped => ClipPlayback.Inactive,
-			_ => throw new Error("invalid arg: " + nameof(state))
+			_ => throw new Crash("Invalid arg: " + nameof(state))
 		};
 	}
 
@@ -22,7 +23,7 @@ internal static class ALEnumC {
 			DataLineFormat.Mono16 => BufferFormat.Mono16,
 			DataLineFormat.Stereo8 => BufferFormat.Stereo8,
 			DataLineFormat.Stereo16 => BufferFormat.Stereo16,
-			_ => throw new Error("invalid arg: " + nameof(format))
+			_ => throw new Crash("Invalid arg: " + nameof(format))
 		};
 	}
 }

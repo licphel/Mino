@@ -64,7 +64,7 @@ public class TextField : Component {
 
 	public TextField(Drawable?[] drawables, Font font, ScrollBar bar) {
 		if (drawables.Length != 3) {
-			throw new Error("asset confirmation failed");
+			throw new Crash("Asset confirmation failed");
 		}
 		_asset_Drawables = drawables;
 		_asset_Font = font;

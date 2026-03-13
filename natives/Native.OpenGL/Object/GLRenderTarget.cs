@@ -2,6 +2,7 @@
 using Mino.Graphics;
 using Mino.Graphics.Desc;
 using Mino.Graphics.Enum;
+using Mino.Utility;
 using Silk.NET.OpenGL;
 
 namespace Mino.Native.OpenGL.Object;
@@ -135,7 +136,7 @@ public sealed class GLRenderTarget : RenderTarget {
 
 			GLEnum status = _gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
 			if (status != GLEnum.FramebufferComplete) {
-				throw new Error($"framebuffer incomplete '{status}'");
+				throw new Crash($"Framebuffer incomplete: '{status}'");
 			}
 		});
 	}

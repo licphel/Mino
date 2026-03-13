@@ -1,6 +1,7 @@
 ﻿using Mino.Framework.Resource;
 using Mino.Graphics;
 using Mino.Graphics.Enum;
+using Mino.Utility;
 using Silk.NET.OpenGL;
 using Sampler = Mino.Graphics.Sampler;
 using Texture = Mino.Graphics.Texture;
@@ -23,7 +24,7 @@ public sealed class GLResourceSet : ResourceSet {
 		
 		foreach (ResourceSetLayout.Slot slot in layout.Slots) {
 			if (string.IsNullOrEmpty(slot.Name)) {
-				throw new Error($"null name at slot {slot.Binding}");
+				throw new Crash($"Null name at slot {slot.Binding}");
 			}
 		}
 		// Init bounds.
@@ -73,7 +74,7 @@ public sealed class GLResourceSet : ResourceSet {
 					_gl.Uniform1(uniformLocation, (int) b._glUnits);
 					break;
 				default:
-					throw new Error("invalid arg: " + nameof(b));
+					throw new Crash("Invalid arg: " + nameof(b));
 			}
 
 		}
@@ -84,7 +85,7 @@ public sealed class GLResourceSet : ResourceSet {
 			b._glUnits = b.Type switch {
 				ResourceType.UniformBuffer => ctx._ubId++,
 				ResourceType.Texture => ctx._texId++,
-				_ => throw new Error("invalid arg: " + nameof(b))
+				_ => throw new Crash("Invalid arg: " + nameof(b))
 			};
 		}
 	}

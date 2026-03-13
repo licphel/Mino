@@ -1,5 +1,6 @@
 ﻿#region
 using Mino.Graphics.Enum;
+using Mino.Utility;
 using Silk.NET.OpenGL;
 using PolygonMode = Mino.Graphics.Enum.PolygonMode;
 using ShaderType = Mino.Graphics.Enum.ShaderType;
@@ -13,7 +14,7 @@ public class GLEnumC {
 			BufferType.Vertex => GLEnum.ArrayBuffer,
 			BufferType.Index => GLEnum.ElementArrayBuffer,
 			BufferType.Uniform => GLEnum.UniformBuffer,
-			_ => throw new Error("invalid arg: " + nameof(type))
+			_ => throw new Crash("Invalid arg: " + nameof(type))
 		};
 	}
 
@@ -45,7 +46,7 @@ public class GLEnumC {
 			}
 			return GLEnum.StreamRead;
 		}
-		throw new Error("invalid arg: " + nameof(usage));
+		throw new Crash("Invalid arg: " + nameof(usage));
 	}
 
 	public static GLEnum Cast(VertexAttributeType type) {
@@ -58,7 +59,7 @@ public class GLEnumC {
 			VertexAttributeType.Int32 => GLEnum.Int,
 			VertexAttributeType.Float16 => GLEnum.HalfFloat,
 			VertexAttributeType.Float32 => GLEnum.Float,
-			_ => throw new Error("invalid arg: " + nameof(type))
+			_ => throw new Crash("Invalid arg: " + nameof(type))
 		};
 	}
 
@@ -79,7 +80,7 @@ public class GLEnumC {
 			BlendFactor.ConstantAlpha => GLEnum.ConstantAlpha,
 			BlendFactor.OneMinusConstantAlpha => GLEnum.OneMinusConstantAlpha,
 			BlendFactor.SrcAlphaSaturate => GLEnum.SrcAlphaSaturate,
-			_ => throw new Error("invalid arg: " + nameof(factor))
+			_ => throw new Crash("Invalid arg: " + nameof(factor))
 		};
 	}
 
@@ -90,7 +91,7 @@ public class GLEnumC {
 			BlendFunc.ReverseSubtract => GLEnum.FuncReverseSubtract,
 			BlendFunc.Min => GLEnum.Min,
 			BlendFunc.Max => GLEnum.Max,
-			_ => throw new Error("invalid arg: " + nameof(func))
+			_ => throw new Crash("Invalid arg: " + nameof(func))
 		};
 	}
 
@@ -104,7 +105,7 @@ public class GLEnumC {
 			CompareOp.GreaterOrEqual => GLEnum.Gequal,
 			CompareOp.Less => GLEnum.Less,
 			CompareOp.LessOrEqual => GLEnum.Lequal,
-			_ => throw new Error("invalid arg: " + nameof(cd))
+			_ => throw new Crash("Invalid arg: " + nameof(cd))
 		};
 	}
 
@@ -118,7 +119,7 @@ public class GLEnumC {
 			StencilFunc.IncrWrap => GLEnum.IncrWrap,
 			StencilFunc.DecrWrap => GLEnum.DecrWrap,
 			StencilFunc.Invert => GLEnum.Invert,
-			_ => throw new Error("invalid arg: " + nameof(op))
+			_ => throw new Crash("Invalid arg: " + nameof(op))
 		};
 	}
 
@@ -148,7 +149,7 @@ public class GLEnumC {
 			TextureFormat.Depth32F => (GLEnum.DepthComponent32f, GLEnum.DepthComponent, GLEnum.Float),
 			TextureFormat.Depth24Stencil8 => (GLEnum.Depth24Stencil8, GLEnum.DepthStencil, GLEnum.UnsignedInt248),
 
-			_ => throw new Error("invalid arg: " + nameof(format))
+			_ => throw new Crash("Invalid arg: " + nameof(format))
 		};
 	}
 
@@ -157,7 +158,7 @@ public class GLEnumC {
 			TextureType.Texture1D => GLEnum.Texture1D,
 			TextureType.Texture2D => GLEnum.Texture2D,
 			TextureType.Texture3D => GLEnum.Texture3D,
-			_ => throw new Error("invalid arg: " + nameof(type))
+			_ => throw new Crash("Invalid arg: " + nameof(type))
 		};
 	}
 
@@ -167,7 +168,7 @@ public class GLEnumC {
 			TextureWrap.MirroredRepeat => (int) GLEnum.MirroredRepeat,
 			TextureWrap.ClampToEdge => (int) GLEnum.ClampToEdge,
 			TextureWrap.ClampToBorder => (int) GLEnum.ClampToBorder,
-			_ => throw new Error("invalid arg: " + nameof(wrap))
+			_ => throw new Crash("Invalid arg: " + nameof(wrap))
 		};
 	}
 
@@ -179,7 +180,7 @@ public class GLEnumC {
 			TextureFilter.LinearMipmapNearest => (int) GLEnum.LinearMipmapNearest,
 			TextureFilter.NearestMipmapLinear => (int) GLEnum.NearestMipmapLinear,
 			TextureFilter.NearestMipmapNearest => (int) GLEnum.NearestMipmapNearest,
-			_ => throw new Error("invalid arg: " + nameof(filter))
+			_ => throw new Crash("Invalid arg: " + nameof(filter))
 		};
 	}
 
@@ -189,7 +190,7 @@ public class GLEnumC {
 			ShaderType.Fragment => GLEnum.FragmentShader,
 			ShaderType.Geometry => GLEnum.GeometryShader,
 			ShaderType.Compute => GLEnum.ComputeShader,
-			_ => throw new Error("invalid arg: " + nameof(type))
+			_ => throw new Crash("Invalid arg: " + nameof(type))
 		};
 	}
 
@@ -202,7 +203,7 @@ public class GLEnumC {
 			Topology.LineStrip => GLEnum.LineStrip,
 			Topology.LineLoop => GLEnum.LineLoop,
 			Topology.Point => GLEnum.Points,
-			_ => throw new Error("invalid arg: " + nameof(mode))
+			_ => throw new Crash("Invalid arg: " + nameof(mode))
 		};
 	}
 
@@ -211,7 +212,7 @@ public class GLEnumC {
 			PolygonMode.Fill => GLEnum.Fill,
 			PolygonMode.Line => GLEnum.Line,
 			PolygonMode.Point => GLEnum.Point,
-			_ => throw new Error("invalid arg: " + nameof(mode))
+			_ => throw new Crash("Invalid arg: " + nameof(mode))
 		};
 	}
 
@@ -221,7 +222,7 @@ public class GLEnumC {
 			CullMode.Back => GLEnum.Back,
 			CullMode.Front => GLEnum.Front,
 			CullMode.FrontAndBack => GLEnum.FrontAndBack,
-			_ => throw new Error("invalid arg: " + nameof(mode))
+			_ => throw new Crash("Invalid arg: " + nameof(mode))
 		};
 	}
 }

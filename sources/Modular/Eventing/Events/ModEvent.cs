@@ -1,4 +1,4 @@
-﻿namespace Mino.Modular.Events;
+﻿namespace Mino.Modular.Eventing.Events;
 
 /// <summary>
 ///		Event: on mod changes.

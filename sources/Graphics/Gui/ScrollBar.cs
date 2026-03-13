@@ -3,6 +3,7 @@ using Mino.Desktop;
 using Mino.Graphics.Sprite;
 using Mino.Input;
 using Mino.Mathematics;
+using Mino.Utility;
 #endregion
 
 namespace Mino.Graphics.Gui;
@@ -51,7 +52,7 @@ public class ScrollBar : Component {
 
 	public ScrollBar(Drawable?[] drawables) {
 		if (drawables.Length != 2) {
-			throw new Error("asset confirmation failed");
+			throw new Crash("Asset confirmation failed");
 		}
 		_asset_Drawables = drawables;
 	}

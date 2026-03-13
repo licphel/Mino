@@ -1,4 +1,7 @@
-﻿namespace Mino.Mathematics;
+﻿using Mino.Utility;
+using Mino.Utility.Logging;
+
+namespace Mino.Mathematics;
 
 /// <summary>
 ///     Immutable 3D bounding box.
@@ -15,12 +18,12 @@ public readonly struct Box3 : IEquatable<Box3> {
 	/// </summary>
 	/// <param name="min">Minimum corner.</param>
 	/// <param name="max">Maximum corner.</param>
-	/// <exception cref="Error">Thrown when min is greater than max.</exception>
+	/// <exception cref="Crash">Thrown when min is greater than max.</exception>
 	public Box3(in Vector3 min, in Vector3 max) {
 		Min = min;
 		Max = max;
 		if (min.X > max.X || min.Y > max.Y || min.Z > max.Z) {
-			throw new Error("max < min");
+			Log.Warn("Box max < min");
 		}
 	}
 

@@ -1,8 +1,10 @@
 ﻿using System.Collections.Concurrent;
 using System.Reflection;
-using Mino.Modular.Events;
+using Mino.Modular.Eventing;
+using Mino.Modular.Eventing.Events;
 using Mino.Nio;
 using Mino.Nio.NBT;
+using Mino.Utility;
 
 namespace Mino.Modular;
 
@@ -84,18 +86,18 @@ public class Mod {
 			Mod mod = (Mod) Activator.CreateInstance(asm.GetType(entry)!, root, modId)!;
 
 			if (Mods.ContainsKey(modId)) {
-				throw new Error($"modId conflict: {modId}");
+				throw new Crash($"Mod id conflict: {modId}");
 			}
 			Mods[modId] = mod;
 
 			string depErr = mod.CheckDependencies();
 			if (!string.IsNullOrEmpty(depErr)) {
-				throw new Error($"dep error: {depErr}");
+				throw new Crash($"Dependency not satisfied: {depErr}");
 			}
 			
 			return mod;
 		}
-		throw new Error($"entrypoint '{entry}' not found when loading {modId}");
+		throw new Crash($"Entrypoint '{entry}' not found when loading mod '{modId}'");
 	}
 
 	/// <summary>

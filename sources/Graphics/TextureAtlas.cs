@@ -4,6 +4,8 @@ using Mino.Framework.Resource;
 using Mino.Graphics.Desc;
 using Mino.Graphics.Enum;
 using Mino.Mathematics;
+using Mino.Utility;
+using Mino.Utility.Logging;
 #endregion
 
 namespace Mino.Graphics;
@@ -28,7 +30,8 @@ public class TextureAtlas : IDisposable {
 
 	public void Init() {
 		if (_init) {
-			throw new Error("duplicated init");
+			Log.Warn("Texture atlas duplicated init");
+			return;
 		}
 		_init = true;
 
@@ -85,10 +88,10 @@ public class TextureAtlas : IDisposable {
 	/// </summary>
 	/// <param name="image">Image to insert.</param>
 	/// <returns>A texture part, not ready for usage.</returns>
-	/// <exception cref="Error">Thrown if not initialized or ended.</exception>
+	/// <exception cref="Crash">Thrown if not initialized or ended.</exception>
 	public TexturePart Accept(Image image) {
 		if (!_init) {
-			throw new Error("cannot accept");
+			Log.Warn("Texture atlas has not initialized");
 		}
 		// Expand till enough.
 		RectI dstRect;

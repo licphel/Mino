@@ -61,7 +61,7 @@ public static class TagSystem {
 		if (default(T) != null) {
 			return default!;
 		}
-		throw new Error("unsupported type");
+		throw new Crash($"Unsupported type: '{typeof(T)}'");
 	}
 
 	public static T AsWithFallback<T>(object? v, in Maybe<T> fallback) {
@@ -106,9 +106,9 @@ public static class TagSystem {
 	/// </summary>
 	/// <param name="json">JSON to parse.</param>
 	/// <returns>A new tag map.</returns>
-	/// <exception cref="Error">Thrown if the parsing process has faults.</exception>
+	/// <exception cref="Crash">Thrown if the parsing process has faults.</exception>
 	public static TagMap ParseJson(TextAccess json) {
-		return JsonSerializer.Deserialize<TagMap>(json, _dumpOptions) ?? throw new Error("invalid json");
+		return JsonSerializer.Deserialize<TagMap>(json, _dumpOptions) ?? throw new Crash($"Invalid json: {json}");
 	}
 
 	/// <summary>

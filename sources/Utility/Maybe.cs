@@ -24,10 +24,10 @@ public readonly struct Maybe<T> : IEquatable<Maybe<T>> {
 	/// </summary>
 	/// <param name="value">Nullable value.</param>
 	/// <returns>A maybe.</returns>
-	/// <exception cref="Error">Thrown if input is null.</exception>
+	/// <exception cref="Crash">Thrown if input is null.</exception>
     public static Maybe<T> Of(in T value) {
 		if (default(T) is null && value is null) {
-			throw new Error(nameof(value), "cannot create some with null value");
+			throw new Crash("Cannot create non-none maybe with null value");
 		}
 		return new Maybe<T>(value, true);
 	}
@@ -40,11 +40,11 @@ public readonly struct Maybe<T> : IEquatable<Maybe<T>> {
 	/// <summary>
 	///		The value of the maybe.
 	/// </summary>
-	/// <exception cref="Error">Thrown if this is none.</exception>
+	/// <exception cref="Crash">Thrown if this is none.</exception>
     public T Value {
 		get {
 			if (!HasValue) {
-				throw new Error("maybe has no value");
+				throw new Crash("Maybe has no value");
 			}
 			return _value!;
 		}

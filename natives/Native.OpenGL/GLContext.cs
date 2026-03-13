@@ -1,8 +1,8 @@
 ﻿using Mino.Desktop;
 using Mino.Framework.Resource;
 using Mino.Graphics;
-using Mino.Graphics.Enum;
 using Mino.Native.OpenGL.Object;
+using Mino.Utility.Logging;
 using Silk.NET.OpenGL;
 using Sampler = Mino.Graphics.Sampler;
 using Texture = Mino.Graphics.Texture;
@@ -20,7 +20,7 @@ public class GLContext : AbstractThreadContext {
 		Pend(() => {
 			GLEnum err;
 			while ((err = _gl.GetError()) != GLEnum.NoError) {
-				throw new Error($"gl error raised '{err}'");
+				Log.Warn($"OpenGL error raised: '{err}'");
 			}
 		});
 	}

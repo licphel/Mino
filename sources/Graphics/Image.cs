@@ -1,6 +1,7 @@
 ﻿#region
 using Mino.Mathematics;
 using Mino.Nio;
+using Mino.Utility;
 using StbImageSharp;
 using ColorComponents = StbImageSharp.ColorComponents;
 #endregion
@@ -47,10 +48,10 @@ public interface Image : IDisposable {
 	/// <param name="height">Image height.</param>
 	/// <param name="bytes">Image data.</param>
 	/// <returns>A blank image.</returns>
-	/// <exception cref="Error">Thrown if size is negative.</exception>
+	/// <exception cref="Crash">Thrown if size is negative.</exception>
 	public static Image Create(int width, int height, byte[]? bytes = null) {
 		if (width < 0 || height < 0) {
-			throw new Error("negative size");
+			throw new Crash("Negative size");
 		}
 		return new LiteralImage {
 			Bytes = bytes ?? new byte[4 * width * height],
@@ -117,7 +118,7 @@ public interface Image : IDisposable {
 
 		public ImagePixelProxy(int x, Image image) {
 			X = x;
-			Data = image.Bytes ?? throw new Error("no image data");
+			Data = image.Bytes ?? throw new Crash("No image data");
 			W = image.Width;
 			P = image.PixelStride;
 		}

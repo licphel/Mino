@@ -1,4 +1,6 @@
-﻿namespace Mino.Nio;
+﻿using Mino.Utility;
+
+namespace Mino.Nio;
 
 /// <summary>
 ///     Utility functions for urls using 'file://' scheme.
@@ -105,12 +107,12 @@ public static class FileUtil {
 	/// </summary>
 	/// <param name="src">Src file url.</param>
 	/// <param name="dst">Dst file url.</param>
-	/// <exception cref="Error">Thrown if src url does not exist.</exception>
+	/// <exception cref="Crash">Thrown if src url does not exist.</exception>
 	public static void Move(in Url src, in Url dst) {
 		ensureFile(src);
 		PathType urlType = GetTypeOf(src);
 		if (urlType == PathType.NotExist) {
-			throw new Error($"cannot find '{src}'");
+			throw new Crash($"Cannot find '{src}'");
 		}
 
 		// Ensure destination's parent.
@@ -152,7 +154,7 @@ public static class FileUtil {
 
 	private static void ensureFile(in Url url) {
 		if (!url.Scheme.IsFileBased) {
-			throw new Error("URL is not file-based");
+			throw new Crash($"URL {url} is not a file url");
 		}
 	}
 }

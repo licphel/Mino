@@ -1,4 +1,4 @@
-﻿namespace Mino.Modular;
+﻿namespace Mino.Modular.Eventing;
 
 public delegate void EventFn<in T>(T @event) where T : Event;
 

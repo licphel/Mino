@@ -3,8 +3,9 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using Mino.Framework;
 using Mino.Nio;
+using Mino.Utility;
+using Mino.Utility.Logging;
 #endregion
 
 namespace Mino.Network;
@@ -50,12 +51,13 @@ public class PacketHandler : IDisposable {
 	/// <param name="connectionType">The connection type.</param>
 	/// <param name="endpoint">The endpoint used in LAN mode.</param>
 	/// <returns>Whether the connection is built.</returns>
-	/// <exception cref="Error">Thrown if already connected or disposed.</exception>
-	/// <exception cref="Error">Thrown if LAN mode is used but endpoint is null.</exception>
+	/// <exception cref="Crash">Thrown if already connected or disposed.</exception>
+	/// <exception cref="Crash">Thrown if LAN mode is used but endpoint is null.</exception>
 	public bool Search(NetConnectionType connectionType, IPEndPoint? endpoint = null) {
 		lock (_connectionLock) {
 			if (_connected) {
-				throw new Error("already connected");
+				Log.Warn("Socket is already connected");
+				return false;
 			}
 		}
 
@@ -65,7 +67,8 @@ public class PacketHandler : IDisposable {
 
 		switch (connectionType) {
 			case NetConnectionType.NotConnected:
-				throw new Error("unexpected connection type");
+				Log.Warn("Unexpected connection type: NotConnected");
+				return false;
 			case NetConnectionType.LocalArea: {
 				serverIP = discover(out serverPort);
 				if (string.IsNullOrEmpty(serverIP)) {
@@ -75,7 +78,8 @@ public class PacketHandler : IDisposable {
 			}
 			case NetConnectionType.Remote:
 				if (endpoint == null) {
-					throw new Error("null endpoint");
+					Log.Warn("Null endpoint");
+					return false;
 				}
 				serverIP = endpoint.Address.ToString();
 				serverPort = endpoint.Port;
@@ -123,16 +127,17 @@ public class PacketHandler : IDisposable {
 	///     Sends a packet to server.
 	/// </summary>
 	/// <param name="packet">A server-bound packet.</param>
-	/// <exception cref="Error">Thrown if not connected.</exception>
+	/// <exception cref="Crash">Thrown if not connected.</exception>
 	public void Send(Packet packet) {
 		if (!_connected) {
-			throw new Error("not connected");
+			Log.Warn("Socket is not connected");
+			return;
 		}
 
 		try {
 			_packets.Add(packet, _disposeCts.Token);
 		} catch (OperationCanceledException) {
-			throw new Error("disconnecting or disposed");
+			Log.Warn("Socket is disconnecting or disposed");
 		}
 	}
 
@@ -159,7 +164,7 @@ public class PacketHandler : IDisposable {
 				}
 			} catch (SocketException ex) {
 				// Log but don't throw during cleanup.
-				Logger.Global.Debug(ex);
+				Log.Debug(ex);
 			} finally {
 				_socket = null;
 				_packets.Dispose();
@@ -176,7 +181,7 @@ public class PacketHandler : IDisposable {
 				try {
 					packet.Perform();
 				} catch (Exception ex) {
-					Logger.Global.Debug(ex);
+					Log.Debug(ex);
 				}
 			}
 		}
@@ -209,7 +214,7 @@ public class PacketHandler : IDisposable {
 				return true;
 			}
 		} catch (Exception ex) {
-			Logger.Global.Debug(ex);
+			Log.Debug(ex);
 			return false;
 		}
 	}
@@ -285,7 +290,7 @@ public class PacketHandler : IDisposable {
 				}
 			}
 		} catch (Exception ex) {
-			Logger.Global.Debug(ex);
+			Log.Debug(ex);
 		} finally {
 			if (_connected) {
 				Disconnect();
@@ -336,7 +341,7 @@ public class PacketHandler : IDisposable {
 				}
 			}
 		} catch (Exception ex) {
-			Logger.Global.Debug(ex);
+			Log.Debug(ex);
 		} finally {
 			if (_connected) {
 				Disconnect();
@@ -351,7 +356,7 @@ public class PacketHandler : IDisposable {
 
 			if (len is < 0 or > Net.CompressionBufferSize) {
 				// Invalid length, disconnect.
-				Logger.Global.Debug($"Invalid packet length: {len}");
+				Log.Debug($"Invalid packet length: {len}");
 				Disconnect();
 				return;
 			}
@@ -371,7 +376,7 @@ public class PacketHandler : IDisposable {
 					_consumption.Enqueue(packet);
 				}
 			} catch (Exception ex) {
-				Logger.Global.Debug(ex);
+				Log.Debug(ex);
 				// Skip corrupted packet but stay connected.
 				_rcvBuf.ReadIndex += len;
 			}

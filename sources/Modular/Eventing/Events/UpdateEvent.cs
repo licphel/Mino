@@ -1,6 +1,6 @@
 ﻿using Mino.Framework;
 
-namespace Mino.Modular.Events;
+namespace Mino.Modular.Eventing.Events;
 
 /// <summary>
 ///		Event: on Executor.OnUpdate.

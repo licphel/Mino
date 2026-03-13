@@ -1,18 +1,20 @@
 ﻿using System.Collections.Concurrent;
+using Mino.Utility;
 
 namespace Mino.Modular.Registry;
 
 /// <summary>
 ///		A deferred register of class types.
 /// </summary>
-public class DeferredRegistry<T> where T : Registerable {
+public class DeferredRegistry<T> where T : class, Registerable {
 	private ConcurrentDictionary<Identifier, T> _map = new ConcurrentDictionary<Identifier, T>();
 	private List<T> _arrMap = new List<T>();
 	private ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
-	private ConcurrentQueue<Action> _pendingTasks = new ConcurrentQueue<Action>();
+	private Queue<Action> _pendingTasks = new Queue<Action>();
 	private string _scope;
 	private string _tName;
 	private int _next = 0;
+	private bool _frozen;
 	
 	public DeferredRegistry(string scope) {
 		_scope = scope;
@@ -30,33 +32,41 @@ public class DeferredRegistry<T> where T : Registerable {
 	///		Registers an object.
 	/// </summary>
 	/// <param name="key">Object id key.</param>
-	/// <param name="t">Object itself.</param>
+	/// <param name="factory">Object factory.</param>
 	/// <returns>A deferred entry.</returns>
-	public DeferredEntry<T> Register(Identifier key, T t) {
-		key = Identifier.Fallback(_scope, key);
-		t.Id = key;
-		t.IntId = _next++;
-		_map[key] = t;
+	public DeferredEntry<T> Register(Identifier key, Func<T> factory) {
 		_lock.EnterWriteLock();
-		_arrMap.Add(t);
-		_lock.ExitWriteLock();
+
+		if (_frozen) {
+			throw new Crash($"Try to register '{key}' after registry is frozen");
+		}
 		
-		DeferredEntry<T> entry = new DeferredEntry<T>(() => t, key);
+		key = Identifier.Fallback(_scope, key);
+		DeferredEntry<T> entry = new DeferredEntry<T>(key);
 		_pendingTasks.Enqueue(() => {
-			entry.Fetch();
+			T t = factory.Invoke();
+			t.Id = key;
+			t.IntId = _next++;
+			_map[key] = t;
+			_arrMap.Add(t);
+			entry.Value = t;
 		});
+		_lock.ExitWriteLock();
 		return entry;
 	}
 
 	/// <summary>
-	///		Executes all pending register requests.
+	///		Executes all pending register requests and stop accepting.
 	/// </summary>
-	public void ExecuteAll() {
-		while (!_pendingTasks.IsEmpty) {
+	public void Freeze() {
+		_lock.EnterWriteLock();
+		while (_pendingTasks.Count > 0) {
 			if (_pendingTasks.TryDequeue(out Action? act)) {
 				act();
 			}
 		}
+		_frozen = true;
+		_lock.ExitWriteLock();
 	}
 	
 	public T this[in Identifier key] {

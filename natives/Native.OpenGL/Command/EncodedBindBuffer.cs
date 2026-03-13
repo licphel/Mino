@@ -1,5 +1,4 @@
 ﻿#region
-using Mino.Graphics.Enum;
 using Mino.Native.OpenGL.Object;
 #endregion
 
