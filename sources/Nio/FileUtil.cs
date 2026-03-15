@@ -75,6 +75,10 @@ public static class FileUtil {
 	/// <returns>The collection of subordinate directories.</returns>
 	public static IEnumerable<Url> SubDirectories(in Url url) {
 		ensureFile(url);
+		if (GetTypeOf(url) != PathType.Directory) {
+			return [];
+		}
+		
 		return Array.ConvertAll(Directory.GetDirectories(url.ToFilePath()), path => new Url(path));
 	}
 
@@ -85,6 +89,10 @@ public static class FileUtil {
 	/// <returns>The collection of subordinate files.</returns>
 	public static IEnumerable<Url> SubFiles(in Url url) {
 		ensureFile(url);
+		if (GetTypeOf(url) != PathType.Directory) {
+			return [];
+		}
+		
 		return Array.ConvertAll(Directory.GetFiles(url.ToFilePath()), path => new Url(path));
 	}
 

@@ -1,8 +1,10 @@
 ﻿using System.Collections.Concurrent;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Mino.Modular.Eventing;
 using Mino.Modular.Eventing.Events;
 using Mino.Modular.Persistent;
+using Mino.Modular.Resource;
 using Mino.Nio;
 using Mino.Utility;
 using Mino.Utility.Logging;
@@ -31,27 +33,33 @@ namespace Mino.Modular;
 /// <summary>
 ///		Represents a mod instance.
 /// </summary>
-public abstract class Mod {
+public class Mod {
 	/// <summary>
 	///		All loaded mods.
 	/// </summary>
 	public static readonly ConcurrentDictionary<string, Mod> Mods = new ConcurrentDictionary<string, Mod>();
+	
 	/// <summary>
 	///		Bottom core mod, normally the game itself.
 	/// </summary>
 	public static Mod BottomCore { get; private set; } = null!;
+	
+	/// <summary>
+	///		Dominant loader of all mods.
+	/// </summary>
+	public static AssetLoader? DominantLoader { get; private set; }
 
 	private static Lock _lock = new Lock();
 	private static bool _frozen;
 	
 	// Mod asm. Used to subscribe events.
-	public Assembly Asm = null!;
+	public Assembly? Asm = null;
 	/// <summary>
 	///		The persistent system. 'Modly' singleton.
 	/// </summary>
 	public PersistentSystem PersistentSystem = new PersistentSystem();
 	
-	private void injectValues(in Url directory, in ModInfo info, Assembly asm) {
+	private void injectValues(in Url directory, in ModInfo info, Assembly? asm) {
 		Directory = directory;
 		Info = info;
 		Asm = asm;
@@ -100,11 +108,64 @@ public abstract class Mod {
 	public DependencyInfo[] Dependencies {
 		get => Info.Dependencies;
 	}
+	
+	/*
+	 * Mod loading stages:
+	 * 
+	 * ASM_LOAD
+	 *	|
+	 * PRE_LOAD
+	 *	|
+	 * SORT_BY_DEPENDENCY
+	 *	|
+	 * QUEUE_ASSETS
+	 *	|
+	 * POST_LOAD
+	 *	|
+	 * LIFECYCLE
+	 */
 
 	/// <summary>
-	///		Initializes the mod.
+	///		On mod pre-load.
 	/// </summary>
-	public virtual void Initialize() {
+	public virtual void OnPreLoad() {
+		// Override...
+	}
+
+	///  <summary>
+	/// 		Enqueues loading assets or overriding other mod's assets.
+	///  </summary>
+	///  <param name="loader">Dominant loader.</param>
+	///  <param name="rec">Record of all overriders.</param>
+	public void QueueAssetLoading(AssetLoader loader, OverrideRecord rec) {
+		OnQueueAssetLoading(DominantLoader = loader, rec);
+	}
+
+	///  <summary>
+	/// 		Enqueues loading assets or overriding other mod's assets.
+	///  </summary>
+	///  <param name="loader">Dominant loader.</param>
+	///  <param name="rec">Record of all overriders.</param>
+	protected virtual void OnQueueAssetLoading(AssetLoader loader, OverrideRecord rec) {
+		// Override default behavior
+		Url baseOverride = Directory / "override";
+		
+		foreach (Url url in FileUtil.SubDirectories(baseOverride)) {
+			string modId = FileUtil.GetNameNoExtension(url);
+
+			AssetLoader subLoader = loader.CopyWithProcessors(modId);
+			subLoader.IsOverriding = true;
+			subLoader.Scan(url);
+			loader.Enqueue(subLoader);
+			
+			rec.Record(ModId, modId);
+		}
+	}
+
+	/// <summary>
+	///		On mod post-load.
+	/// </summary>
+	public virtual void OnPostLoading() {
 		// Override...
 	}
 
@@ -120,7 +181,7 @@ public abstract class Mod {
 		
 		foreach (DependencyInfo di in dep) {
 			if (Mods.TryGetValue(di.ModId, out Mod? mod)) {
-				if (mod.Version < di.MinVersion) {
+				if (di.MinVersion != null && mod.Version < di.MinVersion) {
 					throw new Crash($"Version too old: '{ModId}' requires {di}");
 				}
 				if (di.MaxVersion != null && mod.Version > di.MaxVersion) {
@@ -170,37 +231,50 @@ public abstract class Mod {
 			ModInfo info = ModInfo.FromJson(infoUrl);
 			
 			string modId = info.ModId;
-			string entry = info.Entrypoint;
-			Url programUrl = root / info.ProgramLocation;
-			Assembly asm = Assembly.LoadFrom(programUrl.ToFilePath());
-
-			Type? type = asm.GetType(entry);
 			
-			// Init mod instance.
-			if (type != null && type.IsAssignableTo(typeof(Mod))) {
-				Mod mod = (Mod) Activator.CreateInstance(asm.GetType(entry)!)!;
-				mod.injectValues(root, info, asm);
-
-				if (Mods.ContainsKey(modId)) {
-					throw new Crash($"Mod id conflict: {modId}");
-				}
-				Mods[modId] = mod;
-				EventBus.Instance.ScanSubscribers(asm);
-				
-				Log.Info($"Mod '{modId}' successfully loaded. All subscribed");
-
-				// Set the first core mod as bottom core.
-				if (mod.IsCoreMod) {
-					if (BottomCore != null) {
-						throw new Crash($"Already has a root mod. old={BottomCore.ModId}, new is from {root}");
-					}
-					BottomCore = mod;
-					Log.Info($"Mod '{modId}' works as bottom core.");
-				}
-				return;
+			if (Mods.ContainsKey(modId)) {
+				throw new Crash($"Mod id conflict: {modId}");
 			}
+
+			if (info.HasProgram) {
+				// Has program mod.
+				string entry = info.Entrypoint;
+				Url programUrl = root / info.ProgramLocation;
+				Assembly asm = Assembly.LoadFrom(programUrl.ToFilePath());
+
+				Type? type = asm.GetType(entry);
 			
-			throw new Crash($"Entrypoint '{entry}' not found when loading mod '{modId}'");
+				// Init mod instance.
+				if (type != null && type.IsAssignableTo(typeof(Mod))) {
+					Mod mod = (Mod) Activator.CreateInstance(asm.GetType(entry)!)!;
+					mod.injectValues(root, info, asm);
+					Mods[modId] = mod;
+					mod.OnPreLoad();
+					
+					Log.Info($"Mod '{modId}' successfully loaded. All subscribed");
+					
+					EventBus.Instance.ScanSubscribers(asm);
+
+					// Set the first core mod as bottom core.
+					if (mod.IsCoreMod) {
+						if (BottomCore != null) {
+							throw new Crash($"Already has a root mod. old={BottomCore.ModId}, new is from {root}");
+						}
+						BottomCore = mod;
+						Log.Info($"Mod '{modId}' works as bottom core");
+					}
+				} else {
+					throw new Crash($"Entrypoint '{entry}' not found when loading mod '{modId}'");
+				}
+			} else {
+				// No program mod.
+				Mod mod = new Mod();
+				mod.injectValues(root, info, null);
+				Mods[modId] = mod;
+				mod.OnPreLoad();
+				
+				Log.Info($"Mod '{modId}' successfully loaded. Default mod instance created");
+			}
 		} catch(Exception ex) {
 			Log.Warn($"Failed to load mod from {root}: {ex.Message}");
 		}
@@ -217,9 +291,29 @@ public abstract class Mod {
 	}
 
 	/// <summary>
+	///		Loads a class only if given mod is present.
+	/// </summary>
+	/// <param name="dep">Required dependency.</param>
+	/// <typeparam name="T">Type to load.</typeparam>
+	/// <returns>True if the class is loaded.</returns>
+	public bool LoadClassIfPresent<T>(in DependencyInfo dep) {
+		if (Mods.TryGetValue(dep.ModId, out Mod? mod)) {
+			if ((dep.MinVersion == null || mod.Version >= dep.MinVersion) 
+			&& (dep.MaxVersion == null || mod.Version <= dep.MaxVersion)) {
+				RuntimeHelpers.RunClassConstructor(typeof(T).TypeHandle);
+				Log.Debug($"Integration loaded: '{ModId}' offered integration with '{dep.ModId}'");
+				return true;
+			}
+		}
+		Log.Debug($"Integration failed to load: '{ModId}' offered integration with '{dep.ModId}'");
+		return false;
+	}
+
+	/// <summary>
 	///		Freezes mod loading.
 	/// </summary>
-	public static void Freeze() {
+	/// <returns>Sorted mods.</returns>
+	public static List<Mod> Freeze() {
 		lock (_lock) {
 			_frozen = true;
 
@@ -230,8 +324,9 @@ public abstract class Mod {
 			List<Mod> sortedMods = topologicalSort(Mods.Values.ToArray());
 			foreach (Mod mod in sortedMods) {
 				Log.Debug($"Lazy initializing mod '{mod.ModId}'...");
-				mod.Initialize();
 			}
+
+			return sortedMods;
 		}
 	}
 

@@ -1,0 +1,11 @@
+﻿{
+  "graphics": {
+    "tps": 60,
+    "fps": 120,
+    "width": 800,
+    "height": 450,
+    "maximized": false,
+    "vsync": true,
+    "title": "example"
+  }
+}

@@ -22,4 +22,8 @@
         <None Remove="Mino.csproj.DotSettings"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="example\ExampleMod\mod\build\" />
+    </ItemGroup>
+
 </Project>

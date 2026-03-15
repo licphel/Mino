@@ -39,6 +39,10 @@ public struct Holder<T> where T : class {
 			return (T) obj;
 		}
 	}
+	
+	public T OrElse(T fallback) {
+		return HasValue ? Value : fallback;
+	}
 
 	public static implicit operator T(in Holder<T> holder) {
 		return holder.Value;

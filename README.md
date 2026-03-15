@@ -1,6 +1,6 @@
 ﻿# Mino
 
-### Minimal, Integrated, Native and Optimal.
+### Modularized, Intuitive, Native-powered and Opensource.
 
 ![Static Badge](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 ![Static Badge](https://img.shields.io/badge/.NET-9.0%2B-green?style=flat-square)

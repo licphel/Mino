@@ -23,6 +23,11 @@ public class AssetLoader {
 	}
 
 	/// <summary>
+	///		If this loader is used for overriding.
+	/// </summary>
+	public bool IsOverriding { get; set; } = false;
+
+	/// <summary>
 	///     The base url of the loader for relative paths.
 	/// </summary>
 	public Url BaseUrl { get; set; } = Url.Local(string.Empty);
@@ -192,7 +197,11 @@ public class AssetLoader {
 		Enqueue(() => {
 			foreach (KeyValuePair<Predicate<Url>, UrlProcessor> kv in _processors) {
 				if (kv.Key(assetUrl)) {
-					Log.Debug($"Loaded asset: {id}");
+					if (IsOverriding) {
+						Log.Debug($"Overrode asset: {id}");
+					} else {
+						Log.Debug($"Loaded asset: {id}");
+					}
 					kv.Value(id, assetUrl);
 				}
 			}

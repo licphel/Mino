@@ -1,0 +1,25 @@
+{
+  "info": {
+    "mod_id": "example",
+    "version": "1.0.0",
+    "authors": "unknown",
+    "displayed_name": "Example",
+    "description": "Example mod"
+  },
+  "program": {
+    "is_core_mod": false,
+    "has_program": true,
+    "location": "build/ExampleMod.dll",
+    "entrypoint": "ExampleMod.Main"
+  },
+  "dependencies": [
+    {
+      "mod_id": "example_lib_a",
+      "min_version": "1.0.0",
+      "max_version": "2.5.0"
+    },
+    {
+      "mod_id": "example_lib_b"
+    }
+  ]
+}

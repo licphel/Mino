@@ -17,6 +17,7 @@ public class ModInfo {
 	public string DisplayedName = string.Empty;
 	public string Entrypoint = string.Empty;
 	public string ProgramLocation = string.Empty;
+	public bool HasProgram = false;
 
 	/// <summary>
 	///     Creates ModInfo from a JSON string or URL.
@@ -50,13 +51,11 @@ public class ModInfo {
 		bool isCoreMod = map.Get<bool>("$program.is_core_mod", false);
 		
 		string programLocation = map.Get<string>("$program.location");
-		if (!isCoreMod && string.IsNullOrWhiteSpace(programLocation)) {
-			throw new Crash("ModInfo missing required field: $program.location");
-		}
-
 		string entrypoint = map.Get<string>("$program.entrypoint");
-		if (!isCoreMod && string.IsNullOrWhiteSpace(entrypoint)) {
-			throw new Crash($"Mod '{modId}' missing required field: $program.entrypoint");
+		bool hasProgram = map.Get<bool>("$program.has_program", false);
+
+		if (hasProgram && string.IsNullOrEmpty(programLocation) && string.IsNullOrEmpty(entrypoint)) {
+			throw new Crash($"Mod '{modId}' has program but no $program.location and $program.entrypoint");
 		}
 		
 		// Dep configs
@@ -72,6 +71,7 @@ public class ModInfo {
 			IsCoreMod = isCoreMod,
 			ProgramLocation = programLocation,
 			Entrypoint = entrypoint,
+			HasProgram = hasProgram,
 
 			Dependencies = dependencies
 		};
@@ -108,9 +108,11 @@ public class ModInfo {
 		}
 
 		// Parse version range
-		string minVersionStr = depMap.Get<string>("min_version", "0.0.0");
-		if (!Version.TryParse(minVersionStr, out Version? minVersion)) {
-			throw new Crash($"Dependency {targetModId} has invalid min_version: {minVersionStr}");
+		Version? minVersion = null;
+		if (depMap.TryGet("min_version", out string minVersionStr)) {
+			if (!Version.TryParse(minVersionStr, out minVersion)) {
+				throw new Crash($"Dependency {targetModId} has invalid min_version: {minVersionStr}");
+			}
 		}
 
 		Version? maxVersion = null;

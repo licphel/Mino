@@ -1,5 +1,6 @@
 ﻿#region
 using System.Reflection;
+using Mino.Framework;
 using Mino.Utility;
 #endregion
 
@@ -139,7 +140,7 @@ public readonly struct Url : IEquatable<Url> {
 	/// </summary>
 	/// <exception cref="Crash">If cannot find the url.</exception>
 	public static Url Local(string sub) {
-		return new Url(UrlScheme.PcFile, AppDomain.CurrentDomain.BaseDirectory + "/run") / sub;
+		return FrameworkSetup.__Basepath / "run" / sub;
 	}
 
 	public bool Equals(Url other) {
