@@ -30,21 +30,24 @@ public class HolderNotifier {
 	/// <exception cref="Crash">Thrown if type does not match.</exception>
 	public void Notify(object? obj) {
 		_lock.EnterWriteLock();
-		if (_object == obj) {
-			return;
-		}
-		if (obj != null) {
-			Type newType = obj.GetType();
-			_resourceType ??= newType;
-
-			if (obj != null && _resourceType != newType) {
-				throw new Crash($"Asset type does not match: old={_resourceType}, new={newType}");
+		try {
+			if (_object == obj) {
+				return;
 			}
+			if (obj != null) {
+				Type newType = obj.GetType();
+				_resourceType ??= newType;
+
+				if (obj != null && _resourceType != newType) {
+					throw new Crash($"Asset type does not match: old={_resourceType}, new={newType}");
+				}
+			}
+
+			_onChanged?.Invoke(_object, obj);
+			_object = obj;
+		} finally {
+			_lock.ExitWriteLock();
 		}
-		
-		_onChanged?.Invoke(_object, obj);
-		_object = obj;
-		_lock.ExitWriteLock();
 	}
 
 	/// <summary>

@@ -17,6 +17,13 @@ public struct Holder<T> where T : class {
 	}
 
 	/// <summary>
+	///		Whether the value is present.
+	/// </summary>
+	public bool HasValue {
+		get => (_notifier._object as T ?? _fallback) != null;
+	}
+	
+	/// <summary>
 	///		Tries to get an asset.
 	/// </summary>
 	/// <exception cref="Crash">Thrown if cannot get and no fallback is bound.</exception>

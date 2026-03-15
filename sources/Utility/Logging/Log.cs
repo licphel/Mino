@@ -14,7 +14,7 @@ public static class Log {
 		get {
 			if (_default == null) {
 				lock (_lock) {
-					_default ??= new LoggerAsync();
+					_default ??= new LoggerSync();
 				}
 			}
 			return _default;

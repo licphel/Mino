@@ -3,7 +3,6 @@ using System.Reflection;
 using Mino.Modular.Eventing;
 using Mino.Modular.Eventing.Events;
 using Mino.Nio;
-using Mino.Nio.NBT;
 using Mino.Utility;
 using Mino.Utility.Logging;
 
@@ -26,47 +25,111 @@ namespace Mino.Modular;
  * {
  *   "program": "A.dll" // program dll name.
  *   "entrypoint": "Namespace.MainClass.cs" // full name of the :Mod class.
- *   "mod_id": MOD_ID // your mod id, will be soon loaded into Mod object.
  * }
  */
 /// <summary>
 ///		Represents a mod instance.
 /// </summary>
-public class Mod {
+public abstract class Mod {
 	/// <summary>
 	///		All loaded mods.
 	/// </summary>
 	public static readonly ConcurrentDictionary<string, Mod> Mods = new ConcurrentDictionary<string, Mod>();
 	/// <summary>
-	///		Global parent mod.
+	///		Bottom core mod, normally the game itself.
 	/// </summary>
-	public static Mod Parent { get; private set; } = null!;
+	public static Mod BottomCore { get; private set; } = null!;
+
+	private static Lock _lock = new Lock();
+	private static bool _frozen;
+	
+	// Mod asm. Used to subscribe events.
+	protected Assembly _asm = null!;
+	
+	private void injectValues(in Url directory, in ModInfo info, Assembly asm) {
+		Directory = directory;
+		Info = info;
+		_asm = asm;
+	}
 	
 	/// <summary>
 	///		The 'mod/{MOD_ID}' directory.
 	/// </summary>
-	public readonly Url Directory;
+	public Url Directory { get; private set; }
+
 	/// <summary>
-	///		Mod id.
+	///		Mod info.
 	/// </summary>
-	public readonly string ModId;
+	public ModInfo Info { get; private set; } = new ModInfo();
+	
 	/// <summary>
 	///		Whether the mod is enabled.
 	/// </summary>
 	public bool IsEnabled { get; set; } = true;
-	
-	private Mod(string modId, Url directory) {
-		ModId = modId;
-		Directory = directory;
+
+	/// <summary>
+	///		Whether the mod is a core mod.
+	///		If a mod is a core mod, it will ignore vanilla mod.
+	/// </summary>
+	public bool IsCoreMod {
+		get => Info.IsCoreMod;
 	}
 
 	/// <summary>
-	///		Checks dependencies and returns a optional error message.
+	///		Mod id.
 	/// </summary>
-	/// <returns>Empty means no error. Otherwise the game will stop.</returns>
-	public virtual string CheckDependencies() {
-		return string.Empty;
+	public string ModId {
+		get => Info.ModId;
 	}
+	
+	/// <summary>
+	///		Mod version.
+	/// </summary>
+	public Version Version {
+		get => Info.Version;
+	}
+	
+	/// <summary>
+	///		Mod dependencies.
+	/// </summary>
+	public DependencyInfo[] Dependencies {
+		get => Info.Dependencies;
+	}
+
+	/// <summary>
+	///		Initializes the mod.
+	/// </summary>
+	public virtual void Initialize() {
+		// Override...
+	}
+
+	/// <summary>
+	///		Checks dependencies that are not satisfied..
+	/// </summary>
+	public virtual void CheckDependencies() {
+		IEnumerable<DependencyInfo> dep = Dependencies;
+
+		if (!IsCoreMod) {
+			dep = dep.Append(new DependencyInfo(BottomCore.ModId, Version));
+		}
+		
+		foreach (DependencyInfo di in dep) {
+			if (Mods.TryGetValue(di.ModId, out Mod? mod)) {
+				if (mod.Version < di.MinVersion) {
+					throw new Crash($"Version too old: '{ModId}' requires {di}");
+				}
+				if (di.MaxVersion != null && mod.Version > di.MaxVersion) {
+					throw new Crash($"Version too new: '{ModId}' requires {di}");
+				}
+			} else {
+				throw new Crash($"Missing dependency: '{ModId}' requires {di}");
+			}
+		}
+
+		if (IsCoreMod && Dependencies.Length > 0) {
+			Log.Warn($"Core mod '{ModId}' shouldn't have dependencies");
+		}
+ 	}
 
 	/// <summary>
 	///		Enables or disables this mod.
@@ -78,66 +141,139 @@ public class Mod {
 		} else {
 			Log.Info($"Mod {ModId} is disabled");
 		}
+		
 		IsEnabled = enabled;
 		EventBus.Instance.Post(new ModEvent(ModId, enabled ? "e" : "d"));
-	}
-
-	///  <summary>
-	/// 		Creates a root mod, i.e. the main application.
-	///  </summary>
-	///  <param name="modId">Game id.</param>
-	///  <param name="root">Game content url.</param>
-	///  <returns>A mod instance.</returns>
-	public static Mod CreateParent(string modId, in Url root) {
-		Log.Info($"Parent mod {modId} created");
-		return Parent = Mods[modId] = new Mod(modId, root);
 	}
 
 	/// <summary>
 	///		Creates a mod from a mod dir.
 	/// </summary>
 	/// <param name="root">Mod root dir.</param>
-	/// <returns>A mod instance.</returns>
-	public static Mod? Load(in Url root) {
+	public static void Load(in Url root) {
+		lock (_lock) {
+			if (_frozen) {
+				throw new Crash("Mod loading is frozen");
+			}
+		}
+		
 		try {
 			Log.Info($"Possible mod detected: {root}");
 			
-			// Load bootstrap.json.
-			Url bootstrapUrl = root / "bootstrap.json";
-			TagMap bootstrap = TagSystem.ParseJson(bootstrapUrl);
-			string modId = bootstrap.Get<string>("mod_id");
-			string entry = bootstrap.Get<string>("entrypoint");
-			Url programUrl = root / bootstrap.Get<string>("program");
-			Assembly asm = Assembly.LoadFile(programUrl.ToFilePath());
+			// Load mod.json.
+			Url infoUrl = root / "mod.json";
+			ModInfo info = ModInfo.FromJson(infoUrl);
+			
+			string modId = info.ModId;
+			string entry = info.Entrypoint;
+			Url programUrl = root / info.ProgramLocation;
+			Assembly asm = Assembly.LoadFrom(programUrl.ToFilePath());
 
 			Type? type = asm.GetType(entry);
+			
+			// Init mod instance.
 			if (type != null && type.IsAssignableTo(typeof(Mod))) {
-				Mod mod = (Mod) Activator.CreateInstance(asm.GetType(entry)!, root, modId)!;
+				Mod mod = (Mod) Activator.CreateInstance(asm.GetType(entry)!)!;
+				mod.injectValues(root, info, asm);
 
 				if (Mods.ContainsKey(modId)) {
 					throw new Crash($"Mod id conflict: {modId}");
 				}
 				Mods[modId] = mod;
-
-				string depErr = mod.CheckDependencies();
-				if (!string.IsNullOrEmpty(depErr)) {
-					throw new Crash($"Dependency not satisfied: {depErr}");
-				}
-
+				EventBus.Instance.ScanSubscribers(asm);
 				Log.Info($"Mod '{modId}' successfully loaded");
-				return mod;
+
+				// Set the first core mod as bottom core.
+				if (mod.IsCoreMod) {
+					if (BottomCore != null) {
+						throw new Crash($"Already has a root mod. old={BottomCore.ModId}, new is from {root}");
+					}
+					BottomCore = mod;
+					Log.Info($"Mod '{modId}' works as bottom core.");
+				}
+				return;
 			}
+			
 			throw new Crash($"Entrypoint '{entry}' not found when loading mod '{modId}'");
-		} catch {
-			// Ignored
+		} catch(Exception ex) {
+			Log.Warn($"Failed to load mod from {root}: {ex.Message}");
 		}
-		
-		return null;
 	}
 
+	/// <summary>
+	///		Loads all mods in a directory.
+	/// </summary>
+	/// <param name="modDir">Directory to scan from.</param>
 	public static void LoadDirectory(in Url modDir) {
 		foreach (Url file in FileUtil.SubDirectories(modDir)) {
 			Load(file);
 		}
+	}
+
+	/// <summary>
+	///		Freezes mod loading.
+	/// </summary>
+	public static void Freeze() {
+		lock (_lock) {
+			_frozen = true;
+
+			foreach (Mod mod in Mods.Values) {
+				mod.CheckDependencies();
+			}
+
+			List<Mod> sortedMods = topologicalSort(Mods.Values.ToArray());
+			foreach (Mod mod in sortedMods) {
+				Log.Debug($"Lazy initializing mod '{mod.ModId}'...");
+				mod.Initialize();
+			}
+		}
+	}
+
+	private static List<Mod> topologicalSort(Mod[] mods) {
+		Dictionary<string, HashSet<string>> graph = new Dictionary<string, HashSet<string>>();
+		Dictionary<string, int> inDegree = new Dictionary<string, int>();
+		Dictionary<string, Mod> modDict = mods.ToDictionary(m => m.ModId);
+		
+		foreach (Mod mod in mods) {
+			graph[mod.ModId] = new HashSet<string>();
+			inDegree[mod.ModId] = 0;
+		}
+		
+		foreach (Mod mod in mods) {
+			foreach (DependencyInfo dep in mod.Dependencies) {
+				if (modDict.ContainsKey(dep.ModId)) {
+					if (graph[dep.ModId].Add(mod.ModId)) {
+						inDegree[mod.ModId]++;
+					}
+				}
+			}
+		}
+		
+		Queue<string> queue = new Queue<string>(
+			inDegree.Where(kv => kv.Value == 0).Select(kv => kv.Key)
+		);
+    
+		List<Mod> result = new List<Mod>();
+    
+		while (queue.Count > 0) {
+			string currentId = queue.Dequeue();
+			Mod currentMod = modDict[currentId];
+			result.Add(currentMod);
+			
+			foreach (string dependentId in graph[currentId]) {
+				inDegree[dependentId]--;
+				if (inDegree[dependentId] == 0) {
+					queue.Enqueue(dependentId);
+				}
+			}
+		}
+    
+		// Check circuit dep.
+		if (result.Count != mods.Length) {
+			IEnumerable<string> remaining = mods.Select(m => m.ModId).Except(result.Select(m => m.ModId));
+			throw new Crash($"Circuit dependency detected: {string.Join(", ", remaining)}");
+		}
+    
+		return result;
 	}
 }

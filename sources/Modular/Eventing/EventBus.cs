@@ -34,43 +34,42 @@ public sealed class EventBus {
 		regInternal(typeof(T), new EventHandlerWrapper<T>(fn, priority, receiveCanceled));
 	}
 
-    /// <summary>
-    ///     Scans all assemblies and finds out subscribers.
-    /// </summary>
-    public void ScanSubscribers() {
-		foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies()) {
-			if (!_scannedAssemblies.TryAdd(assembly, true)) {
-				return;
-			}
+	/// <summary>
+	///     Scans all assemblies and finds out subscribers.
+	/// </summary>
+	/// <param name="assembly">Target assembly.</param>
+	public void ScanSubscribers(Assembly assembly) {
+		if (!_scannedAssemblies.TryAdd(assembly, true)) {
+			return;
+		}
 
-			Type[] types = assembly.GetTypes();
-			foreach (Type type in types) {
-				MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+		Type[] types = assembly.GetTypes();
+		foreach (Type type in types) {
+			MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
 
-				foreach (MethodInfo method in methods) {
-					SubscribeEvent? attr = method.GetCustomAttribute<SubscribeEvent>();
-					if (attr == null) {
-						continue;
-					}
-
-					ParameterInfo[] parameters = method.GetParameters();
-					if (parameters.Length != 1) {
-						continue;
-					}
-
-					Type eventType = parameters[0].ParameterType;
-					if (!typeof(Event).IsAssignableFrom(eventType)) {
-						continue;
-					}
-
-					EventHandler handler = mkDelegate(method, eventType);
-					regInternal(eventType, handler);
+			foreach (MethodInfo method in methods) {
+				SubscribeEvent? attr = method.GetCustomAttribute<SubscribeEvent>();
+				if (attr == null) {
+					continue;
 				}
+
+				ParameterInfo[] parameters = method.GetParameters();
+				if (parameters.Length != 1) {
+					continue;
+				}
+
+				Type eventType = parameters[0].ParameterType;
+				if (!typeof(Event).IsAssignableFrom(eventType)) {
+					continue;
+				}
+
+				EventHandler handler = mkDelegate(method, eventType);
+				regInternal(eventType, handler);
 			}
 		}
 	}
 
-    /// <summary>
+	/// <summary>
     ///     Posts the event synchronously.
     /// </summary>
     /// <param name="event">Event to post.</param>

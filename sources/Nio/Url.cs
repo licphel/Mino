@@ -139,15 +139,7 @@ public readonly struct Url : IEquatable<Url> {
 	/// </summary>
 	/// <exception cref="Crash">If cannot find the url.</exception>
 	public static Url Local(string sub) {
-		Assembly? entryAssembly = Assembly.GetCallingAssembly();
-		if (entryAssembly == null) {
-			throw new Crash("Cannot find current assembly");
-		}
-		DirectoryInfo? dir = new FileInfo(entryAssembly.Location).Directory;
-		if (dir == null) {
-			throw new Crash("Cannot find current assembly location");
-		}
-		return new Url(UrlScheme.PcFile, dir.FullName + "/run") / sub;
+		return new Url(UrlScheme.PcFile, AppDomain.CurrentDomain.BaseDirectory + "/run") / sub;
 	}
 
 	public bool Equals(Url other) {

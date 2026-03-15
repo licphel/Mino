@@ -33,11 +33,11 @@ public interface Logger : IDisposable {
 	/// <summary>
 	///     Prints a log, may be not synchronous.
 	/// </summary>
-	/// <param name="level">The log level.</param>
+	/// <param name="severity">The log level.</param>
 	/// <param name="msg">The message to log.</param>
 	/// <param name="ex">Optional exception to log.</param>
 	/// <param name="header">Whether to use logging header.</param>
-	void Print(Severity level, string? msg, Exception? ex, bool header);
+	void Print(Severity severity, string? msg, Exception? ex, bool header);
 
 	/// <summary>
 	///     Gets a standard log line.
