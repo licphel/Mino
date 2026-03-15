@@ -177,6 +177,17 @@ public class AssetLoader {
 		}
 	}
 
+	/// <summary>
+	///		Copies a new loader with processors.
+	/// </summary>
+	/// <param name="scope">New scope.</param>
+	/// <returns>A new derived loader.</returns>
+	public AssetLoader CopyWithProcessors(string scope) {
+		AssetLoader child = new AssetLoader(scope);
+		child._processors = _processors;
+		return child;
+	}
+
 	private void designateToProcessor(Identifier id, Url assetUrl) {
 		Enqueue(() => {
 			foreach (KeyValuePair<Predicate<Url>, UrlProcessor> kv in _processors) {

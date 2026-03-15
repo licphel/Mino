@@ -2,6 +2,7 @@
 using System.Reflection;
 using Mino.Modular.Eventing;
 using Mino.Modular.Eventing.Events;
+using Mino.Modular.Persistent;
 using Mino.Nio;
 using Mino.Utility;
 using Mino.Utility.Logging;
@@ -44,12 +45,16 @@ public abstract class Mod {
 	private static bool _frozen;
 	
 	// Mod asm. Used to subscribe events.
-	protected Assembly _asm = null!;
+	public Assembly Asm = null!;
+	/// <summary>
+	///		The persistent system. 'Modly' singleton.
+	/// </summary>
+	public PersistentSystem PersistentSystem = new PersistentSystem();
 	
 	private void injectValues(in Url directory, in ModInfo info, Assembly asm) {
 		Directory = directory;
 		Info = info;
-		_asm = asm;
+		Asm = asm;
 	}
 	
 	/// <summary>
@@ -181,7 +186,8 @@ public abstract class Mod {
 				}
 				Mods[modId] = mod;
 				EventBus.Instance.ScanSubscribers(asm);
-				Log.Info($"Mod '{modId}' successfully loaded");
+				
+				Log.Info($"Mod '{modId}' successfully loaded. All subscribed");
 
 				// Set the first core mod as bottom core.
 				if (mod.IsCoreMod) {

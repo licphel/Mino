@@ -1,30 +1,31 @@
 ﻿using System.Collections.Concurrent;
 using Mino.Nio;
 using Mino.Nio.NBT;
+using Mino.Utility;
 
-namespace Mino.Utility.Configuration;
+namespace Mino.Modular.Persistent;
 
 /// <summary>
-///		Manages all config values.
+///		Manages all data values.
 /// </summary>
-public static class ConfigSystem {
-	internal static TagMap _G = new TagMap();
-	internal static bool _init;
-	internal static ConcurrentQueue<Action> _finalW = new ConcurrentQueue<Action>();
+public sealed class PersistentSystem {
+	internal TagMap _G = new TagMap();
+	internal bool _init;
+	internal ConcurrentQueue<Action> _finalW = new ConcurrentQueue<Action>();
 	
 	/// <summary>
-	///		Initializes the config system.
+	///		Initializes the data system.
 	/// </summary>
-	/// <param name="url">Local config storage file.</param>
+	/// <param name="url">Local data storage file.</param>
 	/// <exception cref="Crash">Thrown if url is not a file url.</exception>
-	public static void Init(Url url) {
+	public void Init(Url url) {
 		if (!url.Scheme.IsFileBased) {
 			throw new Crash($"Url {url} is not a file url");
 		}
 		_init = true;
 		
 		AppDomain.CurrentDomain.ProcessExit += delegate {
-			// Write present configs.
+			// Write present datas.
 			while (!_finalW.IsEmpty) {
 				if (_finalW.TryDequeue(out Action? act)) {
 					act.Invoke();
