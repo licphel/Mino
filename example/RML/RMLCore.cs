@@ -1,4 +1,6 @@
-﻿using Mino.Framework;
+﻿using Mino.Audio;
+using Mino.Audio.Desc;
+using Mino.Framework;
 using Mino.Graphics;
 using Mino.Graphics.Desc;
 using Mino.Graphics.Text;
@@ -10,6 +12,42 @@ using Mino.Utility.Logging;
 namespace Mino.RML;
 
 public static class RMLCore {
+	public static Action<AssetLoader> OnSetProcessors = loader => {
+		// Textures
+		loader.AddProcessor(
+			url => FileUtil.GetExtension(url).ToLowerInvariant() is "png" or "jpg" or "jpeg", (id, url) => {
+				Image image = Image.Parse(url.Read());
+				Texture tex = RenderSystem.Create<Texture>(TextureDesc.CreateByImage(image));
+				Assets.Set(id, tex);
+			});
+		
+		// Font types
+		loader.AddProcessor(
+			url => FileUtil.GetExtension(url).ToLowerInvariant() is "ttf" or "otf", (id, url) => {
+				Font font = Font.Load(url);
+				font.SetResolution(64);
+				Assets.Set(id, font); 
+			});
+		
+		// Texts
+		loader.AddProcessor(
+			url => FileUtil.GetExtension(url).ToLowerInvariant() is "txt",
+			(id, url) => {
+				TextAccess str = url;
+				Assets.Set(id, (string) str);
+			}
+		);
+		
+		// Wave data lines.
+		loader.AddProcessor(
+			url => FileUtil.GetExtension(url).ToLowerInvariant() is "wav",
+			(id, url) => {
+				DataLine dataLine = AudioSystem.Create<DataLine>(DataLineDesc.Parse(url.Read()));
+				Assets.Set(id, dataLine);
+			}
+		);
+	};
+	
 	public static void Main(string[] args) {
 		// Firstly, we handle args.
 		FrameworkSetup.Start(args);
@@ -26,18 +64,7 @@ public static class RMLCore {
 		
 		// Create dominant loader.
 		AssetLoader loader = new AssetLoader("ml");
-		loader.AddProcessor(
-			url => url.Path.EndsWith(".png"), (id, url) => {
-				Image image = Image.Parse(url.Read());
-				Texture tex = RenderSystem.Create<Texture>(TextureDesc.CreateByImage(image));
-				Assets.Set(id, tex);
-			});
-		loader.AddProcessor(
-			url => url.Path.EndsWith(".ttf") || url.Path.EndsWith(".otf"), (id, url) => {
-				Font font = Font.Load(url);
-				font.SetResolution(64);
-				Assets.Set(id, font); 
-			});
+		OnSetProcessors?.Invoke(loader);
 		// ...
 		// Other processors can be added, up to you.
 	

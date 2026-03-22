@@ -5,7 +5,7 @@ namespace Mino.Modular.Registry;
 /// <summary>
 ///		Deferred registered value.
 /// </summary>
-public class DeferredEntry<T> where T : class, Registerable {
+public class DeferredEntry<T> where T : class, RegisterInterface {
 	public DeferredEntry(in Identifier id) {
 		Id = id;
 	}

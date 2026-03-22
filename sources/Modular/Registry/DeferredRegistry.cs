@@ -7,7 +7,7 @@ namespace Mino.Modular.Registry;
 /// <summary>
 ///		A deferred register of class types.
 /// </summary>
-public class DeferredRegistry<T> where T : class, Registerable {
+public class DeferredRegistry<T> where T : class, RegisterInterface {
 	private ConcurrentDictionary<Identifier, T> _map = new ConcurrentDictionary<Identifier, T>();
 	private List<T> _arrMap = new List<T>();
 	private ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
@@ -48,8 +48,7 @@ public class DeferredRegistry<T> where T : class, Registerable {
 		DeferredEntry<T> entry = new DeferredEntry<T>(key);
 		_pendingTasks.Enqueue(() => {
 			T t = factory.Invoke();
-			t.Id = key;
-			t.IntId = _next++;
+			t.Freeze(key, _next++);
 			_map[key] = t;
 			_arrMap.Add(t);
 			entry.Value = t;
