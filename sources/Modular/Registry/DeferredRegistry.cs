@@ -14,7 +14,7 @@ public class DeferredRegistry<T> where T : class, RegisterInterface {
 	private Queue<Action> _pendingTasks = new Queue<Action>();
 	private Domain _domain;
 	private string _tName;
-	private int _next = 0;
+	private int _next = 1;
 	private bool _frozen;
 	
 	public DeferredRegistry(Domain domain) {
@@ -74,12 +74,16 @@ public class DeferredRegistry<T> where T : class, RegisterInterface {
 	}
 	
 	public T this[in Identifier key] {
-		get => _map[key];
+		get => _map.GetValueOrDefault(key, this[0]);
 	}
 	
 	public T this[int key] {
 		get {
 			_lock.EnterReadLock();
+			if (key < 0 || key >= _arrMap.Count) {
+				return _arrMap[0];
+			}
+			
 			T t = _arrMap[key];
 			_lock.ExitReadLock();
 			return t;

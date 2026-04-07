@@ -15,76 +15,14 @@ namespace Mino.Graphics.Sprite;
 ///     provides integrated 2D rendering solution.
 /// </summary>
 public unsafe class Brush : IDisposable {
-	private const string VertShaderTex = """
-										 #version 330 core
-
-										 layout(location = 0) in vec3 i_position;
-										 layout(location = 1) in vec4 i_color;
-										 layout(location = 2) in vec2 i_texCoord;
-
-										 out vec4 o_color;
-										 out vec2 o_texCoord;
-
-										 layout(std140) uniform u_transform {
-										     mat4 u_viewProjection;
-										 };
-
-										 void main(){
-										     o_color = i_color;
-										     o_texCoord = i_texCoord;
-
-										     gl_Position =  u_viewProjection * vec4(i_position, 1.0);
-										 }
-										 """;
-	private const string FragShaderTex = """
-										 #version 330 core
-
-										 in vec4 o_color;
-										 in vec2 o_texCoord;
-
-										 uniform sampler2D u_texture;
-
-										 void main() {
-										     vec4 col = texture(u_texture, o_texCoord);
-										     gl_FragColor = o_color * col;
-										 }
-										 """;
-	private const string VertShaderCol = """
-										 #version 330 core
-
-										 layout(location = 0) in vec3 i_position;
-										 layout(location = 1) in vec4 i_color;
-
-										 out vec4 o_color;
-
-										 layout(std140) uniform u_transform {
-										     mat4 u_viewProjection;
-										 };
-
-										 void main(){
-										     o_color = i_color;
-
-										     gl_Position =  u_viewProjection * vec4(i_position, 1.0);
-										 }
-										 """;
-	private const string FragShaderCol = """
-										 #version 330 core
-
-										 in vec4 o_color;
-
-										 void main() {
-										     gl_FragColor = o_color;
-										 }
-										 """;
-
+	/// <summary>
+	///		Called on flushing.
+	/// </summary>
+	public Action<Brush>? OnFlushed;
 	/*
 	 * STATE SWITCHING INFO
 	 */
-	private RenderPipe? _ast_Pipe = null;
-	private BrushPrimitive? _ast_Primitive = null;
-	private ResourceSet? _ast_Set = null;
-
-	private Texture? _ast_Tex = null;
+	private BrushState _state;
 	private float _invWidth = 0;
 	private float _invHeight = 0;
 	/*
@@ -100,23 +38,23 @@ public unsafe class Brush : IDisposable {
 	 */
 	private RenderTarget _renderTarget = null!;
 	private Sampler _sampler = null!;
-	private BrushCache _target;
-	private BufferObject _vbo = null!;
+	private bool _isDirect;
+	private MultiMesh _parent;
+	private MultiMesh.Node _target = null!;
 	private Encoder _encoder = null!;
-	private BufferObject _ibo = null!;
 	private BufferObject _ubo = null!;
 	private Camera2D _camera = Camera2D.Normal(new Camera2D());
 	/*
 	 * Other variables
 	 */
-	private int _vertCnt = 0;
-	private int _indCnt = 0;
 	private bool _disposed;
 	public int _Drawcalls = 0;
 	private Stack<ScissorDesc> _scissorStack = new Stack<ScissorDesc>();
 
-	public Brush(BrushCache target) {
-		_target = target;
+	public Brush(MultiMesh parent) {
+		_parent = parent;
+		_isDirect = _parent.IsUltimate;
+		
 		initGfxResources();
 	}
 
@@ -167,6 +105,17 @@ public unsafe class Brush : IDisposable {
 	}
 
 	/// <summary>
+	///		Current brush states.
+	/// </summary>
+	public BrushState State {
+		get => _state;
+		set {
+			Flush();
+			_state = value;
+		}
+	}
+
+	/// <summary>
 	///     Current viewport.
 	/// </summary>
 	public Box2 CurrentViewport { get; private set; }
@@ -204,20 +153,64 @@ public unsafe class Brush : IDisposable {
 	}
 
 	/// <summary>
+	///		Moves to next mesh node.
+	/// </summary>
+	public void NextNode() {
+		if (_target != null) {
+			_target.RecordedState = _state;
+		}
+		
+		_target = _parent.Acquire();
+	}
+	
+	/// <summary>
+	///		Replays a mesh with this brush.
+	/// </summary>
+	/// <param name="mesh">The mesh to replay.</param>
+	public void Replay(MultiMesh mesh) {
+		if (mesh.IsUltimate) {
+			return; // Ultimate mesh cannot be replayed.
+		}
+		
+		BrushState oldState = State;
+		
+		foreach (MultiMesh.Node node in mesh) {
+			State = node.RecordedState;
+			draw(node);
+		}
+		
+		State = oldState;
+	}
+
+	/// <summary>
 	///     Flushes the brush, clears all buffers and submits the draw.
 	/// </summary>
 	/// <param name="force">True if a force state update is needed.</param>
 	public void Flush(bool force = false) {
-		if (_ast_Set == null || _ast_Pipe == null || _ast_Primitive == null) {
-			return; // Unreachable...?
-		}
-		if (_vertCnt <= 0 && !force) {
+		if (_target == null) {
 			return;
 		}
-		_Drawcalls++;
+		
+		if (_parent.IsUltimate) {
+			draw(_target, force);
+			_target.Reset(); // Directly submit, dp not record.
+		} else {
+			NextNode(); // Move to next node for recording.
+		}
+	}
 
-		ByteBuffer vBuf = _target.VertexBuf;
-		ByteBuffer iBuf = _target.IndexBuf;
+	public void draw(MultiMesh.Node node, bool force = false) {
+		if (_state._set == null || _state._pipe == null || _state._primitive == null) {
+			return; // Unreachable...?
+		}
+		if (node.VertexCount <= 0 && !force) {
+			return;
+		}
+		
+		_Drawcalls++;
+		
+		ByteBuffer vBuf = node.VertexBuf;
+		ByteBuffer iBuf = node.IndexBuf;
 
 		_encoder.SetViewport(
 			(int) CurrentViewport.MinX,
@@ -227,7 +220,9 @@ public unsafe class Brush : IDisposable {
 		);
 		_encoder.SetScissor(CurrentScissor);
 
-		if (_vertCnt <= 0) {
+		// End of a drawing frame, we need to clear encoder's commands.
+		// (forced flush)
+		if (node.VertexCount <= 0) {
 			if (force) {
 				_encoder.QueuedExecute();
 				_encoder.Reset();
@@ -235,45 +230,53 @@ public unsafe class Brush : IDisposable {
 			return;
 		}
 
-		_encoder.SetRenderPipe(_ast_Pipe);
+		_encoder.SetRenderPipe(_state._pipe);
 
-		_vbo.Submit<byte>(vBuf.AsSpan());
-		_encoder.SetBuffer(_vbo);
+		if (node.Dirty) {
+			node.Vbo.Submit<byte>(vBuf.AsSpan());
+		}
+		_encoder.SetBuffer(node.Vbo);
 
-		_ast_Set.BindUniform(0, _ubo, sizeof(Matrix4x4));
-		_encoder.SetResource(0, _ast_Set);
+		_state._set.BindUniform(0, _ubo, sizeof(Matrix4x4));
+		_encoder.SetResource(0, _state._set);
 
-		switch (_ast_Primitive) {
+		switch (_state._primitive) {
 			case BrushPrimitive.TextureSprite:
-				_ast_Set.BindTexture(1, _ast_Tex!, _sampler);
+				_state._set.BindTexture(1, _state._tex!, _sampler);
 				_encoder.SetTopology(Topology.Triangle);
-				_encoder.SetBuffer(_ibo);
-				_ibo.Submit<byte>(iBuf.AsSpan());
-				_encoder.DrawIndexed(_indCnt, 0);
+				
+				if (node.Dirty) {
+					node.Ibo.Submit<byte>(iBuf.AsSpan());
+				}
+				_encoder.SetBuffer(node.Ibo);
+				
+				_encoder.DrawIndexed(node.IndexCount, 0);
 				break;
 			case BrushPrimitive.ColorSprite:
 				_encoder.SetTopology(Topology.Triangle);
-				_encoder.SetBuffer(_ibo);
-				_ibo.Submit<byte>(iBuf.AsSpan());
-				_encoder.DrawIndexed(_indCnt, 0);
+				
+				if (node.Dirty) {
+					node.Ibo.Submit<byte>(iBuf.AsSpan());
+				}
+				_encoder.SetBuffer(node.Ibo);
+				
+				_encoder.DrawIndexed(node.IndexCount, 0);
 				break;
 			case BrushPrimitive.ColorLine:
 				_encoder.SetTopology(Topology.Line);
-				_encoder.Draw(_vertCnt, 0);
+				_encoder.Draw(node.VertexCount, 0);
 				break;
 			case BrushPrimitive.ColorPoint:
 				_encoder.SetTopology(Topology.Point);
-				_encoder.Draw(_vertCnt, 0);
+				_encoder.Draw(node.VertexCount, 0);
 				break;
 		}
 
 		_encoder.QueuedExecute();
 		_encoder.Reset();
 
-		vBuf.Clear();
-		iBuf.Clear();
-		_vertCnt = 0;
-		_indCnt = 0;
+		// Avoid useless submissions.
+		node.Dirty = false;
 	}
 
 	/// <summary>
@@ -390,15 +393,14 @@ public unsafe class Brush : IDisposable {
 		vBuf.Write(Color.AsHalves());
 		vBuf.Write(new Vector2(u, v2));
 
-		iBuf.Write((uint) _vertCnt + 0);
-		iBuf.Write((uint) _vertCnt + 2);
-		iBuf.Write((uint) _vertCnt + 1);
-		iBuf.Write((uint) _vertCnt + 2);
-		iBuf.Write((uint) _vertCnt + 0);
-		iBuf.Write((uint) _vertCnt + 3);
+		iBuf.Write((uint) _target.VertexCount + 0);
+		iBuf.Write((uint) _target.VertexCount + 2);
+		iBuf.Write((uint) _target.VertexCount + 1);
+		iBuf.Write((uint) _target.VertexCount + 2);
+		iBuf.Write((uint) _target.VertexCount + 0);
+		iBuf.Write((uint) _target.VertexCount + 3);
 
-		_vertCnt += 4;
-		_indCnt += 6;
+		_target.Write(4, 6);
 	}
 
 	/// <summary>
@@ -563,15 +565,14 @@ public unsafe class Brush : IDisposable {
 		vBuf.Write(new Vector3(x1, y2, Depth));
 		vBuf.Write(Color.AsHalves());
 
-		iBuf.Write((uint) _vertCnt + 0);
-		iBuf.Write((uint) _vertCnt + 2);
-		iBuf.Write((uint) _vertCnt + 1);
-		iBuf.Write((uint) _vertCnt + 2);
-		iBuf.Write((uint) _vertCnt + 0);
-		iBuf.Write((uint) _vertCnt + 3);
+		iBuf.Write((uint) _target.VertexCount + 0);
+		iBuf.Write((uint) _target.VertexCount + 2);
+		iBuf.Write((uint) _target.VertexCount + 1);
+		iBuf.Write((uint) _target.VertexCount + 2);
+		iBuf.Write((uint) _target.VertexCount + 0);
+		iBuf.Write((uint) _target.VertexCount + 3);
 
-		_vertCnt += 4;
-		_indCnt += 6;
+		_target.Write(4, 6);
 	}
 
 	/// <summary>
@@ -625,7 +626,7 @@ public unsafe class Brush : IDisposable {
 		vBuf.Write(new Vector3(x2t, y2t, Depth));
 		vBuf.Write(Color.AsHalves());
 
-		_vertCnt += 2;
+		_target.Write(2, 0);
 	}
 
 	/// <summary>
@@ -652,7 +653,7 @@ public unsafe class Brush : IDisposable {
 		vBuf.Write(new Vector3(xt, yt, Depth));
 		vBuf.Write(Color.AsHalves());
 
-		_vertCnt += 1;
+		_target.Write(1, 0);
 	}
 
 	/// <summary>
@@ -719,24 +720,12 @@ public unsafe class Brush : IDisposable {
 	}
 
 	private void initGfxResources() {
+		GRes.init();
+		
 		RenderTarget = RenderTarget.GetUltimate();
 		Sampler = RenderSystem.Create<Sampler>(new SamplerDesc());
 
-		_vbo = RenderSystem.Create<BufferObject>(
-			new BufferObjectDesc {
-				Frequency = BufferFrequency.Stream,
-				Type = BufferType.Vertex,
-				Usage = BufferUsage.GpuRead | BufferUsage.CpuWrite
-			});
-		_ibo = RenderSystem.Create<BufferObject>(
-			new BufferObjectDesc {
-				Frequency = BufferFrequency.Stream,
-				Type = BufferType.Index,
-				Usage = BufferUsage.GpuRead | BufferUsage.CpuWrite
-			});
 		
-		_vbo.Allocate<byte>(1024 * 1024, null);
-		_ibo.Allocate<byte>(1024 * 1024, null);
 		
 		_ubo = RenderSystem.Create<BufferObject>(
 			new BufferObjectDesc {
@@ -754,79 +743,14 @@ public unsafe class Brush : IDisposable {
 		 * 0 - colored
 		 * 1 - textured
 		 */
-		ShaderProgram program_0 = ShaderProgram.CreateRender(VertShaderCol, FragShaderCol);
-		ShaderProgram program_1 = ShaderProgram.CreateRender(VertShaderTex, FragShaderTex);
-		ResourceSetLayout layout_0 = ResourceSetLayout.Bake(
-			new ResourceSetLayout.Slot {
-				Count = 1,
-				Name = "u_transform",
-				Stages = ShaderType.Vertex,
-				Type = ResourceType.UniformBuffer
-			});
-		ResourceSetLayout layout_1 = ResourceSetLayout.Bake(
-			new ResourceSetLayout.Slot {
-				Count = 1,
-				Name = "u_transform",
-				Stages = ShaderType.Vertex,
-				Type = ResourceType.UniformBuffer
-			}, new ResourceSetLayout.Slot {
-				Count = 1,
-				Name = "u_texture",
-				Stages = ShaderType.Fragment,
-				Type = ResourceType.Texture
-			});
-		// Colored pipe.
-		_pipes[0] = RenderSystem.Create<RenderPipe>(
-			new RenderPipeDesc {
-				Blend = BlendDesc.AlphaMix,
-				Depth = DepthDesc.Leq,
-				Rasterization = RasterizationDesc.Default,
-				ResourceLayouts = [layout_0],
-				ShaderProgram = program_0,
-				Usage = RenderPipeUsage.Render,
-				VertexLayout = VertexLayout.Bake(
-					new VertexLayout.Attr {
-						Components = 3,
-						Normalized = false,
-						Type = VertexAttributeType.Float32
-					}, new VertexLayout.Attr {
-						// Half color4
-						Components = 4,
-						Normalized = false,
-						Type = VertexAttributeType.Float16
-					})
-			});
-		// Textured pipe.
-		_pipes[1] = RenderSystem.Create<RenderPipe>(
-			new RenderPipeDesc {
-				Blend = BlendDesc.AlphaMix,
-				Depth = DepthDesc.Leq,
-				Rasterization = RasterizationDesc.Default,
-				ResourceLayouts = [layout_1],
-				ShaderProgram = program_1,
-				Usage = RenderPipeUsage.Render,
-				VertexLayout = VertexLayout.Bake(
-					new VertexLayout.Attr {
-						Components = 3,
-						Normalized = false,
-						Type = VertexAttributeType.Float32
-					}, new VertexLayout.Attr {
-						// Half color4
-						Components = 4,
-						Normalized = false,
-						Type = VertexAttributeType.Float16
-					}, new VertexLayout.Attr {
-						Components = 2,
-						Normalized = false,
-						Type = VertexAttributeType.Float32
-					})
-			});
-		_sets[0] = RenderSystem.Create<ResourceSet>(layout_0);
-		_sets[1] = RenderSystem.Create<ResourceSet>(layout_1);
+		_pipes[0] = GRes.p4c!;
+		_pipes[1] = GRes.p4t!;
+		_sets[0] = RenderSystem.Create<ResourceSet>(GRes.rl4c!);
+		_sets[1] = RenderSystem.Create<ResourceSet>(GRes.rl4t!);
 	}
 
 	private void assert(BrushPrimitive primitive) {
-		if (_ast_Primitive == primitive) {
+		if (_state._primitive == primitive) {
 			return;
 		}
 
@@ -834,25 +758,25 @@ public unsafe class Brush : IDisposable {
 
 		// Apply states based on primitive.
 		if (primitive == BrushPrimitive.TextureSprite) {
-			_ast_Pipe = _pipes[1];
-			_ast_Set = _sets[1];
+			_state._pipe = _pipes[1];
+			_state._set = _sets[1];
 		} else {
-			_ast_Pipe = _pipes[0];
-			_ast_Set = _sets[0];
+			_state._pipe = _pipes[0];
+			_state._set = _sets[0];
 		}
 
-		_ast_Tex = null;
-		_ast_Primitive = primitive;
+		_state._tex = null;
+		_state._primitive = primitive;
 	}
 
 	private void assert(Texture? tex) {
-		if (_ast_Tex == tex) {
+		if (_state._tex == tex) {
 			return;
 		}
 
 		Flush();
 
-		_ast_Tex = tex;
+		_state._tex = tex;
 		if (tex != null) {
 			_invWidth = 1.0F / tex.Width;
 			_invHeight = 1.0F / tex.Height;
@@ -865,9 +789,7 @@ public unsafe class Brush : IDisposable {
 		}
 		_disposed = true;
 		GC.SuppressFinalize(this);
-
-		_vbo.Dispose();
-		_ibo.Dispose();
+		
 		_sampler.Dispose();
 		_encoder.Dispose();
 	}
