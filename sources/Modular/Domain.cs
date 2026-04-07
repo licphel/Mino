@@ -1,37 +1,38 @@
 ﻿#region
 using System.Collections.Concurrent;
+using System.Reflection;
 using Mino.Utility;
 #endregion
 
 namespace Mino.Modular;
 
 /// <summary>
-///     A realm of a mod.
+///     A domain of a mod.
 /// </summary>
-public sealed class Realm : IEquatable<Realm> {
-	private static readonly ConcurrentDictionary<string, Realm> _realms = new ConcurrentDictionary<string, Realm>();
+public sealed class Domain : IEquatable<Domain> {
+	private static readonly ConcurrentDictionary<string, Domain> _domains = new ConcurrentDictionary<string, Domain>();
 	/// <summary>
-	///     The unknown realms for default fallback.
+	///     The unknown domains for default fallback.
 	/// </summary>
-	public static readonly Realm Unknown = new Realm("unknown");
+	public static readonly Domain Unknown = new Domain("unknown");
 
 	public readonly string Name;
 
-	public Realm(string name) {
+	internal Domain(string name) {
 		if (string.IsNullOrWhiteSpace(name)) {
-			throw new Crash("Realm name cannot be empty");
+			throw new Crash("Domain name cannot be empty");
 		}
 		if (!Validate(name)) {
-			throw new Crash($"Realm name invalid: '{name}'");
+			throw new Crash($"Domain name invalid: '{name}'");
 		}
 
 		Name = name;
 
-		_realms.TryAdd(name, this);
+		_domains.TryAdd(name, this);
 	}
 
 	/// <summary>
-	///     Gets an identifier in current realm.
+	///     Gets an identifier in current domain.
 	/// </summary>
 	/// <param name="str">Path of the identifier.</param>
 	/// <returns>An validated identifier.</returns>
@@ -64,15 +65,30 @@ public sealed class Realm : IEquatable<Realm> {
 	}
 
 	/// <summary>
-	///     Tries to find a realm by name.
+	///     Tries to find a domain by name.
 	/// </summary>
-	/// <param name="name">Realm name.</param>
-	/// <returns>Nullable realm result.</returns>
-	public static Realm TryFind(string name) {
-		return _realms.GetValueOrDefault(name, Unknown);
+	/// <param name="name">Domain name.</param>
+	/// <returns>Nullable domain result.</returns>
+	public static Domain TryFind(string name) {
+		return _domains.GetValueOrDefault(name, Unknown);
 	}
 
-	public bool Equals(Realm? other) {
+	/// <summary>
+	///		Gets the domain of the current
+	/// </summary>
+	/// <param name="throwIfNotFound">Whether to throw an exception when not found.</param>
+	/// <returns></returns>
+	public static Domain GetCurrent(bool throwIfNotFound = false) {
+		if (Mod.ModsByAsm.TryGetValue(Assembly.GetCallingAssembly(), out Mod? mod)) {
+			return mod.Domain;
+		}
+		if (throwIfNotFound) {
+			throw new Crash("Domain is not initialized");
+		}
+		return Unknown;
+	}
+
+	public bool Equals(Domain? other) {
 		if (other is null) {
 			return false;
 		}
@@ -83,7 +99,7 @@ public sealed class Realm : IEquatable<Realm> {
 	}
 
 	public override bool Equals(object? obj) {
-		return ReferenceEquals(this, obj) || obj is Realm other && Equals(other);
+		return ReferenceEquals(this, obj) || obj is Domain other && Equals(other);
 	}
 
 	public override int GetHashCode() {
@@ -94,11 +110,11 @@ public sealed class Realm : IEquatable<Realm> {
 		return Name;
 	}
 
-	public static bool operator ==(Realm? left, Realm? right) {
+	public static bool operator ==(Domain? left, Domain? right) {
 		return Equals(left, right);
 	}
 
-	public static bool operator !=(Realm? left, Realm? right) {
+	public static bool operator !=(Domain? left, Domain? right) {
 		return !Equals(left, right);
 	}
 }

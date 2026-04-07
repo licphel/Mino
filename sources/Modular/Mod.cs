@@ -38,6 +38,7 @@ public class Mod {
 	///		All loaded mods.
 	/// </summary>
 	public static readonly ConcurrentDictionary<string, Mod> Mods = new ConcurrentDictionary<string, Mod>();
+	public static readonly ConcurrentDictionary<Assembly, Mod> ModsByAsm = new ConcurrentDictionary<Assembly, Mod>();
 	
 	/// <summary>
 	///		Bottom core mod, normally the game itself.
@@ -54,15 +55,14 @@ public class Mod {
 	
 	// Mod asm. Used to subscribe events.
 	public Assembly? Asm = null;
-	/// <summary>
-	///		The persistent system. 'Modly' singleton.
-	/// </summary>
 	public PersistentSystem PersistentSystem = new PersistentSystem();
+	public Domain Domain = Domain.Unknown;
 	
 	private void injectValues(in Url directory, in ModInfo info, Assembly? asm) {
 		Directory = directory;
 		Info = info;
 		Asm = asm;
+		Domain = new Domain(Info.ModId);
 	}
 	
 	/// <summary>
@@ -153,7 +153,7 @@ public class Mod {
 		foreach (Url url in FileUtil.SubDirectories(baseOverride)) {
 			string modId = FileUtil.GetNameNoExtension(url);
 
-			AssetLoader subLoader = loader.CopyWithProcessors(modId);
+			AssetLoader subLoader = loader.CopyWithProcessors(Domain.TryFind(modId));
 			subLoader.IsOverriding = true;
 			subLoader.Scan(url);
 			loader.Enqueue(subLoader);
@@ -249,6 +249,7 @@ public class Mod {
 					Mod mod = (Mod) Activator.CreateInstance(asm.GetType(entry)!)!;
 					mod.injectValues(root, info, asm);
 					Mods[modId] = mod;
+					ModsByAsm[asm] = mod;
 					mod.OnPreLoad();
 					
 					Log.Info($"Mod '{modId}' successfully loaded. All subscribed");
@@ -328,6 +329,21 @@ public class Mod {
 
 			return sortedMods;
 		}
+	}
+	
+	/// <summary>
+	///		Converts an identifier to a mod-based url resource location.
+	/// </summary>
+	/// <param name="id">Identifier of a mod resource.</param>
+	/// <returns>A url of domain - mod id, key - resource finder.</returns>
+	/// <exception cref="Crash">Thrown if there's no matching mod.</exception>
+	public static Url GetResourceLocation(in Identifier id) {
+		Mod? mod = Mods!.GetValueOrDefault(id.Domain.Name, null);
+		if (mod == null) {
+			throw new Crash($"Domain '{id.Domain}' is not a mod");
+		}
+		
+		return mod.Directory / id.Path;
 	}
 
 	private static List<Mod> topologicalSort(Mod[] mods) {

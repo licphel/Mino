@@ -63,7 +63,7 @@ public static class RMLCore {
 		Log.Instance.OutputTo(logUrl);
 		
 		// Create dominant loader.
-		AssetLoader loader = new AssetLoader("ml");
+		AssetLoader loader = new AssetLoader(new Domain("ml"));
 		OnSetProcessors?.Invoke(loader);
 		// ...
 		// Other processors can be added, up to you.

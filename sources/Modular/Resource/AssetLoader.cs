@@ -16,10 +16,10 @@ public class AssetLoader {
 	private Queue<AssetLoader> _subordinateLoaders = new Queue<AssetLoader>();
 	private Queue<Action> _taskQueue = new Queue<Action>();
 	private int _totalCount;
-	private string _scope;
+	private Domain _domain;
 	
-	public AssetLoader(string scope) {
-		_scope = scope;
+	public AssetLoader(Domain domain) {
+		_domain = domain;
 	}
 
 	/// <summary>
@@ -141,7 +141,7 @@ public class AssetLoader {
 			return;
 		}
 		Url resName = Url.GetRelativeName(BaseUrl, url);
-		designateToProcessor(new Identifier(_scope, resName.Path), url);
+		designateToProcessor(_domain.Get(resName.Path), url);
 	}
 
 	/// <summary>
@@ -185,10 +185,10 @@ public class AssetLoader {
 	/// <summary>
 	///		Copies a new loader with processors.
 	/// </summary>
-	/// <param name="scope">New scope.</param>
+	/// <param name="domain">New domain.</param>
 	/// <returns>A new derived loader.</returns>
-	public AssetLoader CopyWithProcessors(string scope) {
-		AssetLoader child = new AssetLoader(scope);
+	public AssetLoader CopyWithProcessors(Domain domain) {
+		AssetLoader child = new AssetLoader(domain);
 		child._processors = _processors;
 		return child;
 	}

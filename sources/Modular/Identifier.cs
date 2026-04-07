@@ -1,5 +1,4 @@
-﻿using Mino.Nio;
-using Mino.Utility;
+﻿using Mino.Utility;
 
 namespace Mino.Modular;
 
@@ -7,84 +6,55 @@ namespace Mino.Modular;
 ///		Key identifier.
 /// </summary>
 public readonly struct Identifier : IEquatable<Identifier> {
-	/// <summary>
-	///		Identifier scope root.
-	/// </summary>
-	public class ScopeRoot {
-		public readonly string Scope;
-		
-		public ScopeRoot(string scope) {
-			Scope = scope;
-		}
-
-		public Identifier Of(string key) {
-			return new Identifier(Scope, key);
-		}
-
-		public static implicit operator string(ScopeRoot root) {
-			return root.Scope;
-		}
-	}
-	
-	public readonly string Scope;
-	public readonly string Key;
+	public readonly Domain Domain;
+	public readonly string Path;
 	private readonly int hash;
 	private readonly string full;
 
 	/// <summary>
-	///		Fallbacks to a default scope.
+	///		Fallbacks to a default domain.
 	/// </summary>
-	/// <param name="scope">Default scope.</param>
-	/// <param name="key">Key to convert.</param>
+	/// <param name="domain">Default domain.</param>
+	/// <param name="path">Path to convert.</param>
 	/// <returns>An identifier.</returns>
-	public static Identifier Fallback(string scope, string key) {
-		if (key.Contains(':')) {
-			return new Identifier(key);
+	public static Identifier Fallback(Domain domain, string path) {
+		if (path.Contains(':')) {
+			return Of(path);
 		}
-		return new Identifier(scope, key);
+		return new Identifier(domain, path);
 	}
 
-	public Identifier(string scope, string key) {
-		Scope = scope;
-		Key = key;
-		hash = HashCode.Combine(Scope, Key);
-		if (string.IsNullOrEmpty(Scope)) {
-			full = Key;
+	private Identifier(Domain domain, string path) {
+		Domain = domain;
+		Path = path;
+		hash = HashCode.Combine(Domain, Path);
+		full = Domain + ":" + Path;
+
+		if (!Domain.Validate(full)) {
+			throw new Crash($"Identifier invalid: {full}");
 		}
-		full = Scope + ":" + Key;
 	}
 
-	public Identifier(string path) {
-		if (!path.Contains(':')) {
-			Key = path;
-			Scope = string.Empty;
+	public static Identifier Of(string full) {
+		Domain? domain;
+		string path;
+		
+		if (!full.Contains(':')) {
+			path = full;
+			domain = Domain.Unknown;
 		} else {
-			string[] arr = path.Split(':');
-			Scope = arr[0];
-			Key = arr[1];
+			string[] arr = full.Split(':');
+			if (arr.Length != 2) {
+				throw new Crash($"Cannot parse {full}");
+			}
+			
+			domain = Domain.TryFind(arr[0]);
+			path = arr[1];
 		}
-		
-		hash = HashCode.Combine(Scope, Key);
-		if (string.IsNullOrEmpty(Scope)) {
-			full = Key;
-		}
-		full = path;
-	}
 
-	/// <summary>
-	///		Converts to a url.
-	/// </summary>
-	/// <returns>A url of scope - mod id, key - resource finder.</returns>
-	/// <exception cref="Crash">Thrown if there's no matching mod.</exception>
-	public Url ToUrl() {
-		Mod? mod = Mod.Mods!.GetValueOrDefault(Scope, null);
-		if (mod == null) {
-			throw new Crash($"Scope '{Scope}' is not a mod id");
-		}
-		
-		return mod.Directory / Key;
+		return new Identifier(domain, path);
 	}
-
+	
 	public override bool Equals(object? obj) {
 		if (obj is not Identifier identity) {
 			return false;
@@ -100,7 +70,7 @@ public readonly struct Identifier : IEquatable<Identifier> {
 		if (i1.hash != i2.hash) {
 			return false;
 		}
-		return i1.Key.Equals(i2.Key) && i1.Scope.Equals(i2.Scope);
+		return i1.Path.Equals(i2.Path) && i1.Domain.Equals(i2.Domain);
 	}
 
 	public static bool operator !=(Identifier i1, Identifier i2) {
@@ -112,18 +82,13 @@ public readonly struct Identifier : IEquatable<Identifier> {
 	}
 
 	// string -> Id.
-	public static implicit operator Identifier(string s) {
-		return new Identifier(s);
+	public static implicit operator Identifier(string str) {
+		return Of(str);
 	}
 
 	// Id -> string.
-	public static implicit operator string(Identifier idt) {
-		return idt.ToString();
-	}
-
-	// Id -> Url.
-	public static implicit operator Url(in Identifier id) {
-		return id.ToUrl();
+	public static implicit operator string(Identifier id) {
+		return id.ToString();
 	}
 	
 	public bool Equals(Identifier other) {

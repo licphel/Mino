@@ -12,13 +12,13 @@ public class DeferredRegistry<T> where T : class, RegisterInterface {
 	private List<T> _arrMap = new List<T>();
 	private ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
 	private Queue<Action> _pendingTasks = new Queue<Action>();
-	private string _scope;
+	private Domain _domain;
 	private string _tName;
 	private int _next = 0;
 	private bool _frozen;
 	
-	public DeferredRegistry(string scope) {
-		_scope = scope;
+	public DeferredRegistry(Domain domain) {
+		_domain = domain;
 		_tName = typeof(T).Name;
 	}
 
@@ -42,9 +42,9 @@ public class DeferredRegistry<T> where T : class, RegisterInterface {
 			throw new Crash($"Try to register '{key}' after registry is frozen");
 		}
 		
-		Log.Debug($"Register {_scope}:{_tName}, key={key}");
+		Log.Debug($"Register {_domain}:{_tName}, key={key}");
 		
-		key = Identifier.Fallback(_scope, key);
+		key = Identifier.Fallback(_domain, key);
 		DeferredEntry<T> entry = new DeferredEntry<T>(key);
 		_pendingTasks.Enqueue(() => {
 			T t = factory.Invoke();
@@ -62,7 +62,7 @@ public class DeferredRegistry<T> where T : class, RegisterInterface {
 	/// </summary>
 	public void Freeze() {
 		_lock.EnterWriteLock();
-		Log.Info($"Registry {_scope}:{_tName} is frozen");
+		Log.Info($"Registry {_domain}:{_tName} is frozen");
 		
 		while (_pendingTasks.Count > 0) {
 			if (_pendingTasks.TryDequeue(out Action? act)) {

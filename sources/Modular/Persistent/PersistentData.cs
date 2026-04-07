@@ -12,11 +12,11 @@ public class PersistentData<T> {
 	private PersistentSystem _sys;
 
 	public PersistentData(in Identifier key, in Maybe<T> fallback) {
-		_key = key.Key;
+		_key = key.Path;
 		_fallback = fallback;
 
 		try {
-			_sys = Mod.Mods[key.Scope].PersistentSystem;
+			_sys = Mod.Mods[key.Domain.Name].PersistentSystem;
 			_sys._finalW.Enqueue(
 				delegate {
 					// Flush the value.
