@@ -19,8 +19,7 @@ public sealed class MultiMesh : IEnumerable<MultiMesh.Node>, IDisposable {
 	///		Each node of a multi mesh works under a set of render states.
 	/// </summary>
 	public sealed class Node {
-		// Not so big initial cap so that it won't lag.
-		public const int InitialCap = 1024;
+		public const int InitialCap = 128;
 		
 		public readonly ByteBuffer VertexBuf = new ByteBuffer().With(Endianness.Native);
 		public readonly ByteBuffer IndexBuf = new ByteBuffer().With(Endianness.Native);
@@ -47,6 +46,13 @@ public sealed class MultiMesh : IEnumerable<MultiMesh.Node>, IDisposable {
 			});
 			Ibo.Allocate<byte>(InitialCap, null);
 		}
+
+		/// <summary>
+		///		Whether the node has no data.
+		/// </summary>
+		public bool IsEmpty {
+			get => VertexCount == 0;
+		}
 		
 		/// <summary>
 		///		Writes vertex and index counts.
@@ -71,14 +77,20 @@ public sealed class MultiMesh : IEnumerable<MultiMesh.Node>, IDisposable {
 		}
 	}
 
+	/*
+	 * Note: the last node is always not used.
+	 * Because that, we cannot predicate whether the drawing will continue...
+	 */
 	private List<Node> _nodes = new List<Node>();
 	private int _curNode = 0;
 	private Brush? _brush;
+	private bool _merge;
 	private bool _disposed;
 
-	public MultiMesh() {
+	public MultiMesh(bool allowMerge = false) {
 		// Initial node.
 		_nodes.Add(new Node());
+		_merge = allowMerge;
 	}
 
 	/// <summary>
@@ -95,11 +107,6 @@ public sealed class MultiMesh : IEnumerable<MultiMesh.Node>, IDisposable {
 	public Node Acquire() {
 		if (_curNode < _nodes.Count) {
 			return _nodes[_curNode++];
-		}
-
-		// Use overallocated empty node first.
-		if (_nodes[_curNode - 1].VertexCount == 0) {
-			return _nodes[_curNode - 1];
 		}
 		
 		Node node = new Node();
@@ -129,6 +136,7 @@ public sealed class MultiMesh : IEnumerable<MultiMesh.Node>, IDisposable {
 			throw new Crash("Brush is not initialized");
 		}
 		
+		// TODO: Merge nodes
 		_brush.End();
 	}
 	

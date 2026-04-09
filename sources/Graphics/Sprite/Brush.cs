@@ -175,6 +175,10 @@ public unsafe class Brush : IDisposable {
 		BrushState oldState = State;
 		
 		foreach (MultiMesh.Node node in mesh) {
+			if (node.IsEmpty) {
+				continue;
+			}
+			
 			State = node.RecordedState;
 			draw(node);
 		}
@@ -194,7 +198,7 @@ public unsafe class Brush : IDisposable {
 		if (_parent.IsUltimate) {
 			draw(_target, force);
 			_target.Reset(); // Directly submit, dp not record.
-		} else {
+		} else if(!_target.IsEmpty) {
 			NextNode(); // Move to next node for recording.
 		}
 	}
@@ -361,8 +365,9 @@ public unsafe class Brush : IDisposable {
 			(v, v2) = (v2, v);
 		}
 
-		Transform.Top.Transform(x, y, Depth, out float x1, out float y1, out _);
-		Transform.Top.Transform(x + w, y + h, Depth, out float x2, out float y2, out _);
+		Transform.Top.Transform(x, y, Depth, out float x1, out float y1, out float d1);
+		Transform.Top.Transform(x + w, y + h, Depth, out float x2, out float y2, out float d2);
+		float dMid = (d1 + d2) * 0.5F;
 
 		/* Vertex 0, 1, 2, 3 visualized.
 		 *
@@ -377,19 +382,19 @@ public unsafe class Brush : IDisposable {
 		 */
 
 		// 0
-		vBuf.Write(new Vector3(x1, y1, Depth));
+		vBuf.Write(new Vector3(x1, y1, d1));
 		vBuf.Write(Color.AsHalves());
 		vBuf.Write(new Vector2(u, v));
 		// 1
-		vBuf.Write(new Vector3(x2, y1, Depth));
+		vBuf.Write(new Vector3(x2, y1, dMid));
 		vBuf.Write(Color.AsHalves());
 		vBuf.Write(new Vector2(u2, v));
 		// 2
-		vBuf.Write(new Vector3(x2, y2, Depth));
+		vBuf.Write(new Vector3(x2, y2, d2));
 		vBuf.Write(Color.AsHalves());
 		vBuf.Write(new Vector2(u2, v2));
 		// 3
-		vBuf.Write(new Vector3(x1, y2, Depth));
+		vBuf.Write(new Vector3(x1, y2, dMid));
 		vBuf.Write(Color.AsHalves());
 		vBuf.Write(new Vector2(u, v2));
 
@@ -549,20 +554,21 @@ public unsafe class Brush : IDisposable {
 		ByteBuffer vBuf = _target.VertexBuf;
 		ByteBuffer iBuf = _target.IndexBuf;
 
-		Transform.Top.Transform(x, y, Depth, out float x1, out float y1, out _);
-		Transform.Top.Transform(x + w, y + h, Depth, out float x2, out float y2, out _);
+		Transform.Top.Transform(x, y, Depth, out float x1, out float y1, out float d1);
+		Transform.Top.Transform(x + w, y + h, Depth, out float x2, out float y2, out float d2);
+		float dMid = (d1 + d2) * 0.5F;
 
 		// 0
-		vBuf.Write(new Vector3(x1, y1, Depth));
+		vBuf.Write(new Vector3(x1, y1, d1));
 		vBuf.Write(Color.AsHalves());
 		// 1
-		vBuf.Write(new Vector3(x2, y1, Depth));
+		vBuf.Write(new Vector3(x2, y1, dMid));
 		vBuf.Write(Color.AsHalves());
 		// 2
-		vBuf.Write(new Vector3(x2, y2, Depth));
+		vBuf.Write(new Vector3(x2, y2, d2));
 		vBuf.Write(Color.AsHalves());
 		// 3
-		vBuf.Write(new Vector3(x1, y2, Depth));
+		vBuf.Write(new Vector3(x1, y2, dMid));
 		vBuf.Write(Color.AsHalves());
 
 		iBuf.Write((uint) _target.VertexCount + 0);
@@ -617,13 +623,13 @@ public unsafe class Brush : IDisposable {
 
 		ByteBuffer vBuf = _target.VertexBuf;
 
-		Transform.Top.Transform(x1, y1, Depth, out float x1t, out float y1t, out _);
-		Transform.Top.Transform(x2, y2, Depth, out float x2t, out float y2t, out _);
+		Transform.Top.Transform(x1, y1, Depth, out float x1t, out float y1t, out float d1);
+		Transform.Top.Transform(x2, y2, Depth, out float x2t, out float y2t, out float d2);
 
-		vBuf.Write(new Vector3(x1t, y1t, Depth));
+		vBuf.Write(new Vector3(x1t, y1t, d1));
 		vBuf.Write(Color.AsHalves());
 
-		vBuf.Write(new Vector3(x2t, y2t, Depth));
+		vBuf.Write(new Vector3(x2t, y2t, d2));
 		vBuf.Write(Color.AsHalves());
 
 		_target.Write(2, 0);
@@ -648,9 +654,9 @@ public unsafe class Brush : IDisposable {
 
 		ByteBuffer vBuf = _target.VertexBuf;
 
-		Transform.Top.Transform(x, y, Depth, out float xt, out float yt, out _);
+		Transform.Top.Transform(x, y, Depth, out float xt, out float yt, out float d);
 
-		vBuf.Write(new Vector3(xt, yt, Depth));
+		vBuf.Write(new Vector3(xt, yt, d));
 		vBuf.Write(Color.AsHalves());
 
 		_target.Write(1, 0);
