@@ -132,7 +132,7 @@ public class TagMap : IEnumerable<KeyValuePair<string, object>> {
 	/// <param name="key">Map key.</param>
 	/// <param name="v">Set value.</param>
 	/// <exception cref="Crash">Thrown if value type is invalid.</exception>
-	public void Set(string key, object? v) {
+	public void Set<T>(string key, T? v) {
 		if (!TagSystem.Validate(v)) {
 			throw new Crash($"Invalid type: {v?.GetType()}");
 		}

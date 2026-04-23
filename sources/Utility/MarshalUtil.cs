@@ -17,16 +17,10 @@ public unsafe class MarshalUtil {
 	/// <param name="tmp">Temp array.</param>
 	/// <param name="endianness">Used endianness.</param>
 	/// <typeparam name="T">Target type.</typeparam>
-	/// <returns>A span containing the bytes.</returns>
-	public static ReadOnlySpan<byte> Write<T>(in T value, byte* tmp = null,
+	public static void Write<T>(in T value, Memory<byte> tmp,
 		Endianness endianness = Endianness.Little) where T : unmanaged {
-		int size = Unsafe.SizeOf<T>();
-		Span<byte> span;
-		if (tmp == null) {
-			span = new byte[size];
-		} else {
-			span = new Span<byte>(tmp, size);
-		}
+		Span<byte> span = tmp.Span;
+		
 		MemoryMarshal.Write(span, value);
 
 		if (endianness != Endianness.Native) {
@@ -34,7 +28,6 @@ public unsafe class MarshalUtil {
 				span.Reverse();
 			}
 		}
-		return span;
 	}
 
 	/// <summary>

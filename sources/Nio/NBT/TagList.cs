@@ -58,7 +58,7 @@ public class TagList : IEnumerable<object> {
 	/// </summary>
 	/// <param name="v">Pushed value.</param>
 	/// <exception cref="Crash">Thrown if value type is invalid.</exception>
-	public void Add(object? v) {
+	public void Add<T>(T? v) {
 		if (!TagSystem.Validate(v)) {
 			throw new Crash($"Invalid type: {v?.GetType()}");
 		}
@@ -71,7 +71,7 @@ public class TagList : IEnumerable<object> {
 	/// <param name="index">Index.</param>
 	/// <param name="v">Inserted value.</param>
 	/// <exception cref="Crash">Thrown if value type is invalid.</exception>
-	public void Insert(int index, object? v) {
+	public void Insert<T>(int index, T? v) {
 		if (!TagSystem.Validate(v)) {
 			throw new Crash($"Invalid type: {v?.GetType()}");
 		}
@@ -84,7 +84,7 @@ public class TagList : IEnumerable<object> {
 	/// <param name="index">Index.</param>
 	/// <param name="v">Set value.</param>
 	/// <exception cref="Crash">Thrown if value type is invalid.</exception>
-	public void Set(int index, object? v) {
+	public void Set<T>(int index, T? v) {
 		if (!TagSystem.Validate(v)) {
 			throw new Crash($"Invalid type: {v?.GetType()}");
 		}
