@@ -21,7 +21,7 @@ public class RMLSourceMod {
 	}
 
 	public void Build() {
-		string cmd = $"build \"{ProjectPath}/{ProjectName}.csproj\" -c Debug -o {ProjectPath}/mod/build";
+		string cmd = $"publish \"{ProjectPath}/{ProjectName}.csproj\" -c Debug -o {ProjectPath}/mod/build";
 		
 		Process process = new Process {
 			StartInfo = new ProcessStartInfo {

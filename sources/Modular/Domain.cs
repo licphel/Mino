@@ -47,7 +47,7 @@ public sealed class Domain : IEquatable<Domain> {
 	/// <returns>True if there's no invalid characters. Otherwise false.</returns>
 	public static bool Validate(string seq) {
 		foreach (char ch in seq) {
-			if (":_/$.".Contains(ch)) {
+			if (":_/$.-".Contains(ch)) {
 				continue;
 			}
 			if (ch >= '0' && ch <= '9') {

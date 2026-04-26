@@ -46,6 +46,10 @@ Open the solution or project file in your preferred IDE. Mino is compatible with
 
 NuGet package is under construction. We will upload once the project gets stable.
 
+### Create your own mod
+
+See [HowToCreateAMod.md](HowToCreateAMod.md)
+
 ## Requirements
 
 To develop with Mino, ensure your environment meets the following prerequisites:
