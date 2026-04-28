@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Mino.Framework;
 using Mino.Utility.Logging;
 
 namespace Mino.RML;
@@ -10,14 +11,26 @@ public class RMLSourceMod {
 		_smRegistry.Add(sm);
 	}
 	
-	public readonly string ProjectPath;
+	private readonly string _projectPath;
 	public readonly string ProjectName;
 	public readonly string ModId;
 	
 	public RMLSourceMod(string projectPath, string projectName, string modId) {
-		ProjectPath = projectPath;
+		_projectPath = projectPath;
 		ProjectName = projectName;
 		ModId = modId;
+	}
+	
+	public string ProjectPath {
+		get {
+			string projectPath = _projectPath;
+		
+			if (projectPath == "~") {
+				// Self-contained
+				projectPath = FrameworkSetup.__Basepath.ToFilePath();
+			}
+			return projectPath;
+		}
 	}
 
 	public void Build() {

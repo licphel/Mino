@@ -15,6 +15,7 @@ public static class RMLWrapper {
 		RMLSourceMod.Register(
 			new RMLSourceMod(
 				// Path to your project directory
+				// "~" means self-contained launching.
 				"<Your solution path>/ExampleMod",
 				// Project name, equal to the .csproj file name
 				"ExampleMod",
