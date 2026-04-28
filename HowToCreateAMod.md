@@ -9,13 +9,14 @@ Make a C# solution with ```.net>=9.0```.
 ## II. Clone Mino
 
 Open the terminal of your solution, run shell
+
 ```bash
 git clone https://github.com/licphel/Mino.git
 ```
 
 ## III. RMLWrapper
 
-A RMLWrapper automates your source-to-mod procedure. You needn't build or publish 
+A RMLWrapper automates your source-to-mod procedure. You needn't build or publish
 your mod, copy DLLs to the target directory.
 
 Just to launch the RMLWrapper will build your source as a mod.
@@ -45,9 +46,11 @@ Assume that your mod project is simply named as ```Mod```, we need to put
 Now launch the RMLWrapper project with args ```--indev --debug --noexcept```
 
 You are expected to see log outputs like:
+
 ```
 [...] [Main/Info] Possible mod detected: file://.../Mod/mod
 [...] [Main/Info] Mod '<your_mod_id>' successfully loaded. All subscribed
 [...] [Main/Debug] Lazy initializing mod '<your_mod_id>'...
 ```
+
 That's it.

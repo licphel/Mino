@@ -145,11 +145,11 @@ public sealed class FlattenFactory {
 	}
 
 	private List<List<(Name, object)>> cartesian() {
-		List<List<(Name, object)>> result = new List<List<(Name, object)>>();
-		List<List<(Name, object)>> options = new List<List<(Name, object)>>();
+		var result = new List<List<(Name, object)>>();
+		var options = new List<List<(Name, object)>>();
 
 		foreach (NameLayout layout in _layouts) {
-			List<(Name, object)> list = new List<(Name, object)>();
+			var list = new List<(Name, object)>();
 			foreach (object val in layout.Name.Values) {
 				list.Add((layout.Name, val));
 			}
@@ -164,10 +164,10 @@ public sealed class FlattenFactory {
 		result = new List<List<(Name, object)>> { new List<(Name, object)>() };
 
 		foreach (List<(Name, object)> option in options) {
-			List<List<(Name, object)>> newResult = new List<List<(Name, object)>>();
+			var newResult = new List<List<(Name, object)>>();
 			foreach (List<(Name, object)> existing in result) {
 				foreach ((Name, object) val in option) {
-					List<(Name, object)> copy = new List<(Name, object)>(existing) { val };
+					var copy = new List<(Name, object)>(existing) { val };
 					newResult.Add(copy);
 				}
 			}
