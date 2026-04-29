@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿#region
+using System.Runtime.InteropServices;
 using Mino.Framework.Resource;
 using Mino.Graphics;
 using Mino.Graphics.Desc;
@@ -6,6 +7,7 @@ using Mino.Graphics.Enum;
 using Mino.Utility;
 using Silk.NET.OpenGL;
 using Texture = Mino.Graphics.Texture;
+#endregion
 
 namespace Mino.Native.OpenGL.Object;
 
@@ -14,7 +16,7 @@ public unsafe sealed class GLTexture : Texture {
 	public GLContext _ctx = null!;
 	public uint _handle;
 	public bool _disposed;
-	
+
 	public TextureDesc _desc;
 	public GLEnum _iFormat;
 	public GLEnum _target;
@@ -29,7 +31,7 @@ public unsafe sealed class GLTexture : Texture {
 	public TextureDesc Desc {
 		get => _desc;
 	}
-	
+
 	public void Submit(in TextureSubmission submission) {
 		int x = (int) submission.Region.MinX;
 		int y = (int) submission.Region.MinY;
@@ -38,10 +40,10 @@ public unsafe sealed class GLTexture : Texture {
 		int height = (int) submission.Region.Height;
 		int depth = (int) submission.Region.Depth;
 		byte[]? rawData = submission.Bytes;
-		
+
 		_ctx.Pend(() => {
 			GLCache c = _ctx._cache;
-			
+
 			c.SetTexture(_target, 0, _handle);
 
 			// Flip-y for gl usage.
@@ -86,17 +88,17 @@ public unsafe sealed class GLTexture : Texture {
 			}
 		});
 	}
-	
+
 	public void Blit(Texture to, int x, int y, int w, int h, int srcX, int srcY, int srcW, int srcH,
 		TextureFilter filter = TextureFilter.Nearest) {
 		_ctx.Pend(() => {
 			GLCache c = _ctx._cache;
-			
+
 			GLTexture srcTex = this;
 			GLTexture dstTex = (GLTexture) to;
 			uint srcFBO = _gl.GenFramebuffer();
 			uint dstFBO = _gl.GenFramebuffer();
-			
+
 			try {
 				c.SetFramebuffer(GLEnum.ReadFramebuffer, srcFBO);
 				_gl.FramebufferTexture2D(
@@ -106,7 +108,7 @@ public unsafe sealed class GLTexture : Texture {
 					srcTex._handle,
 					0
 				);
-				
+
 				c.SetFramebuffer(GLEnum.DrawFramebuffer, dstFBO);
 				_gl.FramebufferTexture2D(
 					FramebufferTarget.DrawFramebuffer,
@@ -115,7 +117,7 @@ public unsafe sealed class GLTexture : Texture {
 					dstTex._handle,
 					0
 				);
-				
+
 				_gl.BlitFramebuffer(
 					srcX, srcY, srcX + srcW, srcY + srcH,
 					x, y, x + w, y + h,
@@ -132,25 +134,25 @@ public unsafe sealed class GLTexture : Texture {
 			_gl.GenerateMipmap(GLEnum.Texture2D);
 		});
 	}
-	
+
 	public Texture Pin() {
 		return this;
 	}
-	
+
 	public bool TryGetThreadContext(out ThreadContext ctx) {
 		ctx = _ctx;
 		return true;
 	}
-	
+
 	public void Listen(ThreadContext ctx) {
 		_ctx = (GLContext) ctx;
 		_gl = _ctx._gl;
-		
+
 		_ctx.Pend(() => {
 			GLCache c = _ctx._cache;
-			
+
 			_handle = _gl.GenTexture();
-			
+
 			// Cache enums.
 			_target = GLEnumC.Cast(_desc.Type);
 			(_iFormat, _pixFormat, _pixType) = GLEnumC.Cast(_desc.Format);
@@ -159,7 +161,7 @@ public unsafe sealed class GLTexture : Texture {
 			int height = _desc.Height;
 			int depth = _desc.Depth;
 			byte[]? data = _desc.InitialBytes;
-			
+
 			c.SetTexture(_target, 0, _handle);
 
 			// Flip-y for gl usage.
@@ -203,13 +205,13 @@ public unsafe sealed class GLTexture : Texture {
 			}
 		});
 	}
-	
+
 	public void Dispose() {
 		if (_disposed) {
 			return;
 		}
 		_disposed = true;
-		
+
 		_ctx.Pend(() => {
 			_gl.DeleteTexture(_handle);
 		});

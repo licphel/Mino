@@ -5,6 +5,7 @@ This is a demo project (remember! this is a C# project, just no .csproj file her
 This is optional, but for better dev experience, creating a wrapper is highly recommended.
 
 Basic flow:
+
 ```
 YourModProject /mod/
  ↑ build        ↑ load as valid mod
