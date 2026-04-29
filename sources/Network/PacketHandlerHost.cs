@@ -4,7 +4,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using Mino.Nio;
-using Mino.Utility;
 using Mino.Utility.Logging;
 #endregion
 
@@ -64,7 +63,7 @@ public class PacketHandlerHost : IDisposable {
 	///     Starts the server.
 	/// </summary>
 	/// <exception cref="ObjectDisposedException">Thrown if server is disposed.</exception>
-	/// <exception cref="Crash">Thrown if server is already started.</exception>
+	/// <exception cref="NetworkException">Thrown if server is already started.</exception>
 	/// <exception cref="SocketException">Thrown if socket initialization fails.</exception>
 	public void Start() {
 		if (_active) {
@@ -105,7 +104,7 @@ public class PacketHandlerHost : IDisposable {
 		} catch (Exception ex) {
 			_active = false;
 			cleanup();
-			throw new Crash("Failed to start server.", ex);
+			throw new NetworkException("Failed to start server.", ex);
 		}
 	}
 
@@ -113,7 +112,7 @@ public class PacketHandlerHost : IDisposable {
 	///     Sends a packet to all connected clients.
 	/// </summary>
 	/// <param name="packet">The packet to send.</param>
-	/// <exception cref="Crash">Thrown if server is not active.</exception>
+	/// <exception cref="NetworkException">Thrown if server is not active.</exception>
 	public void Send(Packet packet) {
 		if (!IsActive) {
 			Log.Warn("Server is not active");
@@ -144,7 +143,7 @@ public class PacketHandlerHost : IDisposable {
 	/// </summary>
 	/// <param name="uid">The uid of the target client.</param>
 	/// <param name="packet">The packet to send.</param>
-	/// <exception cref="Crash">Thrown if server is not active.</exception>
+	/// <exception cref="NetworkException">Thrown if server is not active.</exception>
 	public void Send(in Uid16 uid, Packet packet) {
 		if (!IsActive) {
 			Log.Warn("Server is not active");
@@ -175,7 +174,7 @@ public class PacketHandlerHost : IDisposable {
 	/// </summary>
 	/// <param name="uids">The uids of the target clients.</param>
 	/// <param name="packet">The packet to send.</param>
-	/// <exception cref="Crash">Thrown if server is not active.</exception>
+	/// <exception cref="NetworkException">Thrown if server is not active.</exception>
 	public void Send(ICollection<Uid16> uids, Packet packet) {
 		if (!IsActive) {
 			Log.Warn("Server is not active");

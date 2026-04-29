@@ -8,7 +8,7 @@ namespace Mino.Nio.NBT;
 /// <summary>
 ///     NBT List component.
 /// </summary>
-public class TagList : IEnumerable<object> {
+public class NBTList : IEnumerable<object> {
 	private List<object?> _list = new List<object?>();
 
 	/// <summary>
@@ -34,9 +34,9 @@ public class TagList : IEnumerable<object> {
 	/// <returns>A casted value.</returns>
 	public T Get<T>(int i, in Maybe<T> fallback = default) {
 		if (i >= Count || i < 0) {
-			return TagSystem.GetNonnullFallback(fallback);
+			return NBTSystem.GetNonnullFallback(fallback);
 		}
-		return TagSystem.AsWithFallback(_list[i], fallback);
+		return NBTSystem.AsWithFallback(_list[i], fallback);
 	}
 
 	/// <summary>
@@ -50,17 +50,17 @@ public class TagList : IEnumerable<object> {
 		if (i >= Count || i < 0) {
 			return fallback.Invoke();
 		}
-		return TagSystem.AsWithFallback(_list[i], fallback);
+		return NBTSystem.AsWithFallback(_list[i], fallback);
 	}
 
 	/// <summary>
 	///     Adds a value to the end of the list.
 	/// </summary>
 	/// <param name="v">Pushed value.</param>
-	/// <exception cref="Crash">Thrown if value type is invalid.</exception>
+	/// <exception cref="InvalidOperationException">Thrown if value type is invalid.</exception>
 	public void Add<T>(T? v) {
-		if (!TagSystem.Validate(v)) {
-			throw new Crash($"Invalid type: {v?.GetType()}");
+		if (!NBTSystem.Validate(v)) {
+			throw new InvalidOperationException($"Invalid type: {v?.GetType()}");
 		}
 		_list.Add(v);
 	}
@@ -70,10 +70,10 @@ public class TagList : IEnumerable<object> {
 	/// </summary>
 	/// <param name="index">Index.</param>
 	/// <param name="v">Inserted value.</param>
-	/// <exception cref="Crash">Thrown if value type is invalid.</exception>
+	/// <exception cref="InvalidOperationException">Thrown if value type is invalid.</exception>
 	public void Insert<T>(int index, T? v) {
-		if (!TagSystem.Validate(v)) {
-			throw new Crash($"Invalid type: {v?.GetType()}");
+		if (!NBTSystem.Validate(v)) {
+			throw new InvalidOperationException($"Invalid type: {v?.GetType()}");
 		}
 		_list.Insert(index, v);
 	}
@@ -83,10 +83,10 @@ public class TagList : IEnumerable<object> {
 	/// </summary>
 	/// <param name="index">Index.</param>
 	/// <param name="v">Set value.</param>
-	/// <exception cref="Crash">Thrown if value type is invalid.</exception>
+	/// <exception cref="InvalidOperationException">Thrown if value type is invalid.</exception>
 	public void Set<T>(int index, T? v) {
-		if (!TagSystem.Validate(v)) {
-			throw new Crash($"Invalid type: {v?.GetType()}");
+		if (!NBTSystem.Validate(v)) {
+			throw new InvalidOperationException($"Invalid type: {v?.GetType()}");
 		}
 		_list[index] = v;
 	}
@@ -119,13 +119,13 @@ public class TagList : IEnumerable<object> {
 	///     Clones the list.
 	/// </summary>
 	/// <returns>A new identical list.</returns>
-	public TagList Clone() {
-		TagList newList = new TagList();
+	public NBTList Clone() {
+		NBTList newList = new NBTList();
 
 		foreach (object obj in this) {
-			if (obj is TagMap map) {
+			if (obj is NBTCompound map) {
 				newList.Add(map.Clone());
-			} else if (obj is TagList list) {
+			} else if (obj is NBTList list) {
 				newList.Add(list.Clone());
 			} else {
 				newList.Add(obj);
@@ -136,23 +136,23 @@ public class TagList : IEnumerable<object> {
 	}
 
 	public override bool Equals(object? obj) {
-		return obj is TagList list && Equals(list);
+		return obj is NBTList list && Equals(list);
 	}
 
 	public override int GetHashCode() {
 		// Hashcode is not stable.
-		throw new Crash("Cannot use TagList as keys");
+		throw new InvalidOperationException("Cannot use NBTList as keys");
 	}
 
-	public static bool operator ==(TagList? left, TagList? right) {
+	public static bool operator ==(NBTList? left, NBTList? right) {
 		return Equals(left, right);
 	}
 
-	public static bool operator !=(TagList? left, TagList? right) {
+	public static bool operator !=(NBTList? left, NBTList? right) {
 		return !Equals(left, right);
 	}
 
-	public bool Equals(TagList other) {
+	public bool Equals(NBTList other) {
 		return _list.SequenceEqual(other._list);
 	}
 }

@@ -1,6 +1,4 @@
-﻿using Mino.Utility;
-
-namespace Mino.Mathematics.ThreeDim;
+﻿namespace Mino.Mathematics.ThreeDim;
 
 /// <summary>
 ///     View frustum defined by six clipping planes.
@@ -27,7 +25,7 @@ public readonly struct Frustum {
 	/// <param name="planes">Six clipping planes in order: Left, Right, Bottom, Top, Near, Far.</param>
 	public Frustum(Plane[] planes) {
 		if (planes == null || planes.Length != 6) {
-			throw new Crash("Frustum requires exactly six planes");
+			throw new InvalidOperationException("Frustum requires exactly six planes");
 		}
 
 		_planes = new Plane[6];

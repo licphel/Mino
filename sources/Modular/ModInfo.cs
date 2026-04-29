@@ -1,6 +1,5 @@
 ﻿using Mino.Nio;
 using Mino.Nio.NBT;
-using Mino.Utility;
 
 namespace Mino.Modular;
 
@@ -24,23 +23,23 @@ public class ModInfo {
 	/// </summary>
 	/// <param name="json">JSON string or URL pointing to mod info.</param>
 	/// <returns>A new ModInfo instance.</returns>
-	/// <exception cref="Crash">Thrown if required fields are missing or invalid.</exception>
+	/// <exception cref="RMLException">Thrown if required fields are missing or invalid.</exception>
 	public static ModInfo FromJson(TextAccess json) {
-		TagMap map = TagSystem.ParseJson(json);
+		NBTCompound map = NBTSystem.ParseJson(json);
 		
 		// Info configs
 		string modId = map.Get<string>("$info.mod_id");
 		if (string.IsNullOrWhiteSpace(modId)) {
-			throw new Crash("ModInfo missing required field: $info.mod_id");
+			throw new RMLException("ModInfo missing required field: $info.mod_id");
 		}
 
 		string versionStr = map.Get<string>("$info.version");
 		if (string.IsNullOrWhiteSpace(versionStr)) {
-			throw new Crash($"Mod '{modId}' missing required field: $info.version");
+			throw new RMLException($"Mod '{modId}' missing required field: $info.version");
 		}
 		
 		if (!Version.TryParse(versionStr, out Version? version)) {
-			throw new Crash($"Mod '{modId}' has invalid version format: {versionStr}");
+			throw new RMLException($"Mod '{modId}' has invalid version format: {versionStr}");
 		}
 		
 		string authors = map.Get<string>("$info.authors", string.Empty);
@@ -55,7 +54,7 @@ public class ModInfo {
 		bool hasProgram = map.Get<bool>("$program.has_program", false);
 
 		if (hasProgram && string.IsNullOrEmpty(programLocation) && string.IsNullOrEmpty(entrypoint)) {
-			throw new Crash($"Mod '{modId}' has program but no $program.location and $program.entrypoint");
+			throw new RMLException($"Mod '{modId}' has program but no $program.location and $program.entrypoint");
 		}
 		
 		// Dep configs
@@ -77,11 +76,11 @@ public class ModInfo {
 		};
 	}
 	
-	private static DependencyInfo[] parseDepArr(TagMap map, string modId) {
+	private static DependencyInfo[] parseDepArr(NBTCompound map, string modId) {
 		List<DependencyInfo> result = new List<DependencyInfo>();
 
 		// Try to get dependencies list
-		if (!map.TryGet("dependencies", out TagList depList)) {
+		if (!map.TryGet("dependencies", out NBTList depList)) {
 			return Array.Empty<DependencyInfo>();
 		}
 
@@ -92,33 +91,33 @@ public class ModInfo {
 					result.Add(dep.Value);
 				}
 			} catch (Exception ex) {
-				throw new Crash($"Mod '{modId}' has invalid dependency at index {i}: {ex.Message}");
+				throw new RMLException($"Mod '{modId}' has invalid dependency at index {i}: {ex.Message}");
 			}
 		}
 
 		return result.ToArray();
 	}
 	
-	private static DependencyInfo? parseDep(TagList depList, int index, string modId) {
-		TagMap depMap = depList.Get<TagMap>(index);
+	private static DependencyInfo? parseDep(NBTList depList, int index, string modId) {
+		NBTCompound depMap = depList.Get<NBTCompound>(index);
 		
 		string targetModId = depMap.Get<string>("mod_id");
 		if (string.IsNullOrWhiteSpace(targetModId)) {
-			throw new Crash($"Dependency at index {index} missing mod_id");
+			throw new RMLException($"Dependency at index {index} missing mod_id");
 		}
 
 		// Parse version range
 		Version? minVersion = null;
 		if (depMap.TryGet("min_version", out string minVersionStr)) {
 			if (!Version.TryParse(minVersionStr, out minVersion)) {
-				throw new Crash($"Dependency {targetModId} has invalid min_version: {minVersionStr}");
+				throw new RMLException($"Dependency {targetModId} has invalid min_version: {minVersionStr}");
 			}
 		}
 
 		Version? maxVersion = null;
 		if (depMap.TryGet("max_version", out string maxVersionStr)) {
 			if (!Version.TryParse(maxVersionStr, out maxVersion)) {
-				throw new Crash($"Dependency {targetModId} has invalid max_version: {maxVersionStr}");
+				throw new RMLException($"Dependency {targetModId} has invalid max_version: {maxVersionStr}");
 			}
 		}
 			

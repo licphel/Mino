@@ -4,9 +4,9 @@ using Mino.Utility;
 namespace Mino.Nio.NBT;
 
 /// <summary>
-///     Provides tag map serialization and tag validation.
+///     Provides nbt compound serialization and nbt validation.
 /// </summary>
-public static class TagSystem {
+public static class NBTSystem {
 	/*
 	 * TYPE CONVERSION RULES:
 	 *
@@ -20,7 +20,7 @@ public static class TagSystem {
 	 * | Get<string>("key", fallback) -> fallback if not exists or null.
 	 * | TryGet<string>("key", out string val) -> false if not exists or null. Otherwise, val = actual value.
 	 *
-	 * Anyway, NEVER use nullable generic in tag system (like int? v = map.Get<int?>("key"), which is undefined.)
+	 * Anyway, NEVER use nullable generic in nbt system (like int? v = map.Get<int?>("key"), which is undefined.)
 	 */
 
 	// Type IDs.
@@ -43,7 +43,7 @@ public static class TagSystem {
 	private static readonly JsonSerializerOptions _dumpOptions = new JsonSerializerOptions {
 		WriteIndented = true,
 		Converters = {
-			new TagMapJsonConverter()
+			new NBTJsonConverter()
 		}
 	};
 
@@ -61,7 +61,7 @@ public static class TagSystem {
 		if (default(T) != null) {
 			return default!;
 		}
-		throw new Crash($"Unsupported type: '{typeof(T)}'");
+		throw new InvalidOperationException($"Unsupported type: '{typeof(T)}'");
 	}
 
 	public static T AsWithFallback<T>(object? v, in Maybe<T> fallback) {
@@ -83,8 +83,8 @@ public static class TagSystem {
 			return Null;
 		}
 		return o switch {
-			TagMap => Map,
-			TagList => List,
+			NBTCompound => Map,
+			NBTList => List,
 			byte => Byte,
 			short => Short,
 			ushort => Ushort,
@@ -102,29 +102,29 @@ public static class TagSystem {
 	}
 
 	/// <summary>
-	///		Parses a tag map from a JSON string.
+	///		Parses a nbt compound from a JSON string.
 	/// </summary>
 	/// <param name="json">JSON to parse.</param>
-	/// <returns>A new tag map.</returns>
-	/// <exception cref="Crash">Thrown if the parsing process has faults.</exception>
-	public static TagMap ParseJson(TextAccess json) {
-		return JsonSerializer.Deserialize<TagMap>(json, _dumpOptions) ?? throw new Crash($"Invalid json: {json}");
+	/// <returns>A new nbt compound.</returns>
+	/// <exception cref="InvalidOperationException">Thrown if the parsing process has faults.</exception>
+	public static NBTCompound ParseJson(TextAccess json) {
+		return JsonSerializer.Deserialize<NBTCompound>(json, _dumpOptions) ?? throw new InvalidOperationException($"Invalid json: {json}");
 	}
 
 	/// <summary>
-	///     Dumps a tag map to JSON string.
+	///     Dumps a nbt compound to JSON string.
 	/// </summary>
 	/// <param name="map">Serialized map.</param>
-	public static string DumpJson(TagMap map) {
+	public static string DumpJson(NBTCompound map) {
 		return JsonSerializer.Serialize(map, _dumpOptions);
 	}
 
 	/// <summary>
-	///     Encodes a tag map into a byte buffer.
+	///     Encodes a nbt compound into a byte buffer.
 	/// </summary>
 	/// <param name="map">Serialized map.</param>
 	/// <param name="output">Output buffer.</param>
-	public static void Encode(TagMap map, ByteBuffer output) {
+	public static void Encode(NBTCompound map, ByteBuffer output) {
 		foreach ((string key, var val) in map) {
 			output.Write(Tell(val));
 			output.WriteString(key);
@@ -137,12 +137,12 @@ public static class TagSystem {
 	}
 
 	/// <summary>
-	///     Deserializes a tag map from a byte buffer.
+	///     Deserializes a nbt compound from a byte buffer.
 	/// </summary>
 	/// <param name="input">Input buffer.</param>
-	/// <returns>A new tag map deserialized from the input.</returns>
-	public static TagMap Decode(ByteBuffer input) {
-		TagMap map = new TagMap();
+	/// <returns>A new nbt compound deserialized from the input.</returns>
+	public static NBTCompound Decode(ByteBuffer input) {
+		NBTCompound map = new NBTCompound();
 
 		while (true) {
 			byte id = input.Read<byte>();
@@ -169,7 +169,7 @@ public static class TagSystem {
 			return Decode(input);
 		}
 		if (id == List) {
-			TagList list = new TagList();
+			NBTList list = new NBTList();
 			int size = input.Read<int>();
 			for (int i = 0; i < size; i++) {
 				byte type = input.Read<byte>();
@@ -221,9 +221,9 @@ public static class TagSystem {
 	}
 
 	private static void encodePrimitive(object o, ByteBuffer output) {
-		if (o is TagMap map) {
+		if (o is NBTCompound map) {
 			Encode(map, output);
-		} else if (o is TagList list) {
+		} else if (o is NBTList list) {
 			output.Write(list.Count);
 			foreach (object v in list) {
 				output.Write(Tell(v));

@@ -1,6 +1,4 @@
-﻿using Mino.Utility;
-
-namespace Mino.Modular.Resource;
+﻿namespace Mino.Modular.Resource;
 
 /// <summary>
 ///		Holder notifier for hot-reload.
@@ -27,7 +25,7 @@ public class HolderNotifier {
 	///		Notifies an asset change.
 	/// </summary>
 	/// <param name="obj">New value.</param>
-	/// <exception cref="Crash">Thrown if type does not match.</exception>
+	/// <exception cref="RMLException">Thrown if type does not match.</exception>
 	public void Notify(object? obj) {
 		_lock.EnterWriteLock();
 		try {
@@ -39,7 +37,7 @@ public class HolderNotifier {
 				_resourceType ??= newType;
 
 				if (obj != null && _resourceType != newType) {
-					throw new Crash($"Asset type does not match: old={_resourceType}, new={newType}");
+					throw new AssetException($"Asset type does not match: old={_resourceType}, new={newType}");
 				}
 			}
 

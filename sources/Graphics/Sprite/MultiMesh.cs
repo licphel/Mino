@@ -2,7 +2,6 @@
 using Mino.Graphics.Desc;
 using Mino.Graphics.Enum;
 using Mino.Nio;
-using Mino.Utility;
 
 namespace Mino.Graphics.Sprite;
 
@@ -130,10 +129,10 @@ public sealed class MultiMesh : IEnumerable<MultiMesh.Node>, IDisposable {
 	/// <summary>
 	///		Ends a mesh record.
 	/// </summary>
-	/// <exception cref="Crash">Thrown if brush is null.</exception>
+	/// <exception cref="InvalidOperationException">Thrown if brush is null.</exception>
 	public void End() {
 		if (_brush == null) {
-			throw new Crash("Brush is not initialized");
+			throw new InvalidOperationException("Brush is not initialized");
 		}
 		
 		// TODO: Merge nodes

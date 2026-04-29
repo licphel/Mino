@@ -28,7 +28,7 @@ public sealed class ByteArena2D {
 	/// <returns>A new byte arena.</returns>
 	public static ByteArena2D OfMeasure(int measure, int extraBPE) {
 		if ((measure & measure - 1) != 0) {
-			throw new Crash($"Measure {measure} is not a power of 2.");
+			throw new ArgumentException($"Measure {measure} is not a power of 2.");
 		}
 		return new ByteArena2D(measure, extraBPE);
 	}

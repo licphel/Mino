@@ -1,4 +1,6 @@
 ﻿#region
+using Mino.Framework;
+using Mino.Graphics.Sprite;
 using Mino.Mathematics;
 #endregion
 
@@ -19,7 +21,7 @@ public class Face : Component {
 		_resolveNeeded = true;
 	}
 
-	public override void Update(CanvasContext ctx) {
+	public override void Update(in TimeStep step) {
 		// Observe window resize
 		// and mark resolve.
 		Vector2 ws = RenderSystem.GetWindow().Size;
@@ -32,27 +34,29 @@ public class Face : Component {
 		if (_tooltipCtx != null) {
 			_tooltipCtx.Begin();
 			foreach (Component comp in Children) {
-				if (comp.IsAccessible(ctx.Cursor)) {
+				if (comp.IsAccessible()) {
 					comp.AppendTooltip(_tooltipCtx);
 				}
 			}
 			_tooltipCtx.End();
 		}
 
-		base.Update(ctx);
+		base.Update(step);
 	}
 
-	public override void Draw(CanvasContext ctx) {
+	public override void Draw(Brush brush, float partial) {
 		// Handle pending resolve request.
 		if (_resolveNeeded) {
+			Resolve();
 			foreach (Component comp in Children) {
-				comp.Resolve(ctx);
+				comp.Resolve();
 			}
 			_resolveNeeded = false;
 		}
-		base.Draw(ctx);
+		
+		base.Draw(brush, partial);
 
-		_tooltipCtx?.Draw(ctx);
+		_tooltipCtx?.Draw(brush, partial);
 	}
 
 	/// <summary>
@@ -63,7 +67,7 @@ public class Face : Component {
 		_tooltipCtx = ctx;
 	}
 
-	public override bool IsAccessible(in Vector2 cursor) {
+	public override bool IsAccessible() {
 		if (Canvas.Presents.Count == 0) {
 			return false;
 		}

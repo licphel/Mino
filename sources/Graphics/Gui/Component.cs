@@ -1,7 +1,7 @@
 ﻿#region
+using Mino.Framework;
 using Mino.Graphics.Sprite;
 using Mino.Mathematics;
-using Mino.Utility;
 #endregion
 
 namespace Mino.Graphics.Gui;
@@ -12,25 +12,23 @@ namespace Mino.Graphics.Gui;
 public abstract class Component {
 	private Dictionary<string, object?> _attrMap = new Dictionary<string, object?>();
 
-	public Action<Component, CanvasContext>? OnUpdate;
-	public Action<Component, CanvasContext>? OnDraw;
-	public Action<Component, CanvasContext>? OnResolve;
+	public Action<Component, TimeStep>? OnUpdate;
+	public Action<Component, Brush, float>? OnDraw;
+	public Action<Component>? OnResolve;
 
+	internal Func<Canvas> _canvasSupplier = () => null!;
+
+	/// <summary>
+	///		Canvas that the component relies.
+	/// </summary>
+	public Canvas Canvas {
+		get => _canvasSupplier();
+	}
+	
 	/// <summary>
 	///     Whether the component is under the cursor.
 	/// </summary>
 	public bool Hovering { get; protected set; }
-
-	/// <summary>
-	///     Affiliated canvas.
-	///     Ensured nonnull after added into a face.
-	/// </summary>
-	public Canvas Canvas {
-		get {
-			var fn = (Func<Canvas>) GetAttribute("CanvasFactory")!;
-			return fn.Invoke();
-		}
-	}
 
 	/// <summary>
 	///     Name of the component.
@@ -88,25 +86,25 @@ public abstract class Component {
 	///     Adds a child to the component.
 	/// </summary>
 	/// <param name="child">Child to add.</param>
-	/// <exception cref="Crash">Thrown if the child is already another comp's child.</exception>
+	/// <exception cref="InvalidOperationException">Thrown if the child is already another comp's child.</exception>
 	public void AddChild(Component child) {
 		if (child.Parent != null) {
-			throw new Crash("Cannot have multiple parent");
+			throw new InvalidOperationException("Cannot have multiple parent");
 		}
 
 		Children.Add(child);
 		child.Parent = this;
-		child.InitHooks();
-
+		
 		/*
 		 * We use this 'cascade' factory to implement deferred canvas injection.
 		 *
 		 * Canvas0
-		 * |- Face: CanvasFactory1 = () => Canvas0
-		 *		|- Comp 1 CanvasFactory2 = () => CanvasFactory1.Invoke()
+		 * |- Face: _canvasSupplier1 = () => Canvas0
+		 *		|- Comp 1 _canvasSupplier2 = () => _canvasSupplier1.Invoke()
 		 *			|- ...
 		 */
-		child.SetAttribute("CanvasFactory", () => Canvas);
+		child._canvasSupplier = () => Canvas;
+		child.InitHooks();
 	}
 
 	/// <summary>
@@ -133,48 +131,47 @@ public abstract class Component {
 	/// <summary>
 	///     Updates the component.
 	/// </summary>
-	/// <param name="ctx">Current canvas context.</param>
-	public virtual void Update(CanvasContext ctx) {
-		OnUpdate?.Invoke(this, ctx);
+	/// <param name="step">Time Steps.</param>
+	public virtual void Update(in TimeStep step) {
+		OnUpdate?.Invoke(this, step);
 
 		foreach (Component child in Children) {
-			UpdateChild(ctx, child);
+			UpdateChild(step, child);
 		}
 
-		Hovering = IsAccessible(ctx.Cursor);
+		Hovering = IsAccessible();
 	}
 
-	protected virtual void UpdateChild(CanvasContext ctx, Component child) {
-		child.Update(ctx);
+	protected virtual void UpdateChild(in TimeStep step, Component child) {
+		child.Update(step);
 	}
 
 	/// <summary>
 	///     Draws the component.
 	/// </summary>
-	/// <param name="ctx">Current canvas context.</param>
-	public virtual void Draw(CanvasContext ctx) {
-		OnDraw?.Invoke(this, ctx);
-
-		Brush brush = ctx.Brush;
+	/// <param name="brush">Brush for drawing.</param>
+	/// <param name="partial">Partial ticks.</param>
+	public virtual void Draw(Brush brush, float partial) {
+		OnDraw?.Invoke(this, brush, partial);
+		
 		foreach (Component child in Children) {
 			brush.Depth = child.Depth;
-			DrawChild(ctx, child);
+			DrawChild(brush, partial, child);
 		}
 	}
 
-	protected virtual void DrawChild(CanvasContext ctx, Component child) {
-		child.Draw(ctx);
+	protected virtual void DrawChild(Brush brush, float partial, Component child) {
+		child.Draw(brush, partial);
 	}
 
 	/// <summary>
 	///     Called on resolved.
 	/// </summary>
-	/// <param name="ctx">Current canvas context.</param>
-	public virtual void Resolve(CanvasContext ctx) {
-		OnResolve?.Invoke(this, ctx);
+	public virtual void Resolve() {
+		OnResolve?.Invoke(this);
 
 		foreach (Component child in Children) {
-			child.Resolve(ctx);
+			child.Resolve();
 		}
 	}
 
@@ -213,15 +210,16 @@ public abstract class Component {
 	/// <summary>
 	///     Checks if a component is accessible by the cursor.
 	/// </summary>
-	/// <param name="cursor">Cursor position.</param>
 	/// <returns>True is accessible, otherwise false.</returns>
-	public virtual bool IsAccessible(in Vector2 cursor) {
+	public virtual bool IsAccessible() {
+		Vector2 cursor = Canvas.Cursor;
+		
 		if (!Contains(cursor)) {
 			return false;
 		}
 
 		if (Parent != null) {
-			if (Parent.Contains(cursor) && !Parent.IsAccessible(cursor)) {
+			if (Parent.Contains(cursor) && !Parent.IsAccessible()) {
 				return false;
 			}
 

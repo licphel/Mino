@@ -1,6 +1,5 @@
 ﻿#region
 using Mino.Mathematics;
-using Mino.Utility;
 using Mino.Utility.Logging;
 #endregion
 
@@ -26,7 +25,7 @@ public readonly struct TexturePart : IEquatable<TexturePart> {
 	/// </summary>
 	/// <param name="part">A texture part.</param>
 	/// <param name="region">A region in the given part.</param>
-	/// <exception cref="Crash">Thrown if the region is outside of the given part.</exception>
+	/// <exception cref="InvalidOperationException">Thrown if the region is outside of the given part.</exception>
 	public TexturePart(in TexturePart part, in Box3 region) {
 		Src = part.Src;
 		Region = region.Translate(part.Region.Min);

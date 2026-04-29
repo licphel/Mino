@@ -1,6 +1,5 @@
 ﻿#region
 using System.Collections.Concurrent;
-using Mino.Utility;
 #endregion
 
 namespace Mino.Nio;
@@ -42,7 +41,7 @@ public interface UrlScheme {
 		if (_schemeMapping.TryGetValue(name, out UrlScheme? p)) {
 			return p;
 		}
-		throw new Crash($"URL scheme {name} not supported");
+		throw new ArgumentException($"URL scheme {name} not supported");
 	}
 
 	// 'file' scheme implementation.
@@ -61,7 +60,7 @@ public interface UrlScheme {
 			if (op == "a") {
 				return new FileStream(url.Path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write);
 			}
-			throw new Crash($"Unknown file open mode: {op}");
+			throw new InvalidOperationException($"Unknown file open mode: {op}");
 		}
 
 		public async Task<Stream?> OpenStreamAsync(Url url, string op, CancellationToken ct) {
@@ -78,7 +77,7 @@ public interface UrlScheme {
 					() => new FileStream(
 						url.Path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write, 4096, true), ct);
 			}
-			throw new Crash($"Unknown file open mode: {op}");
+			throw new InvalidOperationException($"Unknown file open mode: {op}");
 		}
 
 		public string ToFilePath(Url url) {
@@ -110,7 +109,7 @@ public interface UrlScheme {
 
 		public Stream? OpenStream(Url url, string op) {
 			if (op != "r") {
-				throw new Crash($"'{url}' cannot write");
+				throw new InvalidOperationException($"'{url}' cannot write");
 			}
 			try {
 				HttpResponseMessage response =
@@ -124,7 +123,7 @@ public interface UrlScheme {
 
 		public async Task<Stream?> OpenStreamAsync(Url url, string op, CancellationToken ct) {
 			if (op != "r") {
-				throw new Crash($"'{url}' cannot write");
+				throw new InvalidOperationException($"'{url}' cannot write");
 			}
 			try {
 				HttpResponseMessage response = await _httpClient.GetAsync(
@@ -137,7 +136,7 @@ public interface UrlScheme {
 		}
 
 		public string ToFilePath(Url url) {
-			throw new Crash($"'{url}' cannot be converted to a file url");
+			throw new InvalidCastException($"'{url}' cannot be converted to a file url");
 		}
 
 		public override string ToString() {
@@ -154,7 +153,7 @@ public interface UrlScheme {
 
 		public Stream? OpenStream(Url url, string op) {
 			if (op != "w") {
-				throw new Crash("Console cannot read");
+				throw new InvalidOperationException("Console cannot read");
 			}
 			return url.Path.ToLowerInvariant() switch {
 				"stdin" or "in" => Console.OpenStandardInput(),
@@ -169,7 +168,7 @@ public interface UrlScheme {
 		}
 
 		public string ToFilePath(Url url) {
-			throw new Crash($"'{url}' cannot be converted to a file url");
+			throw new InvalidCastException($"'{url}' cannot be converted to a file url");
 		}
 
 		public override string ToString() {

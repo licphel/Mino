@@ -34,7 +34,7 @@ public class PersistentData<T> {
 	/// <param name="value">Value to set.</param>
 	public void Set(T value) {
 		if (!_sys._init) {
-			throw new Crash("Persistent system data not loaded");
+			throw new RMLException("Persistent system data not loaded");
 		}
 		_sys._G.Set(_key, value);
 	}
@@ -45,7 +45,7 @@ public class PersistentData<T> {
 	/// <returns>The data value.</returns>
 	public T Get() {
 		if (!_sys._init) {
-			throw new Crash("Persistent system data not loaded");
+			throw new RMLException("Persistent system data not loaded");
 		}
 		return _sys._G.Get(_key, _fallback);
 	}

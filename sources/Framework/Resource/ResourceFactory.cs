@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Reflection;
-using Mino.Utility;
 #endregion
 
 namespace Mino.Framework.Resource;
@@ -19,7 +18,7 @@ public class ResourceFactory<S> {
 	/// </summary>
 	/// <typeparam name="I">Interface type.</typeparam>
 	/// <typeparam name="B">Backend type.</typeparam>
-	/// <exception cref="Crash"></exception>
+	/// <exception cref="InvalidOperationException">Thrown if no ctor found.</exception>
 	public void RegisterInterface<I, B>(Action<S>? postprocessor) where B : S {
 		ConstructorInfo[] ctorList = typeof(B).GetConstructors();
 		var validCtorList = new List<ConstructorInfo>();
@@ -31,7 +30,7 @@ public class ResourceFactory<S> {
 		}
 
 		if (validCtorList.Count == 0) {
-			throw new Crash("Constructors with attr [ResourceCreation] not found");
+			throw new InvalidOperationException("Constructors with attr [ResourceCreation] not found");
 		}
 		_ctorMap[typeof(I)] = (validCtorList, postprocessor);
 	}
@@ -42,13 +41,13 @@ public class ResourceFactory<S> {
 	/// <param name="args">Ctor args.</param>
 	/// <typeparam name="I">Interface type.</typeparam>
 	/// <returns>A backend-powered interface.</returns>
-	/// <exception cref="Crash">Thrown if not registered or args do not match.</exception>
+	/// <exception cref="InvalidOperationException">Thrown if not registered or args do not match.</exception>
 	public I Create<I>(params object[] args) {
 		if (_ctorMap.TryGetValue(typeof(I), out (List<ConstructorInfo>, Action<S>?) value)) {
 			List<ConstructorInfo> validCtorList = value.Item1;
 
 			if (validCtorList == null) {
-				throw new Crash($"No such interface backend for '{typeof(I)}'");
+				throw new InvalidOperationException($"No such interface backend for '{typeof(I)}'");
 			}
 
 			object? created = null;
@@ -69,7 +68,7 @@ public class ResourceFactory<S> {
 				return (I) created;
 			}
 		}
-		throw new Crash($"No matching ctor for '{typeof(I)}");
+		throw new InvalidOperationException($"No matching ctor for '{typeof(I)}");
 	}
 
 	private static bool checkCtorMatch(ConstructorInfo ctor, object[] args) {

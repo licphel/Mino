@@ -4,7 +4,6 @@ using Mino.Framework.Resource;
 using Mino.Graphics.Desc;
 using Mino.Graphics.Enum;
 using Mino.Mathematics;
-using Mino.Utility;
 using Mino.Utility.Logging;
 #endregion
 
@@ -88,7 +87,7 @@ public class TextureAtlas : IDisposable {
 	/// </summary>
 	/// <param name="image">Image to insert.</param>
 	/// <returns>A texture part, not ready for usage.</returns>
-	/// <exception cref="Crash">Thrown if not initialized or ended.</exception>
+	/// <exception cref="InvalidOperationException">Thrown if not initialized or ended.</exception>
 	public TexturePart Accept(Image image) {
 		if (!_init) {
 			Log.Warn("Texture atlas has not initialized");

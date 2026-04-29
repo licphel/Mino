@@ -1,7 +1,5 @@
 ﻿#region
-using System.Reflection;
 using Mino.Framework;
-using Mino.Utility;
 #endregion
 
 namespace Mino.Nio;
@@ -54,11 +52,11 @@ public readonly struct Url : IEquatable<Url> {
 	///     Synchronously reads the resource of the url.
 	/// </summary>
 	/// <returns>A resource byte buffer.</returns>
-	/// <exception cref="Crash">If the url has no resource.</exception>
+	/// <exception cref="FileNotFoundException">If the url has no resource.</exception>
 	public ByteBuffer Read() {
 		using Stream? stream = OpenStream("r");
 		if (stream == null) {
-			throw new Crash("URL cannot open a stream");
+			throw new FileNotFoundException("URL cannot open a stream");
 		}
 		using MemoryStream memoryStream = new MemoryStream();
 		stream.CopyTo(memoryStream, StreamBufferSize);
@@ -69,11 +67,11 @@ public readonly struct Url : IEquatable<Url> {
 	///     Asynchronously reads the resource of the url.
 	/// </summary>
 	/// <returns>A resource byte buffer.</returns>
-	/// <exception cref="Crash">If the url has no resource.</exception>
+	/// <exception cref="FileNotFoundException">If the url has no resource.</exception>
 	public async Task<ByteBuffer> ReadAsync() {
 		Stream? stream = await OpenStreamAsync("r");
 		if (stream == null) {
-			throw new Crash("URL cannot open a stream");
+			throw new FileNotFoundException("URL cannot open a stream");
 		}
 		using MemoryStream memoryStream = new MemoryStream();
 		await stream.CopyToAsync(memoryStream, StreamBufferSize);
@@ -84,11 +82,11 @@ public readonly struct Url : IEquatable<Url> {
 	///     Synchronously writes the buffer.
 	/// </summary>
 	/// <param name="buffer">Buffer to write.</param>
-	/// <exception cref="Crash">If the url has no resource.</exception>
+	/// <exception cref="FileNotFoundException">If the url has no resource.</exception>
 	public void Write(ByteBuffer buffer) {
 		using Stream? stream = OpenStream("w");
 		if (stream == null) {
-			throw new Crash("URL cannot open a stream");
+			throw new FileNotFoundException("URL cannot open a stream");
 		}
 		stream.Write(buffer.AsSpan());
 		stream.Flush();
@@ -99,11 +97,11 @@ public readonly struct Url : IEquatable<Url> {
 	/// </summary>
 	/// <param name="buffer">Buffer to write.</param>
 	/// <returns>An async task.</returns>
-	/// <exception cref="Crash">If the url has no resource.</exception>
+	/// <exception cref="FileNotFoundException">If the url has no resource.</exception>
 	public async Task WriteAsync(ByteBuffer buffer) {
 		Stream? stream = await OpenStreamAsync("w");
 		if (stream == null) {
-			throw new Crash("URL cannot open a stream");
+			throw new FileNotFoundException("URL cannot open a stream");
 		}
 		await stream.WriteAsync(buffer.AsMemory());
 		await stream.FlushAsync();
@@ -123,14 +121,14 @@ public readonly struct Url : IEquatable<Url> {
 	public static Url operator ~(Url url) {
 		int idx = url.Path.LastIndexOf('/');
 		if (idx < 0) {
-			throw new Crash($"Cannot find the parent directory of '{url}'");
+			throw new FileNotFoundException($"Cannot find the parent directory of '{url}'");
 		}
 		return new Url(url.Scheme, url.Path.Substring(0, idx + 1));
 	}
 	
 	public static Url GetRelativeName(in Url basePath, in Url path) {
 		if (!basePath.Scheme.IsFileBased || !path.Scheme.IsFileBased) {
-			throw new Crash($"Url {basePath} is not a file url");
+			throw new FileNotFoundException($"Url {basePath} is not a file url");
 		}
 		return new Url(basePath.Scheme, path.ToFilePath().Replace(basePath.ToFilePath() + "/", ""));
 	}
@@ -138,7 +136,6 @@ public readonly struct Url : IEquatable<Url> {
 	/// <summary>
 	///     Finds the executable file's parent directory url.
 	/// </summary>
-	/// <exception cref="Crash">If cannot find the url.</exception>
 	public static Url Local(string sub) {
 		return FrameworkSetup.__Basepath / "run" / sub;
 	}

@@ -726,7 +726,7 @@ public unsafe class Brush : IDisposable {
 	}
 
 	private void initGfxResources() {
-		GRes.init();
+		InternalResources.init();
 		
 		RenderTarget = RenderTarget.GetUltimate();
 		Sampler = RenderSystem.Create<Sampler>(new SamplerDesc());
@@ -749,10 +749,10 @@ public unsafe class Brush : IDisposable {
 		 * 0 - colored
 		 * 1 - textured
 		 */
-		_pipes[0] = GRes.p4c!;
-		_pipes[1] = GRes.p4t!;
-		_sets[0] = RenderSystem.Create<ResourceSet>(GRes.rl4c!);
-		_sets[1] = RenderSystem.Create<ResourceSet>(GRes.rl4t!);
+		_pipes[0] = InternalResources.p4c!;
+		_pipes[1] = InternalResources.p4t!;
+		_sets[0] = RenderSystem.Create<ResourceSet>(InternalResources.rl4c!);
+		_sets[1] = RenderSystem.Create<ResourceSet>(InternalResources.rl4t!);
 	}
 
 	private void assert(BrushPrimitive primitive) {

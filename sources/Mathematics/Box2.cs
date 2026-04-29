@@ -1,4 +1,3 @@
-using Mino.Utility;
 using Mino.Utility.Logging;
 
 namespace Mino.Mathematics;
@@ -17,13 +16,9 @@ public readonly struct Box2 : IEquatable<Box2> {
 	/// </summary>
 	/// <param name="min">Minimum corner.</param>
 	/// <param name="max">Maximum corner.</param>
-	/// <exception cref="Crash">Thrown when min is greater than max.</exception>
 	public Box2(in Vector2 min, in Vector2 max) {
 		Min = min;
 		Max = max;
-		if (min.X > max.X || min.Y > max.Y) {
-			Log.Warn("Box max < min");
-		}
 	}
 
 	/// <summary>

@@ -1,5 +1,4 @@
 ﻿using Mino.Framework.Resource;
-using Mino.Utility;
 
 namespace Mino.Audio;
 
@@ -14,7 +13,7 @@ public static class AudioSystem {
 	///     Loads a native audio context.
 	/// </summary>
 	/// <param name="backend">Backend interface.</param>
-	/// <exception cref="Crash">If there's already a context.</exception>
+	/// <exception cref="InvalidOperationException">If there's already a context.</exception>
 	public static void LoadContext(ThreadContext backend) {
 		lock (_lock) {
 			_ctx = backend;
@@ -25,11 +24,11 @@ public static class AudioSystem {
 	/// <summary>
 	///     Gets current audio context.
 	/// </summary>
-	/// <exception cref="Crash">If there's no audio context.</exception>
+	/// <exception cref="NullReferenceException">If there's no audio context.</exception>
 	public static ThreadContext Context {
 		get {
 			lock (_lock) {
-				return _ctx ?? throw new Crash("Audio context not loaded");
+				return _ctx ?? throw new NullReferenceException("Audio context not loaded");
 			}
 		}
 	}

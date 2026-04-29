@@ -1,6 +1,4 @@
-﻿using Mino.Utility;
-
-namespace Mino.Modular;
+﻿namespace Mino.Modular;
 
 /// <summary>
 ///		Key identifier.
@@ -31,7 +29,7 @@ public readonly struct Identifier : IEquatable<Identifier> {
 		full = Domain + ":" + Path;
 
 		if (!Domain.Validate(full)) {
-			throw new Crash($"Identifier invalid: {full}");
+			throw new RMLException($"Identifier invalid: {full}");
 		}
 	}
 
@@ -45,7 +43,7 @@ public readonly struct Identifier : IEquatable<Identifier> {
 		} else {
 			string[] arr = full.Split(':');
 			if (arr.Length != 2) {
-				throw new Crash($"Cannot parse {full}");
+				throw new RMLException($"Cannot parse {full}");
 			}
 			
 			domain = Domain.TryFind(arr[0]);

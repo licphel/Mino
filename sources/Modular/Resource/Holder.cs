@@ -1,6 +1,4 @@
-﻿using Mino.Utility;
-
-namespace Mino.Modular.Resource;
+﻿namespace Mino.Modular.Resource;
 
 /// <summary>
 ///		Asset ref.
@@ -26,15 +24,15 @@ public struct Holder<T> where T : class {
 	/// <summary>
 	///		Tries to get an asset.
 	/// </summary>
-	/// <exception cref="Crash">Thrown if cannot get and no fallback is bound.</exception>
+	/// <exception cref="RMLException">Thrown if cannot get and no fallback is bound.</exception>
 	public T Value {
 		get {
 			object? obj = _notifier._object as T ?? _fallback;
 			if (obj == null) {
-				throw new Crash($"There's no asset named '{Id}'");
+				throw new AssetException($"There's no asset named '{Id}'");
 			}
 			if (obj is not T) {
-				throw new Crash($"Asset type does not match: expected={typeof(T)}, got={obj.GetType()}");
+				throw new AssetException($"Asset type does not match: expected={typeof(T)}, got={obj.GetType()}");
 			}
 			return (T) obj;
 		}

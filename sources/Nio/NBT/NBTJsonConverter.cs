@@ -6,13 +6,13 @@ using System.Text.Json.Serialization;
 namespace Mino.Nio.NBT;
 
 // Json conversion tool class.
-internal class TagMapJsonConverter : JsonConverter<TagMap> {
-	public override TagMap Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+internal class NBTJsonConverter : JsonConverter<NBTCompound> {
+	public override NBTCompound Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
 		if (reader.TokenType != JsonTokenType.StartObject) {
 			throw new JsonException("Expected start of object");
 		}
 
-		TagMap map = new TagMap();
+		NBTCompound map = new NBTCompound();
 
 		while (reader.Read()) {
 			if (reader.TokenType == JsonTokenType.EndObject) {
@@ -74,9 +74,9 @@ internal class TagMapJsonConverter : JsonConverter<TagMap> {
 				}
 				return (double) reader.GetDecimal();
 			case JsonTokenType.StartObject:
-				return Read(ref reader, typeof(TagMap), options);
+				return Read(ref reader, typeof(NBTCompound), options);
 			case JsonTokenType.StartArray:
-				TagList list = new TagList();
+				NBTList list = new NBTList();
 				while (reader.Read()) {
 					if (reader.TokenType == JsonTokenType.EndArray) {
 						return list;
@@ -95,7 +95,7 @@ internal class TagMapJsonConverter : JsonConverter<TagMap> {
 		}
 	}
 
-	public override void Write(Utf8JsonWriter writer, TagMap value, JsonSerializerOptions options) {
+	public override void Write(Utf8JsonWriter writer, NBTCompound value, JsonSerializerOptions options) {
 		writer.WriteStartObject();
 		
 		foreach (KeyValuePair<string, object> kv in value) {
@@ -111,10 +111,10 @@ internal class TagMapJsonConverter : JsonConverter<TagMap> {
 			case null:
 				writer.WriteNullValue();
 				break;
-			case TagMap map:
+			case NBTCompound map:
 				Write(writer, map, options);
 				break;
-			case TagList list:
+			case NBTList list:
 				writer.WriteStartArray();
 				foreach (object item in list) {
 					_write(writer, item, options);

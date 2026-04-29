@@ -1,6 +1,6 @@
-﻿using Mino.Graphics.Sprite;
+﻿using Mino.Framework;
+using Mino.Graphics.Sprite;
 using Mino.Mathematics;
-using Mino.Utility;
 
 namespace Mino.Graphics.Gui;
 
@@ -21,7 +21,7 @@ public class Bracket : Component {
 
 	public Bracket(Drawable?[] drawables, ScrollBar bar) {
 		if (drawables.Length != 1) {
-			throw new Crash("Asset confirmation failed");
+			throw new InvalidOperationException("Asset confirmation failed");
 		}
 		_asset_Drawables = drawables;
 		
@@ -100,8 +100,8 @@ public class Bracket : Component {
 		Elements.Clear();
 	}
 
-	public override void Update(CanvasContext ctx) {
-		float dy = -_childBar.GetPos(ctx);
+	public override void Update(in TimeStep step) {
+		float dy = -_childBar.GetPos(0.0F); // partial: 0.0F
 		
 		foreach (Component e in Elements) {
 			trsC(e, dy); 
@@ -111,22 +111,20 @@ public class Bracket : Component {
 			 * We do not simply use a transform matrix since children may handle input or other
 			 * logics here...
 			 */
-			e.Update(ctx);
+			e.Update(step);
 			trsC(e, -dy);
 		}
 		
-		base.Update(ctx);
+		base.Update(step);
 	}
 
-	protected override void UpdateChild(CanvasContext ctx, Component child) {
+	protected override void UpdateChild(in TimeStep step, Component child) {
 		if (!Elements.Contains(child)) {
-			base.UpdateChild(ctx, child);
+			base.UpdateChild(step, child);
 		}
 	}
 
-	public override void Draw(CanvasContext ctx) {
-		Brush brush = ctx.Brush;
-		
+	public override void Draw(Brush brush, float partial) {
 		Drawable? drawable = _asset_Drawables[0];
 		if (drawable != null) {
 			brush.Draw(drawable, BoundingBox);
@@ -134,7 +132,7 @@ public class Bracket : Component {
 		
 		int hc = (int) MathF.Ceiling((float) Elements.Count / _horiCap);
 		_childBar.SetSize(hc * _eh + Math.Max(hc - 1, 0) * _wrap + _wrap * 2);
-		float dy = -_childBar.GetPos(ctx);
+		float dy = -_childBar.GetPos(partial);
 		
 		brush.SetScissor(BoundingBox.Inflate(-_wrap, -_wrap));
 		
@@ -146,18 +144,18 @@ public class Bracket : Component {
 			 * We do not simply use a transform matrix since children may handle input or other
 			 * logics here...
 			 */
-			e.Draw(ctx);
+			e.Draw(brush, partial);
 			trsC(e, -dy);
 		}
 		
 		brush.DisableScissor();
 		
-		base.Draw(ctx);
+		base.Draw(brush, partial);
 	}
 
-	protected override void DrawChild(CanvasContext ctx, Component child) {
+	protected override void DrawChild(Brush brush, float partial, Component child) {
 		if (!Elements.Contains(child)) {
-			base.DrawChild(ctx, child);
+			base.DrawChild(brush, partial, child);
 		}
 	}
 

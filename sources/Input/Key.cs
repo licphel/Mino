@@ -10,13 +10,9 @@ namespace Mino.Input;
 ///     Provides key input observation.
 /// </summary>
 public class Key {
-	private static readonly ConcurrentBag<Thread> _listenerThreads = new ConcurrentBag<Thread>();
-	private static readonly ConcurrentDictionary<Thread, bool[]> _threadStamps =
-		new ConcurrentDictionary<Thread, bool[]>();
 	private static readonly ConcurrentDictionary<uint, Key> _activeListeners =
 		new ConcurrentDictionary<uint, Key>();
-	private static bool _isEventHooked;
-
+	
 	private Window _window;
 
 	// Private ctor - we use key listeners for better performance.
@@ -24,11 +20,6 @@ public class Key {
 		_window = RenderSystem.GetWindow();
 		Code = code;
 		Modifiers = mod;
-
-		if (!_isEventHooked) {
-			_window.KeyEvent += keyCallback;
-			_isEventHooked = true;
-		}
 	}
 
 	/// <summary>
@@ -36,13 +27,16 @@ public class Key {
 	/// </summary>
 	public uint Code { get; }
 
+	/// <summary>
+	///		Modifiers of the key.
+	/// </summary>
 	public uint Modifiers { get; }
 
 	/// <summary>
 	///     The key is just pressed.
 	/// </summary>
 	public bool Press {
-		get => isThisRollActivated() && Hold && with(Modifiers);
+		get => new InputSnapshot().IsActive(Code) && Hold && with(Modifiers);
 	}
 
 	/// <summary>
@@ -73,13 +67,6 @@ public class Key {
 		return (_window.GetModifiers(Code) & mod) == mod;
 	}
 
-	private bool isThisRollActivated() {
-		if (_threadStamps.TryGetValue(Thread.CurrentThread, out bool[]? map)) {
-			return map[(int) Code];
-		}
-		return false;
-	}
-
 	/// <summary>
 	///     Gets a key listener instance.
 	/// </summary>
@@ -91,37 +78,6 @@ public class Key {
 			return value;
 		}
 		return _activeListeners[code] = new Key(code, mod);
-	}
-
-	/// <summary>
-	///     Enable a thread to listener managed key events.
-	/// </summary>
-	/// <param name="thread">Listener thread.</param>
-	public static void AddListeningThread(Thread thread) {
-		_listenerThreads.Add(thread);
-	}
-
-	/// <summary>
-	///     Ends a listening roll.
-	/// </summary>
-	public static void NextListeningRoll() {
-		if (_threadStamps.TryGetValue(Thread.CurrentThread, out bool[]? map)) {
-			Array.Fill(map, false);
-		}
-	}
-
-	// Window key event callback:
-	// Notify current thread keys.
-	private static void keyCallback(uint keycode, uint modifier, KeyStatus status) {
-		if (status == KeyStatus.Press) {
-			foreach (Thread thread in _listenerThreads) {
-				if (!_threadStamps.TryGetValue(thread, out bool[]? value)) {
-					value = new bool[1024];
-					_threadStamps[thread] = value;
-				}
-				value[(int) keycode] = true;
-			}
-		}
 	}
 
 	#region KEYCODES

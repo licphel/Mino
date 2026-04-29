@@ -1,9 +1,9 @@
 ﻿#region
 using Mino.Desktop;
+using Mino.Framework;
 using Mino.Graphics.Sprite;
 using Mino.Input;
 using Mino.Mathematics;
-using Mino.Utility;
 #endregion
 
 namespace Mino.Graphics.Gui;
@@ -52,7 +52,7 @@ public class ScrollBar : Component {
 
 	public ScrollBar(Drawable?[] drawables) {
 		if (drawables.Length != 2) {
-			throw new Crash("Asset confirmation failed");
+			throw new InvalidOperationException("Asset confirmation failed");
 		}
 		_asset_Drawables = drawables;
 	}
@@ -93,10 +93,10 @@ public class ScrollBar : Component {
 	/// <summary>
 	///     Gets the lerped position.
 	/// </summary>
-	/// <param name="ctx">Current canvas context.</param>
+	/// <param name="partial">Partial ticks.</param>
 	/// <returns>A lerped scroll position.</returns>
-	public float GetPos(CanvasContext ctx) {
-		return ctx.Partial * (_startPos - _prevPos) + _prevPos;
+	public float GetPos(float partial) {
+		return partial * (_startPos - _prevPos) + _prevPos;
 	}
 
 	/// <summary>
@@ -128,6 +128,10 @@ public class ScrollBar : Component {
 	protected internal override void InitHooks() {
 		base.InitHooks();
 
+		if (_hook != null) {
+			return;
+		}
+
 		Window window = RenderSystem.GetWindow();
 		_hook = scroll => {
 			bool canScroll = Hovering;
@@ -148,10 +152,10 @@ public class ScrollBar : Component {
 		window.CursorScrollEvent -= _hook;
 	}
 
-	public override void Update(CanvasContext ctx) {
-		Vector2 cursor = ctx.Cursor;
+	public override void Update(in TimeStep step) {
+		Vector2 cursor = Canvas.Cursor;
 
-		float dt = (float) ctx.Step.Delta;
+		float dt = (float) step.Delta;
 
 		_prevPos = _startPos;
 		_startPos += _acceleration * dt;
@@ -182,10 +186,10 @@ public class ScrollBar : Component {
 			clamp();
 		}
 
-		base.Update(ctx);
+		base.Update(step);
 	}
 
-	public override void Draw(CanvasContext ctx) {
+	public override void Draw(Brush brush, float partial) {
 		float th = BoundingBox.Height - _wrap * 2.0F;
 		float tw = BoundingBox.Width - _wrap * 2.0F;
 
@@ -197,7 +201,7 @@ public class ScrollBar : Component {
 			per = 1.0F;
 		}
 
-		float scrollPer = Math.Abs(GetPos(ctx)) / _vertical;
+		float scrollPer = Math.Abs(GetPos(partial)) / _vertical;
 		float h = th * per;
 		float oh = scrollPer * th;
 
@@ -205,8 +209,7 @@ public class ScrollBar : Component {
 		_bh = h;
 		_bx = BoundingBox.MinX + _wrap;
 		_by = BoundingBox.MinY + _wrap + oh;
-
-		Brush brush = ctx.Brush;
+		
 		Drawable? drawable = _asset_Drawables[1];
 		if (drawable != null) {
 			brush.Draw(drawable, BoundingBox);
@@ -217,7 +220,7 @@ public class ScrollBar : Component {
 			brush.Draw(drawable, _bx, _by, _bw, _bh);
 		}
 
-		base.Draw(ctx);
+		base.Draw(brush, partial);
 	}
 
 	private void clamp() {

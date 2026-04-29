@@ -1,5 +1,6 @@
 ﻿#region
 using Mino.Audio;
+using Mino.Framework;
 using Mino.Graphics.Sprite;
 using Mino.Input;
 using Mino.Utility;
@@ -50,10 +51,10 @@ public class Button : Component {
 
 	public Button(Drawable?[] drawables, DataLine?[] lines, Mode mode = Mode.Clicking) {
 		if (drawables.Length != (mode == Mode.Clicking ? 3 : 2)) {
-			throw new Crash("Asset confirmation failed");
+			throw new InvalidOperationException("Asset confirmation failed");
 		}
 		if (lines.Length != 2) {
-			throw new Crash("Asset confirmation failed");
+			throw new InvalidOperationException("Asset confirmation failed");
 		}
 
 		_asset_Drawables = drawables;
@@ -74,11 +75,11 @@ public class Button : Component {
 	/// <summary>
 	///     Whether the button is switched on.
 	/// </summary>
-	/// <exception cref="Crash">Thrown if the button cannot switch.</exception>
+	/// <exception cref="InvalidOperationException">Thrown if the button cannot switch.</exception>
 	public bool IsOn {
 		get {
 			if (_mode != Mode.Switching) {
-				throw new Crash("Button cannot switch");
+				throw new InvalidOperationException("Button cannot switch");
 			}
 			return _state == 1;
 		}
@@ -92,8 +93,8 @@ public class Button : Component {
 		_delay = time;
 	}
 
-	public override void Update(CanvasContext ctx) {
-		_pressCD.Update(ctx.Step);
+	public override void Update(in TimeStep step) {
+		_pressCD.Update(step);
 
 		bool act1 = Keymap[0].Press;
 		bool act2 = Keymap[1].Press;
@@ -126,16 +127,15 @@ public class Button : Component {
 			}
 		}
 
-		base.Update(ctx);
+		base.Update(step);
 	}
 
-	public override void Draw(CanvasContext ctx) {
-		Brush brush = ctx.Brush;
+	public override void Draw(Brush brush, float partial) {
 		Drawable? drawable = _asset_Drawables[_state];
 		if (drawable != null) {
 			brush.Draw(drawable, BoundingBox);
 		}
 
-		base.Draw(ctx);
+		base.Draw(brush, partial);
 	}
 }

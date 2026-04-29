@@ -1,6 +1,4 @@
-﻿using Mino.Utility;
-
-namespace Mino.Modular.Registry;
+﻿namespace Mino.Modular.Registry;
 
 /// <summary>
 ///		Deferred registered value.
@@ -31,6 +29,6 @@ public class DeferredEntry<T> where T : class, RegistryObject {
 		if (entry.HasValue) {
 			return entry.Value!;
 		}
-		throw new Crash("Deferred registry entry has no value");
+		throw new RMLException("Deferred registry entry has no value");
 	}
 }

@@ -2,7 +2,6 @@
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using Mino.Utility;
 #endregion
 
 namespace Mino.Network;
@@ -26,7 +25,7 @@ public static class Net {
 	/// </summary>
 	/// <param name="port">The minimum port.</param>
 	/// <returns>A free port.</returns>
-	/// <exception cref="Crash">Thrown if no port is available.</exception>
+	/// <exception cref="NetworkException">Thrown if no port is available.</exception>
 	public static int FindFreePort(int port = 8080) {
 		var nowPorts = new HashSet<int>();
 		IPGlobalProperties properties = IPGlobalProperties.GetIPGlobalProperties();
@@ -44,14 +43,14 @@ public static class Net {
 			}
 		}
 
-		throw new Crash("No port available");
+		throw new NetworkException("No port available");
 	}
 
 	/// <summary>
 	///     Finds the IP of this machine.
 	/// </summary>
 	/// <returns>The IP address of this machine.</returns>
-	/// <exception cref="Crash">Thrown if IP cannot be found.</exception>
+	/// <exception cref="NetworkException">Thrown if IP cannot be found.</exception>
 	public static string FindLocalIP() {
 		IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
 		foreach (IPAddress ip in host.AddressList) {
@@ -59,6 +58,6 @@ public static class Net {
 				return ip.ToString();
 			}
 		}
-		throw new Crash("IP not found");
+		throw new NetworkException("IP not found");
 	}
 }

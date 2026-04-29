@@ -1,7 +1,6 @@
 ﻿#region
 using System.Collections.Concurrent;
 using System.Reflection;
-using Mino.Utility;
 #endregion
 
 namespace Mino.Modular;
@@ -20,10 +19,10 @@ public sealed class Domain : IEquatable<Domain> {
 
 	internal Domain(string name) {
 		if (string.IsNullOrWhiteSpace(name)) {
-			throw new Crash("Domain name cannot be empty");
+			throw new RMLException("Domain name cannot be empty");
 		}
 		if (!Validate(name)) {
-			throw new Crash($"Domain name invalid: '{name}'");
+			throw new RMLException($"Domain name invalid: '{name}'");
 		}
 
 		Name = name;
@@ -83,7 +82,7 @@ public sealed class Domain : IEquatable<Domain> {
 			return mod.Domain;
 		}
 		if (throwIfNotFound) {
-			throw new Crash("Domain is not initialized");
+			throw new RMLException("Domain is not initialized");
 		}
 		return Unknown;
 	}

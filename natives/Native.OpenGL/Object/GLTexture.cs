@@ -4,7 +4,6 @@ using Mino.Framework.Resource;
 using Mino.Graphics;
 using Mino.Graphics.Desc;
 using Mino.Graphics.Enum;
-using Mino.Utility;
 using Silk.NET.OpenGL;
 using Texture = Mino.Graphics.Texture;
 #endregion
@@ -75,7 +74,7 @@ public unsafe sealed class GLTexture : Texture {
 					break;
 				default:
 					gch?.Free();
-					throw new Crash($"Texture format {_desc.Format} not supported");
+					throw new NativeException($"Texture format {_desc.Format} not supported");
 			}
 
 			gch?.Free();
@@ -193,7 +192,7 @@ public unsafe sealed class GLTexture : Texture {
 					break;
 				default:
 					gch?.Free();
-					throw new Crash($"Texture format {_desc.Format} not supported");
+					throw new NativeException($"Texture format {_desc.Format} not supported");
 			}
 
 			gch?.Free();

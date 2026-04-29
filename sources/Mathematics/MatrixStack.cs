@@ -1,6 +1,4 @@
-﻿using Mino.Utility;
-
-namespace Mino.Mathematics;
+﻿namespace Mino.Mathematics;
 
 /// <summary>
 ///     A transformation matrix stack.
@@ -53,7 +51,7 @@ public class MatrixStack<T> where T : Matrix<T>, new() {
 
 	private void assertNonempty() {
 		if (IsEmpty) {
-			throw new Crash("Cannot modify base matrix");
+			throw new InvalidOperationException("Cannot modify base matrix");
 		}
 	}
 }

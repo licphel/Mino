@@ -8,7 +8,7 @@ namespace Mino.Modular;
 /// </summary>
 public sealed class Language {
 	private string _key;
-	private TagMap _i18nMap = new TagMap();
+	private NBTCompound _i18nMap = new NBTCompound();
 	private ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
 	
 	public Language(string key) {
@@ -19,7 +19,7 @@ public sealed class Language {
 	///		Appends a translation map to the language object.
 	/// </summary>
 	/// <param name="map"></param>
-	public void Append(TagMap map) {
+	public void Append(NBTCompound map) {
 		_lock.EnterWriteLock();
 		foreach (var kv in map) {
 			if (kv.Value is not string) {

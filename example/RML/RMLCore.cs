@@ -15,7 +15,7 @@ public static class RMLCore {
 	public static Action<AssetLoader> OnSetProcessors = loader => {
 		// Textures
 		loader.AddProcessor(
-			url => FileUtil.GetExtension(url).ToLowerInvariant() is "png" or "jpg" or "jpeg", (id, url) => {
+			url => Furl.GetExtension(url).ToLowerInvariant() is "png" or "jpg" or "jpeg", (id, url) => {
 				Image image = Image.Parse(url.Read());
 				Texture tex = RenderSystem.Create<Texture>(TextureDesc.CreateByImage(image));
 				Assets.Set(id, tex);
@@ -23,7 +23,7 @@ public static class RMLCore {
 		
 		// Font types
 		loader.AddProcessor(
-			url => FileUtil.GetExtension(url).ToLowerInvariant() is "ttf" or "otf", (id, url) => {
+			url => Furl.GetExtension(url).ToLowerInvariant() is "ttf" or "otf", (id, url) => {
 				Font font = Font.Load(url);
 				font.SetResolution(64);
 				Assets.Set(id, font); 
@@ -31,7 +31,7 @@ public static class RMLCore {
 		
 		// Texts
 		loader.AddProcessor(
-			url => FileUtil.GetExtension(url).ToLowerInvariant() is "txt",
+			url => Furl.GetExtension(url).ToLowerInvariant() is "txt",
 			(id, url) => {
 				TextAccess str = url;
 				Assets.Set(id, (string) str);
@@ -40,7 +40,7 @@ public static class RMLCore {
 		
 		// Wave data lines.
 		loader.AddProcessor(
-			url => FileUtil.GetExtension(url).ToLowerInvariant() is "wav",
+			url => Furl.GetExtension(url).ToLowerInvariant() is "wav",
 			(id, url) => {
 				DataLine dataLine = AudioSystem.Create<DataLine>(DataLineDesc.Parse(url.Read()));
 				Assets.Set(id, dataLine);
@@ -59,7 +59,7 @@ public static class RMLCore {
 		
 		// Add log output dest.
 		Url logUrl = Url.Local("log/latest.log");
-		FileUtil.CreateFile(logUrl);
+		Furl.CreateFile(logUrl);
 		Log.Instance.OutputTo(logUrl);
 		
 		// Create dominant loader.
@@ -70,7 +70,7 @@ public static class RMLCore {
 	
 		// Load mods.
 		Url modUrl = Url.Local("mod");
-		FileUtil.CreateDirectory(modUrl);
+		Furl.CreateDirectory(modUrl);
 		Mod.LoadDirectory(modUrl);
 		
 		// Load source mods.

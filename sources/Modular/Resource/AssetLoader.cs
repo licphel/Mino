@@ -1,5 +1,4 @@
 ﻿using Mino.Nio;
-using Mino.Utility;
 using Mino.Utility.Logging;
 
 namespace Mino.Modular.Resource;
@@ -102,7 +101,7 @@ public class AssetLoader {
 	///     Enqueues all tasks in a loader into this loader.
 	/// </summary>
 	/// <param name="loader">The src loader.</param>
-	/// <exception cref="Crash">If the loading has begun.</exception>
+	/// <exception cref="RMLException">If the loading has begun.</exception>
 	public void Enqueue(AssetLoader loader) {
 		if (loader == null) {
 			return;
@@ -119,7 +118,7 @@ public class AssetLoader {
 	///     Enqueues a task.
 	/// </summary>
 	/// <param name="task">The task.</param>
-	/// <exception cref="Crash">If the loading has begun.</exception>
+	/// <exception cref="RMLException">If the loading has begun.</exception>
 	public void Enqueue(Action task) {
 		if (_processedCount != 0) {
 			Log.Warn("Cannot enqueue while loading");
@@ -134,7 +133,7 @@ public class AssetLoader {
 	///     Enqueues a url and lets the loader to designate a task.
 	/// </summary>
 	/// <param name="url">The resource url.</param>
-	/// <exception cref="Crash">If the loading has begun.</exception>
+	/// <exception cref="RMLException">If the loading has begun.</exception>
 	public void Enqueue(in Url url) {
 		if (_processedCount != 0) {
 			Log.Warn("Cannot enqueue while loading");
@@ -162,21 +161,21 @@ public class AssetLoader {
 		}
 		Log.Debug($"Scan in '{baseUrl}'");
 		
-		FileUtil.PathType type = FileUtil.GetTypeOf(baseUrl);
-		if (type == FileUtil.PathType.NotExist) {
+		Furl.PathType type = Furl.Typeof(baseUrl);
+		if (type == Furl.PathType.NotExist) {
 			return;
 		}
-		if (type == FileUtil.PathType.File) {
+		if (type == Furl.PathType.File) {
 			Enqueue(baseUrl);
 			return;
 		}
 		// Scan recursively.
-		IEnumerable<Url> subs = FileUtil.SubDirectories(baseUrl);
+		IEnumerable<Url> subs = Furl.SubDirectories(baseUrl);
 		foreach (Url dir in subs) {
 			Scan(dir, false);
 		}
 		// Load files.
-		subs = FileUtil.SubFiles(baseUrl);
+		subs = Furl.SubFiles(baseUrl);
 		foreach (Url file in subs) {
 			Enqueue(file);
 		}

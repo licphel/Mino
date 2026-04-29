@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using Mino.Utility;
 using Mino.Utility.Logging;
 
 namespace Mino.Modular.Registry;
@@ -41,7 +40,7 @@ public class DeferredRegistry<T> where T : class, RegistryObject {
 		
 		_lock.EnterWriteLock();
 		if (_frozen) {
-			throw new Crash($"Try to register '{key}' after registry is frozen");
+			throw new RMLException($"Try to register '{key}' after registry is frozen");
 		}
 		Log.Debug($"Register default {_domain}:{_tName}, key={key}");
 		
@@ -63,7 +62,7 @@ public class DeferredRegistry<T> where T : class, RegistryObject {
 		
 		_lock.EnterWriteLock();
 		if (_frozen) {
-			throw new Crash($"Try to register '{key}' after registry is frozen");
+			throw new RMLException($"Try to register '{key}' after registry is frozen");
 		}
 		Log.Debug($"Register {_domain}:{_tName}, key={key}");
 		
@@ -123,7 +122,7 @@ public class DeferredRegistry<T> where T : class, RegistryObject {
 		T t = factory.Invoke();
 		t.Freeze(key, _next++);
 		if (_map.ContainsKey(key)) {
-			throw new Crash($"Duplicated key: {key}");
+			throw new RMLException($"Duplicated key: {key}");
 		}
 		_map[key] = t;
 		

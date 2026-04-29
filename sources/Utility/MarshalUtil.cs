@@ -37,12 +37,12 @@ public unsafe class MarshalUtil {
 	/// <param name="endianness">Used endianness.</param>
 	/// <typeparam name="T">Struct type.</typeparam>
 	/// <returns>A converted struct.</returns>
-	/// <exception cref="Crash">Thrown if the span is not long enough.</exception>
+	/// <exception cref="ArgumentException">Thrown if the span is not long enough.</exception>
 	public static T Read<T>(ReadOnlySpan<byte> span, Endianness endianness = Endianness.Little)
 		where T : unmanaged {
 		int size = Unsafe.SizeOf<T>();
 		if (span.Length < size) {
-			throw new Crash("Span length is not enough.");
+			throw new ArgumentException("Span length is not enough.");
 		}
 
 		if (endianness != Endianness.Native) {

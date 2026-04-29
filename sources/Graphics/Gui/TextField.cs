@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using Mino.Desktop;
+using Mino.Framework;
 using Mino.Graphics.Sprite;
 using Mino.Graphics.Text;
 using Mino.Input;
@@ -64,7 +65,7 @@ public class TextField : Component {
 
 	public TextField(Drawable?[] drawables, Font font, ScrollBar bar) {
 		if (drawables.Length != 3) {
-			throw new Crash("Asset confirmation failed");
+			throw new InvalidOperationException("Asset confirmation failed");
 		}
 		_asset_Drawables = drawables;
 		_asset_Font = font;
@@ -119,6 +120,10 @@ public class TextField : Component {
 	protected internal override void InitHooks() {
 		base.InitHooks();
 
+		if (_hook != null) {
+			return;
+		}
+
 		Window window = RenderSystem.GetWindow();
 		_hook = ch => {
 			if (Canvas.Focused.Contains(this)) {
@@ -136,18 +141,18 @@ public class TextField : Component {
 		window.CharInputEvent -= _hook;
 	}
 
-	public override void Resolve(CanvasContext ctx) {
-		base.Resolve(ctx);
+	public override void Resolve() {
+		base.Resolve();
 
 		// Rebake on resolved - max width changes.
 		rebake();
 		rebakeHint();
 	}
 
-	public override void Update(CanvasContext ctx) {
+	public override void Update(in TimeStep step) {
 		_focus = Canvas.Focused.Contains(this);
-		_cd1.Update(ctx.Step);
-		_cd2.Update(ctx.Step);
+		_cd1.Update(step);
+		_cd2.Update(step);
 
 		if (_focus) {
 			Window window = RenderSystem.GetWindow();
@@ -203,26 +208,20 @@ public class TextField : Component {
 			}
 			if (Keymap[8].Press) {
 				Vector2 ds = BoundingBox.Min + new Vector2(_wrap, _wrap);
-				if (_blob.GetGlyphInstance(ctx.Cursor - ds, out GlyphInstance gi)) {
+				if (_blob.GetGlyphInstance(Canvas.Cursor - ds, out GlyphInstance gi)) {
 					_ptr = gi.Index + 1;
 				}
 			}
 		}
 
-		base.Update(ctx);
+		base.Update(step);
 	}
 
-	public override void AppendTooltip(TooltipContext ctx) {
-		base.AppendTooltip(ctx);
-		ctx.Append("hello");
-	}
-
-	public override void Draw(CanvasContext ctx) {
-		Brush brush = ctx.Brush;
+	public override void Draw(Brush brush, float partial) {
 		int dat = 0;
 		if (_focus) {
 			dat = 2;
-		} else if (IsAccessible(ctx.Cursor)) {
+		} else if (IsAccessible()) {
 			dat = 1;
 		}
 		Drawable? drawable = _asset_Drawables[dat];
@@ -231,24 +230,23 @@ public class TextField : Component {
 		}
 
 		if (_sb.Length == 0 && !string.IsNullOrEmpty(_hint)) {
-			drawGlyphs(ctx, _blobHint, _colorMap[0], _colorMap[1]);
+			drawGlyphs(brush, partial, _blobHint, _colorMap[0], _colorMap[1]);
 		} else {
 			if (_alls) {
-				drawGlyphs(ctx, _blob, _colorMap[3], _colorMap[2]);
+				drawGlyphs(brush, partial, _blob, _colorMap[3], _colorMap[2]);
 			} else {
-				drawGlyphs(ctx, _blob, _colorMap[1], _colorMap[1]);
+				drawGlyphs(brush, partial, _blob, _colorMap[1], _colorMap[1]);
 			}
 		}
 
-		base.Draw(ctx);
+		base.Draw(brush, partial);
 	}
 
-	private void drawGlyphs(CanvasContext ctx, TextBlob blob, Color color, Color bgColor) {
+	private void drawGlyphs(Brush brush, float partial, TextBlob blob, Color color, Color bgColor) {
 		_childBar.SetSize(blob.Height + _wrap * 2);
 		float x = BoundingBox.MinX + _wrap;
-		float y = BoundingBox.MinY + _wrap - _childBar.GetPos(ctx);
-
-		Brush brush = ctx.Brush;
+		float y = BoundingBox.MinY + _wrap - _childBar.GetPos(partial);
+		
 		Color _oldColor = brush.Color;
 		brush.SetScissor(BoundingBox.Inflate(-_wrap, -_wrap));
 

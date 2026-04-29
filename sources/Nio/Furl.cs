@@ -1,11 +1,9 @@
-﻿using Mino.Utility;
-
-namespace Mino.Nio;
+﻿namespace Mino.Nio;
 
 /// <summary>
 ///     Utility functions for urls using 'file://' scheme.
 /// </summary>
-public static class FileUtil {
+public static class Furl {
 	/// <summary>
 	///     Identifies the type of a file url.
 	/// </summary>
@@ -55,7 +53,7 @@ public static class FileUtil {
 	/// </summary>
 	/// <param name="url">Target file url.</param>
 	/// <returns>The path type of the url.</returns>
-	public static PathType GetTypeOf(in Url url) {
+	public static PathType Typeof(in Url url) {
 		ensureFile(url);
 		try {
 			FileAttributes attributes = File.GetAttributes(url.ToFilePath());
@@ -75,7 +73,7 @@ public static class FileUtil {
 	/// <returns>The collection of subordinate directories.</returns>
 	public static IEnumerable<Url> SubDirectories(in Url url) {
 		ensureFile(url);
-		if (GetTypeOf(url) != PathType.Directory) {
+		if (Typeof(url) != PathType.Directory) {
 			return [];
 		}
 		
@@ -89,7 +87,7 @@ public static class FileUtil {
 	/// <returns>The collection of subordinate files.</returns>
 	public static IEnumerable<Url> SubFiles(in Url url) {
 		ensureFile(url);
-		if (GetTypeOf(url) != PathType.Directory) {
+		if (Typeof(url) != PathType.Directory) {
 			return [];
 		}
 		
@@ -102,7 +100,7 @@ public static class FileUtil {
 	/// <param name="url">Target file url.</param>
 	public static void Delete(in Url url) {
 		ensureFile(url);
-		PathType urlType = GetTypeOf(url);
+		PathType urlType = Typeof(url);
 		if (urlType == PathType.File) {
 			File.Delete(url.ToFilePath());
 		} else if (urlType == PathType.Directory) {
@@ -115,12 +113,12 @@ public static class FileUtil {
 	/// </summary>
 	/// <param name="src">Src file url.</param>
 	/// <param name="dst">Dst file url.</param>
-	/// <exception cref="Crash">Thrown if src url does not exist.</exception>
+	/// <exception cref="FileNotFoundException">Thrown if src url does not exist.</exception>
 	public static void Move(in Url src, in Url dst) {
 		ensureFile(src);
-		PathType urlType = GetTypeOf(src);
+		PathType urlType = Typeof(src);
 		if (urlType == PathType.NotExist) {
-			throw new Crash($"Cannot find '{src}'");
+			throw new FileNotFoundException($"Cannot find '{src}'");
 		}
 
 		// Ensure destination's parent.
@@ -162,7 +160,7 @@ public static class FileUtil {
 
 	private static void ensureFile(in Url url) {
 		if (!url.Scheme.IsFileBased) {
-			throw new Crash($"URL {url} is not a file url");
+			throw new InvalidOperationException($"URL {url} is not a file url");
 		}
 	}
 }

@@ -1,6 +1,9 @@
 ﻿#region
 using Mino.Audio;
 using Mino.Audio.Desc;
+using Mino.Desktop;
+using Mino.Framework;
+using Mino.Graphics.Sprite;
 using Mino.Input;
 using Mino.Mathematics;
 #endregion
@@ -8,39 +11,31 @@ using Mino.Mathematics;
 namespace Mino.Graphics.Gui;
 
 /// <summary>
-///     A GUI top canvas.
+///     A GUI canvas containing all components.
 /// </summary>
 public class Canvas {
 	public static readonly Key[] Keymap = [
 		Key.Get(Key.MouseLeft) // Focus key
 	];
-
-	/// <summary>
-	///     Currently focused component.
-	/// </summary>
+	
 	public HashSet<Component?> Focused { get; } = new HashSet<Component?>();
-
-	/// <summary>
-	///     Present faces.
-	/// </summary>
 	public readonly List<Face> Presents = new List<Face>();
-
-	/// <summary>
-	///     Current gui system sound emitter.
-	/// </summary>
-	public Emitter SoundEmitter { get; set; } = new Emitter("gui");
+	public Emitter? Emitter;
+	public float Partial;
+	public Vector2 Cursor;
+	public Vector2 Size;
 
 	/// <summary>
 	///     Plays a sound in GUI emitter.
 	/// </summary>
 	/// <param name="line">Source line.</param>
 	public void PlaySound(DataLine? line) {
-		if (line == null) {
+		if (line == null || Emitter == null) {
 			return;
 		}
 		ClipDesc cDesc = ClipDesc.FromDataLine(line);
 		Clip clip = AudioSystem.Create<Clip>(cDesc);
-		SoundEmitter.Play(clip);
+		Emitter.Play(clip);
 	}
 
 	/// <summary>
@@ -51,7 +46,7 @@ public class Canvas {
 		if (!Presents.Contains(face)) {
 			Presents.Add(face);
 		}
-		face.SetAttribute("CanvasFactory", () => this);
+		face._canvasSupplier = () => this;
 		face.RequestResolve();
 		face.InitHooks();
 	}
@@ -69,35 +64,46 @@ public class Canvas {
 	/// <summary>
 	///     Updates all present faces.
 	/// </summary>
-	/// <param name="ctx">Current canvas context.</param>
-	public void Update(CanvasContext ctx) {
+	/// <param name="step">Time steps.</param>
+	public void Update(in TimeStep step) {
 		foreach (Face face in Presents) {
-			face.Update(ctx);
+			face.Update(step);
 		}
 
 		// Reflush focused component.
 		if (Keymap[0].Press) {
 			Focused.Clear();
-			updateFocus(Presents, ctx.Cursor);
+			updateFocus(Presents);
 		}
 	}
 
 	/// <summary>
 	///     Draws all present faces.
 	/// </summary>
-	/// <param name="ctx">Current canvas context.</param>
-	public void Draw(CanvasContext ctx) {
+	/// <param name="brush">Brush for drawing.</param>
+	/// <param name="partial">Partial ticks.</param>
+	public void Draw(Brush brush, float partial) {
+		// Update context.
+		Window window = RenderSystem.GetWindow();
+		Vector2 rawCursor = window.Cursor;
+		
+		Partial = partial;
+		Cursor = brush.Camera.Unproject(rawCursor, brush.CurrentViewport);
+		Size = new Vector2(brush.Camera.Width, brush.Camera.Height);
+		
 		foreach (Face face in Presents) {
-			face.Draw(ctx);
+			face.Draw(brush, partial);
 		}
 	}
 
-	private void updateFocus(IReadOnlyList<Component> root, in Vector2 cursor) {
+	private void updateFocus(IReadOnlyList<Component> root) {
 		foreach (Component comp in root) {
-			if (comp.IsAccessible(cursor)) {
+			if (comp.IsAccessible()) {
 				Focused.Add(comp);
+				
+				// Recursively check all that satisfies the condition.
 				if (comp.Children.Count > 0) {
-					updateFocus(comp.Children, cursor);
+					updateFocus(comp.Children);
 				}
 			}
 		}

@@ -1,7 +1,6 @@
 ﻿#region
 using Mino.Desktop;
 using Mino.Framework.Resource;
-using Mino.Utility;
 #endregion
 
 namespace Mino.Graphics;
@@ -19,7 +18,7 @@ public class RenderSystem {
 	/// </summary>
 	/// <param name="window">A native window.</param>
 	/// <param name="context">Backend interface.</param>
-	/// <exception cref="Crash">If there's already a context.</exception>
+	/// <exception cref="InvalidOperationException">If there's already a context.</exception>
 	public static void LoadContext(Window window, ThreadContext context) {
 		lock (_lock) {
 			_ctx = context;
@@ -31,11 +30,11 @@ public class RenderSystem {
 	/// <summary>
 	///     Gets current render context.
 	/// </summary>
-	/// <exception cref="Crash">Thrown if there's no render context.</exception>
+	/// <exception cref="NullReferenceException">Thrown if there's no render context.</exception>
 	public static ThreadContext Context {
 		get {
 			lock (_lock) {
-				return _ctx ?? throw new Crash("Render context not loaded");
+				return _ctx ?? throw new NullReferenceException("Render context not loaded");
 			}
 		}
 	}
@@ -44,10 +43,10 @@ public class RenderSystem {
 	///     Gets current window.
 	/// </summary>
 	/// <returns>The current window.</returns>
-	/// <exception cref="Crash">Thrown if there's no window.</exception>
+	/// <exception cref="InvalidOperationException">Thrown if there's no window.</exception>
 	public static Window GetWindow() {
 		lock (_lock) {
-			return _window ?? throw new Crash("Window not loaded");
+			return _window ?? throw new InvalidOperationException("Window not loaded");
 		}
 	}
 

@@ -1,6 +1,5 @@
 ﻿#region
 using System.Runtime.CompilerServices;
-using Mino.Utility;
 #endregion
 
 namespace Mino.Mathematics.ThreeDim;
@@ -136,7 +135,7 @@ public readonly struct Quaternion : IEquatable<Quaternion> {
 	///     Normalizes this quaternion to unit length.
 	/// </summary>
 	/// <returns>The normalized quaternion.</returns>
-	/// <exception cref="Crash">Thrown when the quaternion has zero length.</exception>
+	/// <exception cref="InvalidOperationException">Thrown when the quaternion has zero length.</exception>
 	public Quaternion Normalize() {
 		float len = Length;
 		if (Comparison.DoEqual(0.0F, len)) {

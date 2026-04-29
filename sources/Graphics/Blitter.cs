@@ -1,7 +1,6 @@
 ﻿#region
 using Mino.Graphics.Enum;
 using Mino.Mathematics;
-using Mino.Utility;
 #endregion
 
 namespace Mino.Graphics;
@@ -29,7 +28,7 @@ public static unsafe class Blitter {
 	/// <param name="from">Source texture part.</param>
 	/// <param name="to">Target texture part.</param>
 	/// <param name="filter">Filter of drawing.</param>
-	/// <exception cref="Crash">Thrown if there's no data to draw or draw to.</exception>
+	/// <exception cref="InvalidOperationException">Thrown if there's no data to draw or draw to.</exception>
 	public static void Blit(in TexturePart from, in TexturePart to, TextureFilter filter = TextureFilter.Nearest) {
 		Box2 src = from.Region;
 		Box2 dst = to.Region;
@@ -63,14 +62,14 @@ public static unsafe class Blitter {
 	/// <param name="to">Target image.</param>
 	/// <param name="dst">Dst region.</param>
 	/// <param name="src">Src region.</param>
-	/// <exception cref="Crash">Thrown if src size != dst size.</exception>
+	/// <exception cref="InvalidOperationException">Thrown if src size != dst size.</exception>
 	public static void BlockCopy(Image from, Image to, in Box2 dst, in Box2 src) {
 		if (src.Size != dst.Size) {
-			throw new Crash("Image scaling not supported");
+			throw new InvalidOperationException("Image scaling not supported");
 		}
 		if (from.Bytes == null || to.Bytes == null || from.Bytes.Length < from.PixelStride
 		|| to.Bytes.Length < to.PixelStride) {
-			throw new Crash("No data in image");
+			throw new InvalidOperationException("No data in image");
 		}
 		const float Epsilon = 0.01F;
 
@@ -78,7 +77,7 @@ public static unsafe class Blitter {
 		src.MinY < -Epsilon || src.MaxY - Epsilon > from.Height ||
 		dst.MinX < -Epsilon || dst.MaxX - Epsilon > to.Width ||
 		dst.MinY < -Epsilon || dst.MaxY - Epsilon > to.Height) {
-			throw new Crash("Coordinates out of bounds");
+			throw new InvalidOperationException("Coordinates out of bounds");
 		}
 
 		byte[] fd = from.Bytes;

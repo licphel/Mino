@@ -3,7 +3,7 @@ using Mino.Graphics.Enum;
 
 namespace Mino.Graphics.Sprite;
 
-internal static class GRes {
+internal static class InternalResources {
 	private const string VertShaderTex = """
 										 #version 330 core
 

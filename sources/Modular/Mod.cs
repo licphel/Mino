@@ -6,7 +6,6 @@ using Mino.Modular.Eventing.Events;
 using Mino.Modular.Persistent;
 using Mino.Modular.Resource;
 using Mino.Nio;
-using Mino.Utility;
 using Mino.Utility.Logging;
 
 namespace Mino.Modular;
@@ -150,8 +149,8 @@ public class Mod {
 		// Override default behavior
 		Url baseOverride = Directory / "override";
 		
-		foreach (Url url in FileUtil.SubDirectories(baseOverride)) {
-			string modId = FileUtil.GetNameNoExtension(url);
+		foreach (Url url in Furl.SubDirectories(baseOverride)) {
+			string modId = Furl.GetNameNoExtension(url);
 
 			AssetLoader subLoader = loader.CopyWithProcessors(Domain.TryFind(modId));
 			subLoader.IsOverriding = true;
@@ -182,13 +181,13 @@ public class Mod {
 		foreach (DependencyInfo di in dep) {
 			if (Mods.TryGetValue(di.ModId, out Mod? mod)) {
 				if (di.MinVersion != null && mod.Version < di.MinVersion) {
-					throw new Crash($"Version too old: '{ModId}' requires {di}");
+					throw new RMLException($"Version too old: '{ModId}' requires {di}");
 				}
 				if (di.MaxVersion != null && mod.Version > di.MaxVersion) {
-					throw new Crash($"Version too new: '{ModId}' requires {di}");
+					throw new RMLException($"Version too new: '{ModId}' requires {di}");
 				}
 			} else {
-				throw new Crash($"Missing dependency: '{ModId}' requires {di}");
+				throw new RMLException($"Missing dependency: '{ModId}' requires {di}");
 			}
 		}
 
@@ -219,7 +218,7 @@ public class Mod {
 	public static void Load(in Url root) {
 		lock (_lock) {
 			if (_frozen) {
-				throw new Crash("Mod loading is frozen");
+				throw new RMLException("Mod loading is frozen");
 			}
 		}
 		
@@ -233,7 +232,7 @@ public class Mod {
 			string modId = info.ModId;
 			
 			if (Mods.ContainsKey(modId)) {
-				throw new Crash($"Mod id conflict: {modId}");
+				throw new RMLException($"Mod id conflict: {modId}");
 			}
 
 			if (info.HasProgram) {
@@ -259,13 +258,13 @@ public class Mod {
 					// Set the first core mod as bottom core.
 					if (mod.IsCoreMod) {
 						if (BottomCore != null) {
-							throw new Crash($"Already has a root mod. old={BottomCore.ModId}, new is from {root}");
+							throw new RMLException($"Already has a root mod. old={BottomCore.ModId}, new is from {root}");
 						}
 						BottomCore = mod;
 						Log.Info($"Mod '{modId}' works as bottom core");
 					}
 				} else {
-					throw new Crash($"Entrypoint '{entry}' not found when loading mod '{modId}'");
+					throw new RMLException($"Entrypoint '{entry}' not found when loading mod '{modId}'");
 				}
 			} else {
 				// No program mod.
@@ -286,7 +285,7 @@ public class Mod {
 	/// </summary>
 	/// <param name="modDir">Directory to scan from.</param>
 	public static void LoadDirectory(in Url modDir) {
-		foreach (Url file in FileUtil.SubDirectories(modDir)) {
+		foreach (Url file in Furl.SubDirectories(modDir)) {
 			Load(file);
 		}
 	}
@@ -336,11 +335,11 @@ public class Mod {
 	/// </summary>
 	/// <param name="id">Identifier of a mod resource.</param>
 	/// <returns>A url of domain - mod id, key - resource finder.</returns>
-	/// <exception cref="Crash">Thrown if there's no matching mod.</exception>
+	/// <exception cref="RMLException">Thrown if there's no matching mod.</exception>
 	public static Url GetResourceLocation(in Identifier id) {
 		Mod? mod = Mods!.GetValueOrDefault(id.Domain.Name, null);
 		if (mod == null) {
-			throw new Crash($"Domain '{id.Domain}' is not a mod");
+			throw new RMLException($"Domain '{id.Domain}' is not a mod");
 		}
 		
 		return mod.Directory / id.Path;
@@ -388,7 +387,7 @@ public class Mod {
 		// Check circuit dep.
 		if (result.Count != mods.Length) {
 			IEnumerable<string> remaining = mods.Select(m => m.ModId).Except(result.Select(m => m.ModId));
-			throw new Crash($"Circuit dependency detected: {string.Join(", ", remaining)}");
+			throw new RMLException($"Circuit dependency detected: {string.Join(", ", remaining)}");
 		}
     
 		return result;

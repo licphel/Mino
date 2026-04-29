@@ -4,7 +4,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using Mino.Nio;
-using Mino.Utility;
 using Mino.Utility.Logging;
 #endregion
 
@@ -51,8 +50,8 @@ public class PacketHandler : IDisposable {
 	/// <param name="connectionType">The connection type.</param>
 	/// <param name="endpoint">The endpoint used in LAN mode.</param>
 	/// <returns>Whether the connection is built.</returns>
-	/// <exception cref="Crash">Thrown if already connected or disposed.</exception>
-	/// <exception cref="Crash">Thrown if LAN mode is used but endpoint is null.</exception>
+	/// <exception cref="NetworkException">Thrown if already connected or disposed.</exception>
+	/// <exception cref="NetworkException">Thrown if LAN mode is used but endpoint is null.</exception>
 	public bool Search(NetConnectionType connectionType, IPEndPoint? endpoint = null) {
 		lock (_connectionLock) {
 			if (_connected) {
@@ -127,7 +126,7 @@ public class PacketHandler : IDisposable {
 	///     Sends a packet to server.
 	/// </summary>
 	/// <param name="packet">A server-bound packet.</param>
-	/// <exception cref="Crash">Thrown if not connected.</exception>
+	/// <exception cref="NetworkException">Thrown if not connected.</exception>
 	public void Send(Packet packet) {
 		if (!_connected) {
 			Log.Warn("Socket is not connected");
@@ -305,7 +304,7 @@ public class PacketHandler : IDisposable {
 
 		try {
 			_rcvSt = true;
-			byte[] tempBuffer = new byte[4096];
+			byte[] tempBuffer = new byte[Net.BufferSize];
 
 			while (_connected && !_disposeCts.Token.IsCancellationRequested) {
 				try {

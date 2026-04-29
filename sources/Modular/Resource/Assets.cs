@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using Mino.Utility;
 
 namespace Mino.Modular.Resource;
 
@@ -26,7 +25,7 @@ public static class Assets {
 	///  <param name="fallback">Fallback value.</param>
 	///  <typeparam name="T">Asset type generic.</typeparam>
 	///  <returns>An asset ref.</returns>
-	///  <exception cref="Crash">Thrown if type does not match or no such key.</exception>
+	///  <exception cref="RMLException">Thrown if type does not match or no such key.</exception>
 	public static Holder<T> Get<T>(in Identifier key, T? fallback = null) where T : class {
 		return new Holder<T>(key, _notifiers.GetOrAdd(key, k => new HolderNotifier()), fallback);
 	}

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using Mino.Nio;
 using Mino.Nio.NBT;
-using Mino.Utility;
 
 namespace Mino.Modular.Persistent;
 
@@ -9,7 +8,7 @@ namespace Mino.Modular.Persistent;
 ///		Manages all data values.
 /// </summary>
 public sealed class PersistentSystem {
-	internal TagMap _G = new TagMap();
+	internal NBTCompound _G = new NBTCompound();
 	internal bool _init;
 	internal ConcurrentQueue<Action> _finalW = new ConcurrentQueue<Action>();
 	
@@ -17,10 +16,10 @@ public sealed class PersistentSystem {
 	///		Initializes the data system.
 	/// </summary>
 	/// <param name="url">Local data storage file.</param>
-	/// <exception cref="Crash">Thrown if url is not a file url.</exception>
+	/// <exception cref="RMLException">Thrown if url is not a file url.</exception>
 	public void Init(Url url) {
 		if (!url.Scheme.IsFileBased) {
-			throw new Crash($"Url {url} is not a file url");
+			throw new RMLException($"Url {url} is not a file url");
 		}
 		_init = true;
 		
@@ -32,14 +31,14 @@ public sealed class PersistentSystem {
 				}
  			}
 			
-			TextAccess ta = TagSystem.DumpJson(_G);
+			TextAccess ta = NBTSystem.DumpJson(_G);
 			ta.Write(url);
 		};
 		
-		if (FileUtil.GetTypeOf(url) == FileUtil.PathType.NotExist) {
+		if (Furl.Typeof(url) == Furl.PathType.NotExist) {
 			// No local data.
 			return;
 		}
-		_G = TagSystem.ParseJson(url);
+		_G = NBTSystem.ParseJson(url);
 	}
 }

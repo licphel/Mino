@@ -1,7 +1,6 @@
 ﻿using Mino.Framework.Resource;
 using Mino.Graphics;
 using Mino.Graphics.Desc;
-using Mino.Utility;
 using Silk.NET.OpenGL;
 using ShaderType = Mino.Graphics.Enum.ShaderType;
 
@@ -54,7 +53,7 @@ public sealed class GLShaderProgram : ShaderProgram {
 			_gl.GetProgram(_handle, ProgramPropertyARB.LinkStatus, out int linkStatus);
 			if (linkStatus == 0) {
 				_gl.GetProgramInfoLog(_handle, out string linkLog);
-				throw new Crash($"Shader linking failed: {linkLog}");
+				throw new NativeException($"Shader linking failed: {linkLog}");
 			}
 
 			foreach (ShaderModule rsm in modules) {
@@ -66,7 +65,7 @@ public sealed class GLShaderProgram : ShaderProgram {
 			_gl.GetProgramInfoLog(_handle, out string validateLog);
 
 			if (!string.IsNullOrEmpty(validateLog)) {
-				throw new Crash($"Shader validation failed :{validateLog}");
+				throw new NativeException($"Shader validation failed :{validateLog}");
 			}
 		});
 	}
