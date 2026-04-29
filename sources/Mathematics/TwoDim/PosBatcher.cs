@@ -15,8 +15,8 @@ public static class PosBatcher {
 	/// <returns>A batched position.</returns>
 	public static PosI By(in PosI pos, int sizeX = Standard, int sizeY = Standard) {
 		return new PosI(
-			(int) MathF.Floor(pos.X * sizeX),
-			(int) MathF.Floor(pos.Y * sizeY)
+			(int) MathF.Floor(pos.X / sizeX),
+			(int) MathF.Floor(pos.Y / sizeY)
 		);
 	}
 }

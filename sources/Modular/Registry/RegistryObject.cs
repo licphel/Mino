@@ -1,9 +1,9 @@
 ﻿namespace Mino.Modular.Registry;
 
 /// <summary>
-///		A registerable interface.
+///		A registry object.
 /// </summary>
-public interface RegisterInterface {
+public interface RegistryObject {
 	/// <summary>
 	///		Named identifier.
 	/// </summary>

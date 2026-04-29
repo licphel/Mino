@@ -1,9 +1,9 @@
 ﻿namespace Mino.Modular.Registry;
 
 /// <summary>
-///		A registerable object.
+///		A registry object implementation.
 /// </summary>
-public class RegisterEntry : RegisterInterface {
+public class AbstractRegistryObject : RegistryObject {
 	public Identifier Id { get; private set; }
 	public int IntId { get; private set; }
 	
