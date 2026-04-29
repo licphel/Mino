@@ -252,6 +252,7 @@ public static class TagSystem {
 		} else if (o is string s2) {
 			output.WriteString(s2);
 		} else if (o is byte[] bytes) {
+			output.Write<int>(bytes.Length);
 			output.WriteBytes(bytes);
 		}
 	}

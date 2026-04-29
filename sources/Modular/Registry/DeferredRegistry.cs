@@ -40,7 +40,6 @@ public class DeferredRegistry<T> where T : class, RegistryObject {
 		key = Identifier.Fallback(_domain, key);
 		
 		_lock.EnterWriteLock();
-
 		if (_frozen) {
 			throw new Crash($"Try to register '{key}' after registry is frozen");
 		}
@@ -63,7 +62,6 @@ public class DeferredRegistry<T> where T : class, RegistryObject {
 		key = Identifier.Fallback(_domain, key);
 		
 		_lock.EnterWriteLock();
-
 		if (_frozen) {
 			throw new Crash($"Try to register '{key}' after registry is frozen");
 		}
